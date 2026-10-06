@@ -48,7 +48,6 @@ export const projectActionDescriptions: Record<ProjectAction, string> = {
   license: "License software, content, data or IP.",
   sponsor: "Support the project or its maintainers.",
   bounty: "Create or claim a contribution bounty.",
-  contribute: "Contribute work, capital or resources.",
   rent: "Rent an eligible asset or capacity.",
   borrow: "Borrow an eligible asset or capacity.",
   predict: "Enter an eligible prediction market.",
@@ -56,6 +55,31 @@ export const projectActionDescriptions: Record<ProjectAction, string> = {
   compose: "Build something using this project.",
   reserve: "Reserve an available resource or capacity.",
   follow: "Follow the project and its updates.",
+};
+
+export type ActionCapability = "live" | "account" | "source" | "network";
+
+export interface ActionCapabilityState {
+  action: ProjectAction;
+  capability: ActionCapability;
+  label: string;
+}
+
+export const projectActionCapability = (
+  project: Project,
+  action: ProjectAction,
+  authenticated: boolean,
+): ActionCapabilityState => {
+  if (action === "follow") {
+    return { action, capability: authenticated ? "live" : "account", label: authenticated ? "Ready" : "Sign in" };
+  }
+  if (action === "use" && project.source.reference.startsWith("http")) {
+    return { action, capability: "live", label: "Open source" };
+  }
+  if (action === "license" && project.source.status === "verified") {
+    return { action, capability: "source", label: "Source verified" };
+  }
+  return { action, capability: "network", label: "Network layer" };
 };
 
 export const canShowAction = (project: Project, action: ProjectAction) =>
