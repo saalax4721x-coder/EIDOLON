@@ -77,34 +77,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: hint }, { status: 400 });
   }
 
-  const headers = { ...supabaseHeaders, Authorization: "Bearer " + accessToken, Prefer: "return=representation" };
   const slug = createProjectSlug(name);
   if (!slug) return NextResponse.json({ error: "Project name must contain letters or numbers." }, { status: 400 });
 
-  const projectResponse = await fetch(supabaseUrl + "/rest/v1/projects", {
-    method: "POST", headers,
-    body: JSON.stringify({ name, slug, type, description, economy: draft.economy === "token" ? "token" : "none", verification_status: "pending" }),
+  const headers = { ...supabaseHeaders, Authorization: "Bearer " + accessToken };
+  const rpcResponse = await fetch(supabaseUrl + "/rest/v1/rpc/create_project_bundle", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      p_name: name,
+      p_slug: slug,
+      p_type: type,
+      p_description: description,
+      p_economy: draft.economy === "token" ? "token" : "none",
+      p_source_kind: sourceKindFor(type, source),
+      p_source_reference: source,
+      p_actions: defaultActionsFor(type),
+    }),
   });
-  if (!projectResponse.ok) {
-    const detail = await projectResponse.text();
-    return NextResponse.json({ error: detail.includes("duplicate") ? "A project with this name already exists. Choose a different name." : "Project could not be created." }, { status: projectResponse.status });
-  }
-  const [project] = await projectResponse.json() as Array<{id:string}>;
-  if (!project?.id) return NextResponse.json({ error: "Project was created without an identity." }, { status: 502 });
 
-  const sourceResponse = await fetch(supabaseUrl + "/rest/v1/project_sources", {
-    method: "POST", headers,
-    body: JSON.stringify({ project_id: project.id, kind: sourceKindFor(type, source), reference: source, status: "pending" }),
-  });
-  const economyResponse = await fetch(supabaseUrl + "/rest/v1/project_economies", {
-    method: "POST", headers,
-    body: JSON.stringify({ project_id: project.id, mode: draft.economy === "token" ? "token" : "none" }),
-  });
-  const actionsResponse = await fetch(supabaseUrl + "/rest/v1/project_actions", {
-    method: "POST", headers,
-    body: JSON.stringify(defaultActionsFor(type).map((action) => ({ project_id: project.id, action, enabled: true }))),
-  });
-  if (!sourceResponse.ok || !economyResponse.ok || !actionsResponse.ok)
-    return NextResponse.json({ error: "Project was created, but its supporting records could not all be attached." }, { status: 502 });
+  if (!rpcResponse.ok) {
+    const detail = await rpcResponse.text();
+    if (detail.includes("duplicate") || detail.includes("23505")) {
+      return NextResponse.json({ error: "A project with this name already exists. Choose a different name." }, { status: 409 });
+    }
+    if (detail.includes("42501") || detail.includes("authentication required")) {
+      return NextResponse.json({ error: "Your session is no longer valid. Sign in again." }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Project could not be created. Nothing was partially saved." }, { status: 502 });
+  }
+
+  const projectId = await rpcResponse.json();
+  if (typeof projectId !== "string") {
+    return NextResponse.json({ error: "Project creation returned an invalid identity." }, { status: 502 });
+  }
+
+  const projectResponse = await fetch(
+    supabaseUrl + "/rest/v1/projects?id=eq." + encodeURIComponent(projectId) + "&select=id,name,slug,type,description,economy,verification_status,created_at",
+    { headers: { ...supabaseHeaders, Authorization: "Bearer " + accessToken } },
+  );
+  if (!projectResponse.ok) return NextResponse.json({ error: "Project was created, but could not be loaded." }, { status: 502 });
+
+  const [project] = await projectResponse.json();
+  if (!project) return NextResponse.json({ error: "Project was created, but its identity could not be loaded." }, { status: 502 });
+
   return NextResponse.json({ project });
 }
