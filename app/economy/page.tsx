@@ -24,7 +24,7 @@ export default function Economy() {
             <button className={mode === "token" ? "economy active" : "economy"} onClick={() => setMode("token")}><span className="economy-index">02</span><strong>Project + token</strong><span>Attach a native token layer to the project.</span><i>◇</i></button>
           </div>
           <div className="economy-readout"><span className="readout-dot"/><div><strong>{mode === "token" ? "NATIVE ECONOMY SELECTED" : "INDEPENDENT PROJECT SELECTED"}</strong><p>{mode === "token" ? "Token creation will use real wallet, chain, supply and ownership infrastructure when enabled. Nothing is simulated." : "You can activate an economy later without replacing the project's canonical identity."}</p></div></div>
-          <button className="primary" onClick={() => location.href="/project"}>Return to project <span>→</span></button>
+          <a className="primary" href="/launch">Continue to launch <span>→</span></a>
         </div>
       </section>
     </main>
