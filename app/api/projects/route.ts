@@ -3,7 +3,33 @@ import { cookies } from "next/headers";
 import { supabaseHeaders, supabaseUrl } from "@/lib/supabase-config";
 import { createProjectSlug, type ProjectAction, type SourceKind } from "@/lib/eidolon";
 
-const defaultActions: ProjectAction[] = ["use", "follow", "contribute"];
+function defaultActionsFor(type: string): ProjectAction[] {
+  switch (type) {
+    case "GitHub project":
+      return ["use", "follow", "contribute", "sponsor", "bounty", "license"];
+    case "API":
+      return ["use", "follow", "subscribe", "license"];
+    case "Dataset":
+      return ["use", "follow", "license", "subscribe"];
+    case "Digital asset":
+      return ["use", "follow", "buy", "sell", "rent", "borrow"];
+    case "Protocol":
+      return ["use", "follow", "contribute", "fund", "compose"];
+    case "Creator / business":
+      return ["use", "follow", "subscribe", "buy", "sponsor"];
+    case "AI product":
+      return ["use", "follow", "subscribe", "license"];
+    case "Game":
+      return ["use", "follow", "buy", "sell", "rent"];
+    case "Web app":
+    case "App":
+      return ["use", "follow", "subscribe"];
+    case "Website":
+      return ["use", "follow"];
+    default:
+      return ["use", "follow"];
+  }
+}
 
 function sourceKindFor(type: string, source: string): SourceKind {
   const value = `${type} ${source}`.toLowerCase();
@@ -47,7 +73,7 @@ export async function POST(request: Request) {
   });
   const actionsResponse = await fetch(supabaseUrl + "/rest/v1/project_actions", {
     method: "POST", headers,
-    body: JSON.stringify(defaultActions.map((action) => ({ project_id: project.id, action, enabled: true }))),
+    body: JSON.stringify(defaultActionsFor(String(draft.type)).map((action) => ({ project_id: project.id, action, enabled: true }))),
   });
   if (!sourceResponse.ok || !economyResponse.ok || !actionsResponse.ok)
     return NextResponse.json({ error: "Project was created, but its supporting records could not all be attached." }, { status: 502 });
