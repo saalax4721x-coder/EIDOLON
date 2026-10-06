@@ -30,10 +30,15 @@ export async function POST(request: NextRequest) {
   const exists = await projectExists(projectId, headers);
   if (!exists) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
+  const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, { headers, cache: "no-store" });
+  if (!userResponse.ok) return NextResponse.json({ error: "Authentication session is invalid." }, { status: 401 });
+  const user = await userResponse.json() as { id?: string };
+  if (!user.id) return NextResponse.json({ error: "Authentication session is invalid." }, { status: 401 });
+
   const response = await fetch(`${supabaseUrl}/rest/v1/project_follows`, {
     method: "POST",
     headers: { ...headers, Prefer: "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify({ project_id: projectId })
+    body: JSON.stringify({ project_id: projectId, user_id: user.id })
   });
 
   if (!response.ok) {
