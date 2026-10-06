@@ -1,24 +1,26 @@
-import type { Project } from "@/lib/eidolon";
+import type { Project, ProjectAction } from "@/lib/eidolon";
 
 export interface DiscoveryProject extends Project {
   activityScore: number | null;
   followerCount: number | null;
   usageCount: number | null;
   updatedAt: string | null;
+  isFollowing?: boolean;
 }
 
-export const discoverySort = (projects: DiscoveryProject[], mode: "Trending" | "Rising" | "New" | "Undiscovered") =>
-  [...projects].sort((a, z) => {
-    if (mode === "New") return (Date.parse(z.createdAt) || 0) - (Date.parse(a.createdAt) || 0);
-    if (mode === "Undiscovered") return (a.activityScore ?? 0) - (z.activityScore ?? 0);
-    return (z.activityScore ?? 0) - (a.activityScore ?? 0);
-  });
+export const discoverySort = (projects: DiscoveryProject[], filter: string) => {
+  if (filter === "New") return [...projects].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  if (filter === "Rising") return [...projects].sort((a,b) => (b.activityScore ?? -1) - (a.activityScore ?? -1));
+  if (filter === "Trending") return [...projects].sort((a,b) => (b.activityScore ?? -1) - (a.activityScore ?? -1));
+  if (filter === "Undiscovered") return [...projects].sort((a,b) => (a.followerCount ?? Number.MAX_SAFE_INTEGER) - (b.followerCount ?? Number.MAX_SAFE_INTEGER));
+  if (filter === "Following") return projects.filter((project) => project.isFollowing);
+  return projects;
+};
 
 export const discoveryMatches = (project: DiscoveryProject, query: string) => {
-  const needle = query.trim().toLowerCase();
-  if (!needle) return true;
-  return [project.name, project.slug, project.description, project.type, project.source.reference]
-    .some((value) => value.toLowerCase().includes(needle));
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return [project.name, project.slug, project.description, project.type, project.source.reference].some((value) => value.toLowerCase().includes(q));
 };
 
 export const visibleMetric = (value: number | null) => value === null ? "—" : value.toLocaleString();
