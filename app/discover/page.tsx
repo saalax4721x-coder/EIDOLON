@@ -7,6 +7,7 @@ export default function Discover() {
   const [filter, setFilter] = useState<(typeof discoveryFilters)[number]>("Trending");
   const [q, setQ] = useState("");
   const [projects, setProjects] = useState<DiscoveryProject[]>([]);
+  const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,14 +17,14 @@ export default function Discover() {
         if (!response.ok) throw new Error("Discovery data could not be loaded.");
         return response.json();
       })
-      .then((data) => setProjects(data.projects ?? []))
+      .then((data) => { setProjects(data.projects ?? []); setAuthenticated(Boolean(data.authenticated)); })
       .catch((err) => setError(err instanceof Error ? err.message : "Discovery data could not be loaded."))
       .finally(() => setLoading(false));
   }, []);
 
   const visible = useMemo(() => {
     const filtered = projects.filter((project) => discoveryMatches(project, q));
-    return filter === "Following" ? [] : discoverySort(filtered, filter);
+    return discoverySort(filtered, filter);
   }, [filter, q, projects]);
 
   return <main className="discover">
@@ -40,6 +41,6 @@ export default function Discover() {
       <div className="stats">{p.followerCount === null && p.usageCount === null ? "Live metrics pending" : `${visibleMetric(p.followerCount)} followers · ${visibleMetric(p.usageCount)} uses`}</div>
       <div className="card-actions">{p.actions.slice(0, 3).map((action) => <button key={action}>{action.replace("_", " ")}</button>)}</div>
     </article>)}</section>}
-    {!loading && !error && visible.length === 0 && <div className="panel"><span className="eyebrow">NOTHING HERE YET</span><h2>{filter === "Following" ? "Following is ready for persisted follows." : "No matching projects."}</h2><p>EIDOLON does not invent activity. Verified data will appear as the network grows.</p></div>}
+    {!loading && !error && visible.length === 0 && <div className="panel"><span className="eyebrow">{filter === "Following" && !authenticated ? "SIGN IN REQUIRED" : "NOTHING HERE YET"}</span><h2>{filter === "Following" && !authenticated ? "Sign in to see your followed projects." : filter === "Following" ? "No followed projects yet." : "No matching projects."}</h2><p>{filter === "Following" && !authenticated ? "Your follows are private to your account." : "EIDOLON does not invent activity. Verified data will appear as the network grows."}</p></div>}
   </main>;
 }
