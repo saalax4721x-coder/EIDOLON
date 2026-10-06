@@ -6,6 +6,7 @@ import { createProjectSlug, projectTypes, type ProjectAction, type ProjectType, 
 const validTypes = new Set<string>(projectTypes);
 const githubReference = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?\/?$/i;
 const httpReference = /^https?:\/\/[^\s]+$/i;
+const uuidReference = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function defaultActionsFor(type: string): ProjectAction[] {
   switch (type) {
@@ -52,6 +53,32 @@ function sourceIsValid(type: ProjectType, source: string) {
   return source.length >= 4;
 }
 
+function isProjectRecord(value: unknown): value is {
+  id: string;
+  name: string;
+  slug: string;
+  type: ProjectType;
+  description: string;
+  economy: "none" | "token";
+  verification_status: "unverified" | "pending" | "verified" | "rejected";
+  created_at: string;
+} {
+  if (!value || typeof value !== "object") return false;
+  const project = value as Record<string, unknown>;
+  return (
+    typeof project.id === "string" &&
+    uuidReference.test(project.id) &&
+    typeof project.name === "string" &&
+    typeof project.slug === "string" &&
+    typeof project.type === "string" &&
+    validTypes.has(project.type) &&
+    typeof project.description === "string" &&
+    (project.economy === "none" || project.economy === "token") &&
+    ["unverified", "pending", "verified", "rejected"].includes(String(project.verification_status)) &&
+    typeof project.created_at === "string"
+  );
+}
+
 export async function POST(request: Request) {
   const accessToken = (await cookies()).get("eidolon_access_token")?.value;
   if (!accessToken) return NextResponse.json({ error: "Sign in before launching a project." }, { status: 401 });
@@ -81,20 +108,25 @@ export async function POST(request: Request) {
   if (!slug) return NextResponse.json({ error: "Project name must contain letters or numbers." }, { status: 400 });
 
   const headers = { ...supabaseHeaders, Authorization: "Bearer " + accessToken };
-  const rpcResponse = await fetch(supabaseUrl + "/rest/v1/rpc/create_project_bundle", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      p_name: name,
-      p_slug: slug,
-      p_type: type,
-      p_description: description,
-      p_economy: draft.economy === "token" ? "token" : "none",
-      p_source_kind: sourceKindFor(type, source),
-      p_source_reference: source,
-      p_actions: defaultActionsFor(type),
-    }),
-  });
+  let rpcResponse: Response;
+  try {
+    rpcResponse = await fetch(supabaseUrl + "/rest/v1/rpc/create_project_bundle", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        p_name: name,
+        p_slug: slug,
+        p_type: type,
+        p_description: description,
+        p_economy: draft.economy === "token" ? "token" : "none",
+        p_source_kind: sourceKindFor(type, source),
+        p_source_reference: source,
+        p_actions: defaultActionsFor(type),
+      }),
+    });
+  } catch {
+    return NextResponse.json({ error: "Project service is temporarily unavailable. Nothing was saved." }, { status: 503 });
+  }
 
   if (!rpcResponse.ok) {
     const detail = await rpcResponse.text();
@@ -107,19 +139,40 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Project could not be created. Nothing was partially saved." }, { status: 502 });
   }
 
-  const projectId = await rpcResponse.json();
-  if (typeof projectId !== "string") {
+  let projectId: unknown;
+  try {
+    projectId = await rpcResponse.json();
+  } catch {
+    return NextResponse.json({ error: "Project creation returned an unreadable identity." }, { status: 502 });
+  }
+
+  if (typeof projectId !== "string" || !uuidReference.test(projectId)) {
     return NextResponse.json({ error: "Project creation returned an invalid identity." }, { status: 502 });
   }
 
-  const projectResponse = await fetch(
-    supabaseUrl + "/rest/v1/projects?id=eq." + encodeURIComponent(projectId) + "&select=id,name,slug,type,description,economy,verification_status,created_at",
-    { headers: { ...supabaseHeaders, Authorization: "Bearer " + accessToken } },
-  );
-  if (!projectResponse.ok) return NextResponse.json({ error: "Project was created, but could not be loaded." }, { status: 502 });
+  let projectResponse: Response;
+  try {
+    projectResponse = await fetch(
+      supabaseUrl + "/rest/v1/projects?id=eq." + encodeURIComponent(projectId) + "&select=id,name,slug,type,description,economy,verification_status,created_at",
+      { headers },
+    );
+  } catch {
+    return NextResponse.json({ error: "Project was created, but could not be loaded. Retry from your project list." }, { status: 503 });
+  }
 
-  const [project] = await projectResponse.json();
-  if (!project) return NextResponse.json({ error: "Project was created, but its identity could not be loaded." }, { status: 502 });
+  if (!projectResponse.ok) return NextResponse.json({ error: "Project was created, but could not be loaded. Retry from your project list." }, { status: 502 });
+
+  let records: unknown;
+  try {
+    records = await projectResponse.json();
+  } catch {
+    return NextResponse.json({ error: "Project was created, but its response was invalid." }, { status: 502 });
+  }
+
+  const project = Array.isArray(records) ? records[0] : null;
+  if (!isProjectRecord(project)) {
+    return NextResponse.json({ error: "Project was created, but its identity could not be loaded." }, { status: 502 });
+  }
 
   return NextResponse.json({ project });
 }
