@@ -226,3 +226,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   .toolbar{gap:8px}
   .filters{padding-bottom:2px}
 }
+
+
+.account-projects{width:min(1120px,calc(100% - 48px));margin:0 auto 96px}
+.account-projects .section-heading{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid var(--line,#272727);font-size:10px;letter-spacing:.16em;color:var(--muted,#8b8b8b)}
+.account-project-list{display:grid;gap:1px;background:var(--line,#272727);border:1px solid var(--line,#272727)}
+.account-project{display:flex;justify-content:space-between;gap:32px;padding:24px 26px;background:rgba(14,14,14,.82);text-decoration:none;color:inherit;transition:background .2s ease,transform .2s ease}
+.account-project:hover{background:rgba(24,24,24,.92);transform:translateY(-1px)}
+.account-project h2{margin:7px 0 6px;font-size:24px;letter-spacing:-.03em}
+.account-project p{margin:0;max-width:680px;color:var(--muted,#8b8b8b);line-height:1.6}
+.account-project-meta{display:flex;align-items:center;gap:14px;align-self:center;white-space:nowrap;font-size:9px;letter-spacing:.13em;color:var(--muted,#8b8b8b)}
+.account-project-meta b{font-size:18px;color:var(--text,#f3f0e8)}
+@media (max-width:700px){.account-projects{width:min(100% - 28px,1120px);margin-bottom:56px}.account-project{display:block;padding:20px}.account-project-meta{margin-top:18px;justify-content:space-between}.account-project h2{font-size:21px}}
