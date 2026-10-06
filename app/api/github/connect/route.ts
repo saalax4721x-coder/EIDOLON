@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const projectId = url.searchParams.get("projectId")?.trim() ?? "";
   const next = url.searchParams.get("next")?.trim() ?? "/";
   if (!projectId) return NextResponse.json({ error: "Missing project id." }, { status: 400 });
-  if (!next.startsWith("/")) return NextResponse.json({ error: "Invalid return path." }, { status: 400 });
+  if (!next.startsWith("/") || next.startsWith("//")) return NextResponse.json({ error: "Invalid return path." }, { status: 400 });
 
   const state = randomBytes(32).toString("base64url");
   const { verifier, challenge } = createGithubPkce();
