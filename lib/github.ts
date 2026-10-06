@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 const key = () => {
   const value = process.env.GITHUB_TOKEN_ENCRYPTION_KEY;
@@ -25,7 +25,7 @@ export function decryptSecret(value: string) {
 
 export function createGithubPkce() {
   const verifier = randomBytes(32).toString("base64url");
-  const challenge = require("node:crypto").createHash("sha256").update(verifier).digest("base64url");
+  const challenge = createHash("sha256").update(verifier).digest("base64url");
   return { verifier, challenge };
 }
 
