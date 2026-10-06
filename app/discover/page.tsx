@@ -27,13 +27,13 @@ export default function Discover() {
     return discoverySort(filtered, filter);
   }, [filter, q, projects]);
 
-  return <main className="discover">
+  return <main className="discover discover-experience">
     <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>DISCOVER</span></nav></header>
-    <section className="discover-head"><div><div className="eyebrow">THE NETWORK</div><h1>Find what the world<br/><em>is building.</em></h1></div><a className="launch-link" href="/launch">+ Launch something</a></section>
+    <div className="discover-atmosphere" aria-hidden="true"><span/><span/><span/><i/></div><section className="discover-head"><div><div className="eyebrow">THE NETWORK</div><h1>Find what the world<br/><em>is building.</em></h1></div><a className="launch-link" href="/launch">+ Launch something</a></section>
     <div className="toolbar"><div className="filters">{discoveryFilters.map((x) => <button className={filter === x ? "filter active" : "filter"} onClick={() => setFilter(x)} key={x}>{x}</button>)}</div><input className="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects"/></div>
     {loading && <div className="panel"><span className="eyebrow">LOADING NETWORK</span><h2>Reading verified projects.</h2></div>}
     {!loading && error && <div className="panel"><span className="eyebrow">NETWORK UNAVAILABLE</span><h2>Discovery could not load.</h2><p>{error}</p></div>}
-    {!loading && !error && <section className="project-grid">{visible.map((p) => <article className="project-card" key={p.id}>
+    {!loading && !error && <section className="project-grid">{visible.map((p) => <article className="project-card" key={p.id}><div className="card-sigil" aria-hidden="true">{p.type.slice(0,1).toUpperCase()}</div>
       <div className="card-top"><span>{p.type}</span><span>◈</span></div>
       <h2><a href={`/project?slug=${encodeURIComponent(p.slug)}`}>{p.name}</a></h2>
       <div className="verified">{p.source.kind.toUpperCase()} · {p.source.status.toUpperCase()}</div>
