@@ -31,7 +31,7 @@ export default function Home() {
             <button
               key={item.id}
               className={`intent-card ${intent === item.id ? "selected" : ""}`}
-              onClick={() => setIntent(item.id)}
+              onClick={() => { setIntent(item.id); window.location.href = item.id === "launch" ? "/launch" : item.id === "discover" ? "/discover" : `/discover?intent=${item.id}`; }}
               type="button"
             >
               <span className="intent-mark">{item.mark}</span>
