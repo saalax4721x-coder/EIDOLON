@@ -206,3 +206,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .source-row span{font-variant-numeric:tabular-nums}
 @media(max-width:760px){.project-actions{display:grid;grid-template-columns:1fr 1fr}.project-actions>*{width:100%;text-align:center}.project-actions .project-action-link:first-child{grid-column:1/-1}.project-hero h1{font-size:clamp(52px,17vw,82px)}.project-hero>p{font-size:13px}.identity-card,.economy-console{box-shadow:0 24px 70px rgba(0,0,0,.3)}}
 @media(prefers-reduced-transparency:reduce){.identity-card,.economy-console,.project-card,.intent-card,.choice,.economy,.help-grid>a,.connector-card,.success{-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+
+/* Cross-page navigation + interaction consistency */
+.surface-nav-links a,.topbar-right a{position:relative}
+.surface-nav-links a:after,.topbar-right a:after{content:"";position:absolute;left:0;right:0;bottom:-7px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .22s ease;opacity:.7}
+.surface-nav-links a:hover:after,.topbar-right a:hover:after{transform:scaleX(1)}
+.surface-nav-links span{color:#777b84}
+.launch-link,.project-action-link,.primary,.quiet-button,.filter,.progress-step,.choice,.economy,.intent-card{touch-action:manipulation}
+@media(max-width:760px){
+  .surface-nav-links{gap:12px}
+  .surface-nav-links a:first-child{display:inline-flex}
+  .surface-nav-links a:not(:first-child){display:none}
+  .surface-nav-links span{display:none}
+  .topbar-right{gap:12px}
+  .topbar-right a:first-child{display:inline}
+  .topbar-right a:not(:first-of-type){display:none}
+  .topbar-right .status-dot{margin-left:4px}
+  .toolbar{gap:8px}
+  .filters{padding-bottom:2px}
+}
