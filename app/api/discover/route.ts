@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseHeaders, supabaseUrl } from "@/lib/supabase-config";
 import type { DiscoveryProject } from "@/lib/discovery";
+import type { ProjectType } from "@/lib/eidolon";
 
 export const dynamic = "force-dynamic";
 type DbProject = {
-  id: string; name: string; slug: string; type: string; description: string | null;
+  id: string; name: string; slug: string; type: ProjectType; description: string | null;
   economy: "none" | "token"; verification_status: "unverified" | "pending" | "verified" | "rejected"; created_at: string; updated_at: string;
 };
 type DbSource = { project_id: string; kind: DiscoveryProject["source"]["kind"]; reference: string; status: DiscoveryProject["source"]["status"]; };
