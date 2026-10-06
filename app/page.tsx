@@ -45,7 +45,7 @@ export default function Home() {
           {intent && <span className="selected-intent">Selected · {intents.find((i) => i.id === intent)?.label}</span>}
         </div>
       </section>
-      <footer><span>EIDOLON / 001</span><span>Launch anything. Discover everything.</span><span>THE NETWORK IS FORMING</span></footer>
+      <footer><span>EIDOLON / 001</span><span>Launch anything. Discover everything.</span><nav className="footer-links"><a href="/help">Help</a><a href="/faq">FAQ</a><a href="/connectors">Connectors</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/auth">Sign in</a></nav><span>THE NETWORK IS FORMING</span></footer>
     </main>
   );
 }
