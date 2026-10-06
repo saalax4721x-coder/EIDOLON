@@ -1,1 +1,34 @@
-export default function Terms(){return <main className="legal-page"><header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><a href="/privacy">Privacy</a><span>TERMS</span></nav></header><section className="legal-hero"><span className="eyebrow">LEGAL / TERMS</span><h1>Use the network<br/><em>with clarity.</em></h1><p>EIDOLON connects people to real projects and external systems. Some capabilities are live; others are deliberately marked as network-layer work.</p></section><article className="legal-copy"><h2>1. Honest project information</h2><p>You are responsible for the information and sources you publish. Do not claim ownership, authorization or verification you do not have.</p><h2>2. External services</h2><p>Connected providers remain independent services with their own terms, permissions and availability. EIDOLON does not control third-party systems.</p><h2>3. Economic activity</h2><p>Labels such as Buy, Sell, Fund, Trade or Predict do not imply a live transaction rail. Only capabilities connected to a real underlying system should be treated as executable.</p><h2>4. Prohibited use</h2><p>Do not use EIDOLON for fraud, impersonation, unauthorized access, abuse of external services or unlawful activity.</p><h2>5. Availability</h2><p>The service and integrations may change or become unavailable. Network-layer labels exist to make unfinished capability explicit.</p><h2>6. Contact</h2><p>Legal questions: <a href="mailto:legal@eidolon.network">legal@eidolon.network</a>.</p></article></main>
+export default function Terms() {
+  return (
+    <main className="legal-page">
+      <header className="surface-nav">
+        <a href="/" className="wordmark">EIDOLON</a>
+        <nav className="surface-nav-links">
+          <a href="/discover">Discover</a>
+          <a href="/launch">Launch</a>
+          <a href="/privacy">Privacy</a>
+          <span>TERMS</span>
+        </nav>
+      </header>
+      <section className="legal-hero">
+        <span className="eyebrow">LEGAL / TERMS</span>
+        <h1>Use the network<br /><em>with clarity.</em></h1>
+        <p>EIDOLON connects people to real projects and external systems. Some capabilities are live; others are deliberately marked as network-layer work.</p>
+      </section>
+      <article className="legal-copy">
+        <h2>1. Honest project information</h2>
+        <p>You are responsible for the information and sources you publish. Do not claim ownership, authorization or verification you do not have.</p>
+        <h2>2. External services</h2>
+        <p>Connected providers remain independent services with their own terms, permissions and availability. EIDOLON does not control third-party systems.</p>
+        <h2>3. Economic activity</h2>
+        <p>Labels such as Buy, Sell, Fund, Trade or Predict do not imply a live transaction rail. Only capabilities connected to a real underlying system should be treated as executable.</p>
+        <h2>4. Prohibited use</h2>
+        <p>Do not use EIDOLON for fraud, impersonation, unauthorized access, abuse of external services or unlawful activity.</p>
+        <h2>5. Availability</h2>
+        <p>The service and integrations may change or become unavailable. Network-layer labels exist to make unfinished capability explicit.</p>
+        <h2>6. Contact</h2>
+        <p>Legal questions: <a href="mailto:legal@eidolon.network">legal@eidolon.network</a>.</p>
+      </article>
+    </main>
+  );
+}
