@@ -1,67 +1,12 @@
+"use client";
 import Link from "next/link";
-import { projectActionDescriptions, projectActionLabels, type ProjectAction } from "@/lib/eidolon";
-
-const data = {
-  name: "NOVA",
-  kind: "AI infrastructure",
-  source: "GitHub · Verified",
-  description: "Composable inference infrastructure for builders.",
-  actions: ["use", "contribute", "sponsor", "license", "follow"] as ProjectAction[],
-};
-
-export default function Project() {
-  return (
-    <main className="project-page">
-      <header className="surface-nav">
-        <Link href="/" className="wordmark">EIDOLON</Link>
-        <span>PROJECT / NOVA</span>
-      </header>
-
-      <section className="project-hero">
-        <div className="eyebrow">{data.kind} · {data.source}</div>
-        <h1>{data.name}</h1>
-        <p>{data.description}</p>
-        <div className="project-actions">
-          {data.actions.slice(0, 3).map((action) => (
-            <button key={action}>{projectActionLabels[action]}</button>
-          ))}
-        </div>
-      </section>
-
-      <section className="project-sections">
-        <article>
-          <span className="eyebrow">IDENTITY</span>
-          <h2>Verified source</h2>
-          <p>The project identity is anchored to a real source. Verification, ownership and provenance remain separate from discovery.</p>
-          <div className="source-row"><strong>GitHub</strong><span>VERIFIED</span></div>
-        </article>
-
-        <article>
-          <span className="eyebrow">AVAILABLE ACTIONS</span>
-          <h2>What you can do</h2>
-          <div className="action-list">
-            {data.actions.map((action) => (
-              <div className="action-item" key={action}>
-                <strong>{projectActionLabels[action]}</strong>
-                <span>{projectActionDescriptions[action]}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article>
-          <span className="eyebrow">ECONOMY</span>
-          <h2>No token enabled</h2>
-          <p>This project launched without a token. An economy can be activated later without changing the canonical project identity.</p>
-          <Link className="economy-link" href="/economy">Explore economy →</Link>
-        </article>
-
-        <article>
-          <span className="eyebrow">GRAPH</span>
-          <h2>Connected projects</h2>
-          <p>Dependencies, collaborators, services and compositions will appear here as the network grows.</p>
-        </article>
-      </section>
-    </main>
-  );
+import { useEffect, useState } from "react";
+import { projectActionDescriptions, projectActionLabels, type Project, type ProjectAction } from "@/lib/eidolon";
+export default function ProjectPage(){
+ const [project,setProject]=useState<Project|null>(null),[economy,setEconomy]=useState<any>(null),[loading,setLoading]=useState(true),[error,setError]=useState<string|null>(null);
+ useEffect(()=>{const slug=new URLSearchParams(window.location.search).get("slug");if(!slug){setError("Missing project slug.");setLoading(false);return;}fetch("/api/project?slug="+encodeURIComponent(slug),{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error??"Project could not be loaded.");return d}).then(d=>{setProject(d.project);setEconomy(d.economyDetail)}).catch(e=>setError(e instanceof Error?e.message:"Project could not be loaded.")).finally(()=>setLoading(false))},[]);
+ if(loading)return <main className="project-page"><header className="surface-nav"><Link href="/" className="wordmark">EIDOLON</Link><span>PROJECT</span></header><section className="project-hero"><div className="eyebrow">LOADING PROJECT</div><h1>Reading the network.</h1></section></main>;
+ if(error||!project)return <main className="project-page"><header className="surface-nav"><Link href="/" className="wordmark">EIDOLON</Link><span>PROJECT</span></header><section className="project-hero"><div className="eyebrow">PROJECT UNAVAILABLE</div><h1>{error??"Project not found."}</h1><p><Link href="/discover">Return to discovery →</Link></p></section></main>;
+ const actions=project.actions.length?project.actions:["use","follow"] as ProjectAction[];
+ return <main className="project-page"><header className="surface-nav"><Link href="/" className="wordmark">EIDOLON</Link><span>PROJECT / {project.name}</span></header><section className="project-hero"><div className="eyebrow">{project.type} · {project.source.kind.toUpperCase()} · {project.source.status.toUpperCase()}</div><h1>{project.name}</h1><p>{project.description}</p><div className="project-actions">{actions.slice(0,3).map(a=><button key={a}>{projectActionLabels[a]}</button>)}</div></section><section className="project-sections"><article><span className="eyebrow">IDENTITY</span><h2>Source identity</h2><p>The project is anchored to its persisted source record. Verification and ownership remain separate from discovery.</p><div className="source-row"><strong>{project.source.kind.toUpperCase()}</strong><span>{project.source.status.toUpperCase()}</span></div>{project.source.reference&&<p>{project.source.reference}</p>}</article><article><span className="eyebrow">AVAILABLE ACTIONS</span><h2>What you can do</h2><div className="action-list">{actions.map(a=><div className="action-item" key={a}><strong>{projectActionLabels[a]}</strong><span>{projectActionDescriptions[a]}</span></div>)}</div></article><article><span className="eyebrow">ECONOMY</span><h2>{project.economy==="token"?"Token economy enabled":"No token enabled"}</h2><p>{project.economy==="token"?(economy?.chain?"Economy is configured for "+economy.chain+".":"Token configuration is persisted; chain details are not yet available."):"This project launched without a token. An economy can be activated later without changing the canonical project identity."}</p><Link className="economy-link" href="/economy">Explore economy →</Link></article><article><span className="eyebrow">GRAPH</span><h2>Connected projects</h2><p>Dependencies, collaborators, services and compositions will appear here as the network grows.</p></article></section></main>;
 }
