@@ -165,3 +165,30 @@ footer{max-width:var(--max);margin:18px auto 0;padding:20px 0 28px;border-top:1p
 .action-item em[data-capability="account"]{color:var(--accent);border-color:rgba(231,223,204,.18)}
 .action-item em[data-capability="source"]{color:#a9b4c3;border-color:rgba(169,180,195,.18)}
 @media(max-width:760px){.action-item{grid-template-columns:1fr}.action-item em{justify-self:start}}
+
+
+/* Support, connector and legal system */
+.info-page,.legal-page{min-height:100vh;padding:0 28px 90px;background:
+radial-gradient(700px 520px at 85% 12%,rgba(231,223,204,.035),transparent 70%),
+linear-gradient(180deg,#07080a,#090a0d)}
+.info-hero,.legal-hero{max-width:var(--max);margin:auto;padding:clamp(85px,13vh,145px) 0 70px;border-bottom:1px solid var(--line)}
+.info-hero h1,.legal-hero h1{font-size:clamp(58px,8vw,108px);margin:10px 0 25px}
+.info-hero p,.legal-hero p{max-width:650px;color:#858994;line-height:1.8;font-size:13px}
+.faq-list{max-width:var(--max);margin:0 auto;border-bottom:1px solid var(--line)}
+.faq-item{border-bottom:1px solid var(--line)}.faq-item:last-child{border-bottom:0}
+.faq-item button{width:100%;display:grid;grid-template-columns:55px 1fr 30px;align-items:center;text-align:left;gap:20px;padding:27px 0;border:0;background:none;color:var(--text);cursor:pointer}
+.faq-item button span{font-size:8px;letter-spacing:.15em;color:#50545d}.faq-item strong{font:400 clamp(20px,2.3vw,30px) Georgia,serif;letter-spacing:-.035em}.faq-item i{font-style:normal;color:#696d76;font-size:18px;text-align:right}
+.faq-item p{max-width:700px;padding:0 55px 30px;color:var(--muted);font-size:12px;line-height:1.8;margin:0}
+.faq-item.open button strong{color:var(--accent)}
+.help-grid,.connector-grid{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line)}
+.help-grid>a,.connector-card{background:#090b0e;padding:34px;min-height:230px;color:var(--text);text-decoration:none;transition:.28s;position:relative;overflow:hidden}
+.help-grid>a:hover,.connector-card:hover{background:#0d0f13;transform:translateY(-2px)}
+.help-grid>a:after,.connector-card:after{content:"";position:absolute;right:-80px;bottom:-100px;width:230px;height:230px;border:1px solid rgba(231,223,204,.035);border-radius:50%}
+.help-grid>a>span,.connector-status{color:#555963;font-size:8px;letter-spacing:.16em}
+.help-grid h2,.connector-card h2{font:400 31px Georgia,serif;letter-spacing:-.04em;margin:52px 0 12px}.help-grid p,.connector-card p{max-width:460px;color:var(--muted);font-size:11px;line-height:1.7}
+.support-note{max-width:var(--max);margin:70px auto 0;padding:45px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.support-note h2{font:400 clamp(28px,4vw,48px) Georgia,serif;letter-spacing:-.045em;max-width:720px;margin:12px 0}
+.support-note p{max-width:650px;color:var(--muted);line-height:1.8;font-size:12px}.support-note .primary{display:inline-flex;text-decoration:none;align-items:center;gap:22px}
+.connector-card>div{display:flex;justify-content:space-between;align-items:center}.connector-mark{width:44px;height:44px;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;letter-spacing:.08em}.connector-card.active .connector-mark{border-color:rgba(185,199,173,.3);color:var(--signal)}.connector-card h2{margin-top:70px}.connector-muted{display:inline-block;margin-top:25px;color:#555963;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+.legal-copy{max-width:760px;margin:0 auto;padding:60px 0}.legal-copy h2{font:400 29px Georgia,serif;letter-spacing:-.035em;margin:48px 0 12px}.legal-copy h2:first-child{margin-top:0}.legal-copy p{color:#858994;font-size:12px;line-height:1.9}.legal-copy a{color:var(--accent)}
+@media(max-width:760px){.info-page,.legal-page{padding-left:20px;padding-right:20px}.info-hero,.legal-hero{padding-top:70px}.faq-item button{grid-template-columns:35px 1fr 20px;gap:10px}.faq-item p{padding-left:35px}.help-grid,.connector-grid{grid-template-columns:1fr}.help-grid>a{min-height:190px}.help-grid h2{margin-top:38px}.connector-card h2{margin-top:48px}}
