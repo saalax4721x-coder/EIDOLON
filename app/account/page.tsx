@@ -52,7 +52,7 @@ export default function Account() {
             <p>Signed in as <strong>{email}</strong>. Use your account to launch projects, follow projects and authorize supported connectors.</p>
             <div className="step-actions">
               <a className="primary" href="/launch">Launch <span>↗</span></a>
-              <button className="quiet-button" disabled={busy} onClick={logout}>{busy ? "Signing out…" : "Sign out"}</button>
+              <button type="button" className="quiet-button" disabled={busy} onClick={logout}>{busy ? "Signing out…" : "Sign out"}</button>
             </div>
           </>
         ) : state === "signed-out" ? (
