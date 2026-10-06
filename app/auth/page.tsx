@@ -10,10 +10,12 @@ export default function AuthPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    const next = new URLSearchParams(window.location.search).get("next") || "/launch";
+    const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/launch";
     const response = await fetch("/api/auth/request-link", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, next: safeNext }),
     });
     if (!response.ok) {
       setError((await response.json()).error ?? "Unable to send sign-in link.");
