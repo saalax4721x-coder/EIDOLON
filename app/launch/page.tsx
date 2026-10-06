@@ -6,9 +6,9 @@ import { emptyProjectDraft, projectDraftIsReady } from "@/lib/project-draft";
 
 const steps = ["THE OBJECT", "IDENTITY", "ECONOMY"];
 
-function sourceHint(type: ProjectType | "") {
+function sourceHint(type: ProjectType | "" | null) {
   if (type === "GitHub project") return "Use a GitHub repository URL or owner/repository.";
-  if (["Website", "Web app", "App", "API"].includes(type)) return "Use the live HTTP(S) URL for the underlying project.";
+  if (type && ["Website", "Web app", "App", "API"].includes(type)) return "Use the live HTTP(S) URL for the underlying project.";
   return "Use the underlying source, identifier or URL. Verification comes later.";
 }
 
