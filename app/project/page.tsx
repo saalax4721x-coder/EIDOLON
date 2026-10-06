@@ -49,11 +49,21 @@ export default function ProjectPage() {
   };
 
   useEffect(() => {
-    const result = new URLSearchParams(window.location.search).get("github");
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("github");
+    const errorCode = params.get("error");
     if (result === "verified") {
       setGithubMessage("GitHub control verified. This source is now backed by the connected account.");
     } else if (result) {
       setGithubMessage("GitHub connection completed, but this repository is still awaiting proof.");
+    } else if (errorCode?.startsWith("github_")) {
+      setGithubMessage("GitHub connection could not be completed. No verification claim was recorded.");
+    }
+    if (result || errorCode?.startsWith("github_")) {
+      params.delete("github");
+      params.delete("error");
+      const clean = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (clean ? "?" + clean : ""));
     }
     load();
   }, []);
@@ -173,12 +183,7 @@ export default function ProjectPage() {
 
         <div className="project-actions" aria-label="Project actions">
           {useAction && sourceIsLink && (
-            <a
-              href={project.source.reference}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="project-action-link"
-            >
+            <a href={project.source.reference} target="_blank" rel="noopener noreferrer" className="project-action-link">
               {projectActionLabels.use}
             </a>
           )}
@@ -189,10 +194,7 @@ export default function ProjectPage() {
 
           {authenticated && project.source.status === "pending" && project.source.kind === "github" && (
             <>
-              <a
-                className="project-action-link"
-                href={"/api/github/connect?projectId=" + encodeURIComponent(project.id) + "&next=" + encodeURIComponent(window.location.pathname + window.location.search)}
-              >
+              <a className="project-action-link" href={"/api/github/connect?projectId=" + encodeURIComponent(project.id) + "&next=" + encodeURIComponent(window.location.pathname + window.location.search)}>
                 Connect GitHub
               </a>
               <button type="button" onClick={verifySource} disabled={verifyBusy} aria-busy={verifyBusy}>
@@ -204,9 +206,7 @@ export default function ProjectPage() {
 
         {githubMessage && <p className="action-note" role="status" aria-live="polite">{githubMessage}</p>}
         {followError && <p className="action-error" role="alert">{followError}</p>}
-        {!authenticated && (
-          <p className="action-note">Sign in to follow projects. Your follow is tied to your account.</p>
-        )}
+        {!authenticated && <p className="action-note">Sign in to follow projects. Your follow is tied to your account.</p>}
       </section>
 
       <section className="project-sections project-sections-enhanced">
@@ -214,17 +214,8 @@ export default function ProjectPage() {
           <span className="eyebrow">IDENTITY</span>
           <h2>Source identity</h2>
           <p>The source is recorded, but EIDOLON never treats a declaration as proof of ownership.</p>
-          <div className="source-row">
-            <strong>{project.source.kind.toUpperCase()}</strong>
-            <span>{project.source.status.toUpperCase()}</span>
-          </div>
-          {project.source.reference && (
-            sourceIsLink ? (
-              <p><a href={project.source.reference} target="_blank" rel="noopener noreferrer">{project.source.reference}</a></p>
-            ) : (
-              <p>{project.source.reference}</p>
-            )
-          )}
+          <div className="source-row"><strong>{project.source.kind.toUpperCase()}</strong><span>{project.source.status.toUpperCase()}</span></div>
+          {project.source.reference && (sourceIsLink ? <p><a href={project.source.reference} target="_blank" rel="noopener noreferrer">{project.source.reference}</a></p> : <p>{project.source.reference}</p>)}
         </article>
 
         <article>
@@ -233,39 +224,21 @@ export default function ProjectPage() {
           <div className="action-list">
             {actions.map((action) => {
               const capability = projectActionCapability(project, action, authenticated);
-              return (
-                <div className="action-item" key={action}>
-                  <div>
-                    <strong>{projectActionLabels[action]}</strong>
-                    <span>{projectActionDescriptions[action]}</span>
-                  </div>
-                  <em data-capability={capability.capability}>{capability.label}</em>
-                </div>
-              );
+              return <div className="action-item" key={action}><div><strong>{projectActionLabels[action]}</strong><span>{projectActionDescriptions[action]}</span></div><em data-capability={capability.capability}>{capability.label}</em></div>;
             })}
           </div>
-          <p className="action-note">
-            EIDOLON only activates an action when the required source, account or network capability actually exists.
-          </p>
+          <p className="action-note">EIDOLON only activates an action when the required source, account or network capability actually exists.</p>
         </article>
 
         <article>
           <span className="eyebrow">ECONOMY</span>
           <h2>{project.economy === "token" ? "Token economy enabled" : "No token enabled"}</h2>
-          <p>
-            {project.economy === "token"
-              ? economy?.chain
-                ? "Economy is configured for " + economy.chain + "."
-                : "Token configuration is persisted; chain details are not yet available."
-              : "This project launched without a token. An economy can be activated later without changing the canonical project identity."}
-          </p>
+          <p>{project.economy === "token" ? economy?.chain ? "Economy is configured for " + economy.chain + "." : "Token configuration is persisted; chain details are not yet available." : "This project launched without a token. An economy can be activated later without changing the canonical project identity."}</p>
           <Link className="economy-link" href={"/economy?project=" + encodeURIComponent(project.slug)}>Explore economy →</Link>
         </article>
 
         <article>
-          <span className="eyebrow">GRAPH</span>
-          <h2>Connected projects</h2>
-          <p>Dependencies, collaborators, services and compositions will appear here as the network grows.</p>
+          <span className="eyebrow">GRAPH</span><h2>Connected projects</h2><p>Dependencies, collaborators, services and compositions will appear here as the network grows.</p>
         </article>
       </section>
     </main>
