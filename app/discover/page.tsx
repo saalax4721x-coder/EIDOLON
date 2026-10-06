@@ -28,7 +28,7 @@ export default function Discover() {
   }, [filter, q, projects]);
 
   return <main className="discover">
-    <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><span>DISCOVER</span></header>
+    <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>DISCOVER</span></nav></header>
     <section className="discover-head"><div><div className="eyebrow">THE NETWORK</div><h1>Find what the world<br/><em>is building.</em></h1></div><a className="launch-link" href="/launch">+ Launch something</a></section>
     <div className="toolbar"><div className="filters">{discoveryFilters.map((x) => <button className={filter === x ? "filter active" : "filter"} onClick={() => setFilter(x)} key={x}>{x}</button>)}</div><input className="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects"/></div>
     {loading && <div className="panel"><span className="eyebrow">LOADING NETWORK</span><h2>Reading verified projects.</h2></div>}
