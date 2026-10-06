@@ -136,6 +136,9 @@ export async function POST(request: Request) {
     if (detail.includes("42501") || detail.includes("authentication required")) {
       return NextResponse.json({ error: "Your session is no longer valid. Sign in again." }, { status: 401 });
     }
+    if (detail.includes("22023") || detail.includes("unsupported") || detail.includes("invalid project")) {
+      return NextResponse.json({ error: "The project payload is invalid. Review the launch fields and try again." }, { status: 400 });
+    }
     return NextResponse.json({ error: "Project could not be created. Nothing was partially saved." }, { status: 502 });
   }
 
