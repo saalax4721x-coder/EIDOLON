@@ -37,7 +37,7 @@ export default function Discover() {
     const terms = intentTerms[intent] ?? [];
     const filtered = projects.filter((project) => discoveryMatches(project, q) && (!terms.length || terms.includes(project.type.toLowerCase())));
     return discoverySort(filtered, filter);
-  }, [filter, q, projects]);
+  }, [filter, q, projects, intent]);
 
   return <main className="discover discover-experience">
     <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>DISCOVER</span></nav></header>
