@@ -24,6 +24,8 @@ export default function Home() {
         </div>
       </nav>
       <section className="hero">
+        <div className="hero-atmosphere" aria-hidden="true"><span className="hero-orbit orbit-a"/><span className="hero-orbit orbit-b"/><span className="hero-orbit orbit-c"/><i className="hero-axis"/><b className="hero-node node-a"/><b className="hero-node node-b"/></div>
+        <div className="hero-index" aria-hidden="true"><span>01</span><i/><span>06</span></div>
         <div className="eyebrow">THE WORLD OF THINGS BEING BUILT</div>
         <h1>What are you<br /><em>here to do?</em></h1>
         <p className="lede">EIDOLON keeps the surface simple. Tell us your intention and the world behind it will unfold.</p>
@@ -37,12 +39,13 @@ export default function Home() {
             </button>
           ))}
         </div>
-        <div className="quiet-line">
+        <div className="hero-footerline">
+          <span>PROJECTS / SOURCES / PEOPLE / ECONOMIES</span>
           <span>Projects can launch with or without their own economy.</span>
           {intent && <span className="selected-intent">Selected · {intents.find((i) => i.id === intent)?.label}</span>}
         </div>
       </section>
-      <footer><span>EIDOLON / 001</span><span>Launch anything. Discover everything.</span></footer>
+      <footer><span>EIDOLON / 001</span><span>Launch anything. Discover everything.</span><span>THE NETWORK IS FORMING</span></footer>
     </main>
   );
 }
