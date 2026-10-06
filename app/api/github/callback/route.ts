@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { decryptSecret, encryptSecret, githubApi } from "@/lib/github";
+import { encryptSecret, githubApi } from "@/lib/github";
 import { supabaseHeaders, supabaseUrl } from "@/lib/supabase-config";
 import { verifyGithubProject } from "@/lib/github-verification";
 
