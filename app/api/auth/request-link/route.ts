@@ -3,7 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { supabaseUrl, supabasePublishableKey } from "@/lib/supabase-config";
 
 const base64Url = (input: Buffer) =>
-  input.toString("base64").replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+  input.toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 
 export async function POST(request: Request) {
   const { email } = await request.json();
