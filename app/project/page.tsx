@@ -259,7 +259,7 @@ export default function ProjectPage() {
                 : "Token configuration is persisted; chain details are not yet available."
               : "This project launched without a token. An economy can be activated later without changing the canonical project identity."}
           </p>
-          <Link className="economy-link" href="/economy">Explore economy →</Link>
+          <Link className="economy-link" href={"/economy?project=" + encodeURIComponent(project.slug)}>Explore economy →</Link>
         </article>
 
         <article>
