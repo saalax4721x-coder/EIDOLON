@@ -48,6 +48,7 @@ export const projectActionDescriptions: Record<ProjectAction, string> = {
   license: "License software, content, data or IP.",
   sponsor: "Support the project or its maintainers.",
   bounty: "Create or claim a contribution bounty.",
+  contribute: "Contribute work, capital or resources.",
   rent: "Rent an eligible asset or capacity.",
   borrow: "Borrow an eligible asset or capacity.",
   predict: "Enter an eligible prediction market.",
