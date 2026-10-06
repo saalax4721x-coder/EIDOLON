@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { discoveryFilters } from "@/lib/eidolon";
 import { discoveryMatches, discoverySort, type DiscoveryProject, visibleMetric } from "@/lib/discovery";
 
+const isWebSource = (value: string) => value.startsWith("https://") || value.startsWith("http://");
+
 export default function Discover() {
   const [filter, setFilter] = useState<(typeof discoveryFilters)[number]>("Trending");
   const [q, setQ] = useState("");
@@ -49,7 +51,7 @@ export default function Discover() {
       <div className="verified">{p.source.kind.toUpperCase()} · {p.source.status.toUpperCase()}</div>
       <p>{p.description}</p>
       <div className="stats">{p.followerCount === null && p.usageCount === null ? "Live metrics pending" : `${visibleMetric(p.followerCount)} followers · ${visibleMetric(p.usageCount)} uses`}</div>
-      <div className="card-actions"><a className="project-action-link" href={`/project?slug=${encodeURIComponent(p.slug)}`}>Open project <span>↗</span></a>{p.source.reference && <a className="project-action-link secondary" href={p.source.reference} target="_blank" rel="noreferrer">Source <span>↗</span></a>}</div>
+      <div className="card-actions"><a className="project-action-link" href={`/project?slug=${encodeURIComponent(p.slug)}`}>Open project <span>↗</span></a>{isWebSource(p.source.reference) && <a className="project-action-link secondary" href={p.source.reference} target="_blank" rel="noreferrer">Source <span>↗</span></a>}</div>
     </article>)}</section>}
     {!loading && !error && visible.length === 0 && <div className="panel"><span className="eyebrow">{filter === "Following" && !authenticated ? "SIGN IN REQUIRED" : "NOTHING HERE YET"}</span><h2>{filter === "Following" && !authenticated ? "Sign in to see your followed projects." : filter === "Following" ? "No followed projects yet." : "No matching projects."}</h2><p>{filter === "Following" && !authenticated ? "Your follows are private to your account." : "EIDOLON does not invent activity. Verified data will appear as the network grows."}</p></div>}
   </main>;
