@@ -17,6 +17,11 @@ export default function ProjectPage() {
   const [economy, setEconomy] = useState<any>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
   const [verifyBusy, setVerifyBusy] = useState(false);
@@ -43,6 +48,9 @@ export default function ProjectPage() {
         setEconomy(data.economyDetail);
         setIsFollowing(Boolean(data.isFollowing));
         setAuthenticated(Boolean(data.authenticated));
+        setIsOwner(Boolean(data.isOwner));
+        setEditName(data.project.name);
+        setEditDescription(data.project.description);
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Project could not be loaded."))
       .finally(() => setLoading(false));
@@ -93,6 +101,27 @@ export default function ProjectPage() {
       setFollowError(cause instanceof Error ? cause.message : "Follow could not be updated.");
     } finally {
       setFollowBusy(false);
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!project || editBusy) return;
+    setEditBusy(true);
+    setFollowError(null);
+    try {
+      const response = await fetch("/api/project/edit", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ projectId: project.id, name: editName, description: editDescription }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Project could not be updated.");
+      setProject({ ...project, name: data.project.name, description: data.project.description ?? "" });
+      setEditing(false);
+    } catch (cause) {
+      setFollowError(cause instanceof Error ? cause.message : "Project could not be updated.");
+    } finally {
+      setEditBusy(false);
     }
   };
 
@@ -179,9 +208,16 @@ export default function ProjectPage() {
           {project.type} · {project.source.kind.toUpperCase()} · {project.source.status.toUpperCase()}
         </div>
         <h1>{project.name}</h1>
-        <p>{project.description}</p>
+        {editing ? (
+          <div className="project-edit" aria-label="Edit project">
+            <input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={120} aria-label="Project name" />
+            <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} maxLength={4000} aria-label="Project description" />
+            <div className="step-actions"><button type="button" className="primary" onClick={saveEdit} disabled={editBusy}>{editBusy ? "Saving…" : "Save changes"}</button><button type="button" className="quiet-button" onClick={() => setEditing(false)} disabled={editBusy}>Cancel</button></div>
+          </div>
+        ) : <p>{project.description}</p>}
 
         <div className="project-actions" aria-label="Project actions">
+          {isOwner && !editing && <button type="button" onClick={() => setEditing(true)}>Edit project</button>}
           {useAction && sourceIsLink && (
             <a href={project.source.reference} target="_blank" rel="noopener noreferrer" className="project-action-link">
               {projectActionLabels.use}
