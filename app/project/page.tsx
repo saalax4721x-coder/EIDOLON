@@ -265,6 +265,7 @@ export default function ProjectPage() {
         <nav className="surface-nav-links" aria-label="Project navigation">
           <Link href="/discover">Discover</Link>
           <Link href="/launch">Launch</Link>
+          <Link href="/graph">Graph</Link>
           <span aria-current="page">PROJECT / {project.name}</span>
         </nav>
       </header>
