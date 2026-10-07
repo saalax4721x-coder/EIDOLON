@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EidolonIcon } from "@/components/eidolon-icon";
 
 type Mode = "none" | "token";
 
@@ -65,8 +66,8 @@ export default function Economy() {
         <a href="/" className="wordmark">EIDOLON</a>
         <nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>ECONOMY</span></nav>
       </header>
-      <section className="economy-stage">
-        <div className="economy-intro">
+      <section className="economy-stage"><div className="economy-instrument" aria-hidden="true"><EidolonIcon name="economy" size={42} /><span>ECONOMIC<br/>INSTRUMENT</span><i/><i/></div>
+        <div className="economy-intro"><div className="economy-indexline"><span>02</span><span>OPTIONAL / NATIVE LAYER</span></div>
           <div className="eyebrow">OPTIONAL ECONOMIC LAYER</div>
           <h1>{projectName ? <>Shape<br/><em>{projectName}.</em></> : <>Give a project<br/><em>an economy.</em></>}</h1>
           <p>Economic infrastructure belongs to the project, not the other way around. A project can remain independent or enable its native economic layer.</p>
