@@ -21,6 +21,7 @@ export default function ProjectPage() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editSlug, setEditSlug] = useState("");
   const [editBusy, setEditBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
@@ -51,6 +52,7 @@ export default function ProjectPage() {
         setIsOwner(Boolean(data.isOwner));
         setEditName(data.project.name);
         setEditDescription(data.project.description);
+        setEditSlug(data.project.slug);
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Project could not be loaded."))
       .finally(() => setLoading(false));
@@ -112,11 +114,11 @@ export default function ProjectPage() {
       const response = await fetch("/api/project/edit", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ projectId: project.id, name: editName, description: editDescription }),
+        body: JSON.stringify({ projectId: project.id, name: editName, description: editDescription, slug: editSlug }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error ?? "Project could not be updated.");
-      setProject({ ...project, name: data.project.name, description: data.project.description ?? "" });
+      setProject({ ...project, name: data.project.name, slug: data.project.slug ?? editSlug, description: data.project.description ?? "" });
       setEditing(false);
     } catch (cause) {
       setFollowError(cause instanceof Error ? cause.message : "Project could not be updated.");
@@ -211,6 +213,7 @@ export default function ProjectPage() {
         {editing ? (
           <div className="project-edit" aria-label="Edit project">
             <input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={120} aria-label="Project name" />
+            <input value={editSlug} onChange={(e) => setEditSlug(e.target.value.toLowerCase())} maxLength={160} aria-label="Project slug" />
             <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} maxLength={4000} aria-label="Project description" />
             <div className="step-actions"><button type="button" className="primary" onClick={saveEdit} disabled={editBusy}>{editBusy ? "Saving…" : "Save changes"}</button><button type="button" className="quiet-button" onClick={() => setEditing(false)} disabled={editBusy}>Cancel</button></div>
           </div>
