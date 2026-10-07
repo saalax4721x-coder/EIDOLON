@@ -429,3 +429,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .project-network-edge button{width:24px;height:24px;border:1px solid rgba(201,157,146,.18);background:transparent;color:#8d6c64;font-size:16px;line-height:1;cursor:pointer;transition:.2s}
 .project-network-edge button:hover{border-color:rgba(201,157,146,.45);color:var(--danger);transform:rotate(90deg)}
 @media(prefers-reduced-motion:reduce){.project-network-edge button{transition:none}}
+
+.relationship-composer-grid input{width:100%;min-height:38px;border:1px solid rgba(255,255,255,.07);border-bottom:0;background:#090a0d;color:#bfc3c9;padding:0 12px;font:inherit;font-size:8px;outline:none}
+.relationship-composer-grid input:focus{border-color:rgba(155,201,216,.35);box-shadow:0 0 0 1px rgba(155,201,216,.06)}
+.relationship-composer-grid input+select{border-top-color:rgba(255,255,255,.04)}
