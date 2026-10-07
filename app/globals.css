@@ -854,3 +854,5 @@ h1 em{color:var(--discover)}
   .hero-atmosphere:before,.discover-atmosphere:after,.graph-atmosphere:after,
   .shell:before,.surface:before,.discover:before,.project-page:before,.identity-surface:before,.economy-surface:before,.graph-page:before{animation:none!important}
 }
+
+.project-object-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:820px;margin:28px 0 6px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
