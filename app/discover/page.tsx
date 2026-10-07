@@ -33,7 +33,7 @@ export default function Discover() {
   }, [filter, q, projects, intent]);
 
   return <main className="discover discover-experience">
-    <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>DISCOVER</span></nav></header>
+    <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><a href="/graph">Graph</a><span>DISCOVER</span></nav></header>
     <div className="discover-atmosphere" aria-hidden="true"><span/><span/><span/><i/></div>
     <section className="discover-head"><div><div className="eyebrow">THE NETWORK / LIVE GRAPH</div><h1>Find what the world<br/><em>is building.</em></h1><p className="discover-manifesto">Projects are not posts. They are objects with sources, capabilities, relationships and economies.</p></div><a className="launch-link" href="/launch"><EidolonIcon name="launch" size={15}/> Launch something</a></section>
     <div className="toolbar"><div className="filters">{discoveryFilters.map((x) => <button aria-pressed={filter === x} className={filter === x ? "filter active" : "filter"} onClick={() => setFilter(x)} key={x}>{x}</button>)}</div>{intent && <div className="intent-context">INTENT / {intent.replace("_"," ").toUpperCase()} <button type="button" onClick={() => { setIntent(""); window.history.replaceState({}, "", "/discover"); }}>CLEAR</button></div>}<label className="search-wrap"><EidolonIcon name="discover" size={15}/><input aria-label="Search projects" className="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the network"/></label></div>
