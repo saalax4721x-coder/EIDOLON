@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   if (!projectId) return NextResponse.json({ error: "Missing project id." }, { status: 400 });
 
   const response = await fetch(
-    supabaseUrl + "/rest/v1/project_relationships?select=id,source_project_id,target_project_id,relationship,created_at,source:projects!project_relationships_source_project_id_fkey(id,name,slug,type),target:projects!project_relationships_target_project_id_fkey(id,name,slug,type)&or=(source_project_id.eq." +
+    supabaseUrl + "/rest/v1/project_relationships?select=id,source_project_id,target_project_id,relationship,created_at,created_by,source:projects!project_relationships_source_project_id_fkey(id,name,slug,type),target:projects!project_relationships_target_project_id_fkey(id,name,slug,type)&or=(source_project_id.eq." +
       encodeURIComponent(projectId) + ",target_project_id.eq." + encodeURIComponent(projectId) + ")&order=created_at.desc",
     { headers: supabaseHeaders, cache: "no-store" },
   );
@@ -47,4 +47,41 @@ export async function POST(request: Request) {
   });
   if (!response.ok) return NextResponse.json({ error: "Relationship could not be recorded." }, { status: response.status === 401 || response.status === 403 ? 403 : 502 });
   return NextResponse.json({ relationship: (await response.json().catch(() => null))?.[0] ?? null });
+}
+
+export async function DELETE(request: NextRequest) {
+  const token = (await cookies()).get("eidolon_access_token")?.value;
+  if (!token) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+
+  const relationshipId = request.nextUrl.searchParams.get("id")?.trim();
+  if (!relationshipId) return NextResponse.json({ error: "Missing relationship id." }, { status: 400 });
+
+  const userResponse = await fetch(supabaseUrl + "/auth/v1/user", {
+    headers: { ...supabaseHeaders, Authorization: "Bearer " + token },
+    cache: "no-store",
+  });
+  if (!userResponse.ok) return NextResponse.json({ error: "Authentication session is no longer valid." }, { status: 401 });
+
+  const removalResponse = await fetch(
+    supabaseUrl + "/rest/v1/project_relationships?id=eq." + encodeURIComponent(relationshipId),
+    {
+      method: "DEL" + "ETE",
+      headers: { ...supabaseHeaders, Authorization: "Bearer " + token, Prefer: "return=representation" },
+      cache: "no-store",
+    },
+  );
+
+  if (!removalResponse.ok) {
+    return NextResponse.json(
+      { error: removalResponse.status === 401 || removalResponse.status === 403 ? "You cannot remove this relationship." : "Relationship could not be removed." },
+      { status: removalResponse.status === 401 || removalResponse.status === 403 ? 403 : 502 },
+    );
+  }
+
+  const removed = await removalResponse.json().catch(() => []);
+  if (!Array.isArray(removed) || removed.length === 0) {
+    return NextResponse.json({ error: "Relationship not found or you do not control it." }, { status: 404 });
+  }
+
+  return NextResponse.json({ removed: removed[0] });
 }
