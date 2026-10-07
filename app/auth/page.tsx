@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -37,10 +38,7 @@ export default function AuthPage() {
 
   return (
     <main className="surface identity-surface">
-      <header className="surface-nav">
-        <a href="/" className="wordmark">EIDOLON</a>
-        <nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>IDENTITY</span></nav>
-      </header>
+      <header className="surface-nav"><EidolonNav /></header>
       <section className="identity-stage">
         <div className="identity-orbit" aria-hidden="true"><span/><span/><span/></div>
         <div className="identity-copy"><div className="threshold-mark"><EidolonIcon name="verified" size={32} /></div>
