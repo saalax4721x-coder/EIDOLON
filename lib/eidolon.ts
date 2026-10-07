@@ -6,7 +6,19 @@ export type VerificationStatus = "unverified" | "pending" | "verified" | "reject
 
 export type SourceKind = "github" | "domain" | "wallet" | "app_store" | "play_store" | "game" | "brokerage" | "other";
 
-export type ProjectRelationship =\n  | "uses" | "depends_on" | "forked_from" | "built_with" | "funds" | "competes_with"\n  | "complements" | "licenses" | "provides" | "consumes" | "derived_from"\n  | "composed_with" | "invested_in" | "contributes_to";\n\nexport const projectRelationshipLabels: Record<ProjectRelationship, string> = {\n  uses: "Uses", depends_on: "Depends on", forked_from: "Forked from", built_with: "Built with",\n  funds: "Funds", competes_with: "Competes with", complements: "Complements", licenses: "Licenses",\n  provides: "Provides", consumes: "Consumes", derived_from: "Derived from", composed_with: "Composed with",\n  invested_in: "Invested in", contributes_to: "Contributes to",\n};\n\nexport type ProjectAction =
+export type ProjectRelationship =
+  | "uses" | "depends_on" | "forked_from" | "built_with" | "funds" | "competes_with"
+  | "complements" | "licenses" | "provides" | "consumes" | "derived_from"
+  | "composed_with" | "invested_in" | "contributes_to";
+
+export const projectRelationshipLabels: Record<ProjectRelationship, string> = {
+  uses: "Uses", depends_on: "Depends on", forked_from: "Forked from", built_with: "Built with",
+  funds: "Funds", competes_with: "Competes with", complements: "Complements", licenses: "Licenses",
+  provides: "Provides", consumes: "Consumes", derived_from: "Derived from", composed_with: "Composed with",
+  invested_in: "Invested in", contributes_to: "Contributes to",
+};
+
+export type ProjectAction =
   | "use" | "buy" | "sell" | "fund" | "subscribe" | "license"
   | "sponsor" | "bounty" | "contribute" | "rent" | "borrow"
   | "predict" | "trade" | "compose" | "reserve" | "follow";
