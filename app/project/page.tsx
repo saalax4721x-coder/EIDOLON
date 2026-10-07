@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { EidolonIcon } from "@/components/eidolon-icon";
 import {
   projectActionCapability,
   projectActionDescriptions,
@@ -181,7 +182,7 @@ export default function ProjectPage() {
           <Link href="/" className="wordmark">EIDOLON</Link>
           <span>PROJECT</span>
         </header>
-        <section className="project-hero">
+        <section className="project-hero project-dossier">
           <div className="eyebrow">PROJECT UNAVAILABLE</div>
           <h1>{error ?? "Project not found."}</h1>
           <p><Link href="/discover">Return to discovery →</Link></p>
@@ -206,9 +207,9 @@ export default function ProjectPage() {
       </header>
 
       <section className="project-hero">
-        <div className="eyebrow">
+        <div className="project-dossier-signal"><span className="project-dossier-icon"><EidolonIcon name="project" size={30} /></span><span className="eyebrow">
           {project.type} · {project.source.kind.toUpperCase()} · {project.source.status.toUpperCase()}
-        </div>
+        </span><span className="project-dossier-code">OBJECT / {project.id.slice(0, 8).toUpperCase()}</span></div>
         <h1>{project.name}</h1>
         {editing ? (
           <div className="project-edit" aria-label="Edit project">
@@ -248,9 +249,10 @@ export default function ProjectPage() {
         {!authenticated && <p className="action-note">Sign in to follow projects. Your follow is tied to your account.</p>}
       </section>
 
+      <div className="project-dossier-rail" aria-hidden="true"><span>SOURCE</span><i/><span>ACTIONS</span><i/><span>ECONOMY</span></div>
       <section className="project-sections project-sections-enhanced">
         <article>
-          <span className="eyebrow">IDENTITY</span>
+          <span className="eyebrow"><EidolonIcon name="verified" size={13} /> IDENTITY / SOURCE</span>
           <h2>Source identity</h2>
           <p>The source is recorded, but EIDOLON never treats a declaration as proof of ownership.</p>
           <div className="source-row"><strong>{project.source.kind.toUpperCase()}</strong><span>{project.source.status.toUpperCase()}</span></div>
@@ -258,7 +260,7 @@ export default function ProjectPage() {
         </article>
 
         <article>
-          <span className="eyebrow">AVAILABLE ACTIONS</span>
+          <span className="eyebrow"><EidolonIcon name="graph" size={13} /> CAPABILITIES / ACTIONS</span>
           <h2>What you can do</h2>
           <div className="action-list">
             {actions.map((action) => {
@@ -270,7 +272,7 @@ export default function ProjectPage() {
         </article>
 
         <article>
-          <span className="eyebrow">ECONOMY</span>
+          <span className="eyebrow"><EidolonIcon name="economy" size={13} /> ECONOMY / OPTIONAL</span>
           <h2>{project.economy === "token" ? "Token economy enabled" : "No token enabled"}</h2>
           <p>{project.economy === "token" ? economy?.chain ? "Economy is configured for " + economy.chain + "." : "Token configuration is persisted; chain details are not yet available." : "This project launched without a token. An economy can be activated later without changing the canonical project identity."}</p>
           <Link className="economy-link" href={"/economy?project=" + encodeURIComponent(project.slug)}>Explore economy →</Link>
