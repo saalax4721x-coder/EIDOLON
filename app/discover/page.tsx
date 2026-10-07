@@ -57,7 +57,7 @@ export default function Discover() {
             </svg>
             {fieldProjects.map((p) => {
               const pos = positions.get(p.id)!;
-              return <a className="network-node" key={p.id} href={"/project?slug=" + encodeURIComponent(p.slug)} style={{left: pos.left + "%", top: pos.top + "%"}}>
+              return <a className={`network-node network-node-${typeIcons[p.type] ?? "project"}`} key={p.id} href={"/project?slug=" + encodeURIComponent(p.slug)} style={{left: pos.left + "%", top: pos.top + "%"}}>
                 <span className="network-node-core"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={14}/></span>
                 <span className="network-node-label"><b>{p.name}</b><small>{p.type} · {p.source.status}</small></span>
               </a>;
@@ -68,7 +68,7 @@ export default function Discover() {
       </div>
       <p className="network-field-note">Edges connect only persisted relationships between projects visible in this field. Hidden projects may have relationships that are intentionally not drawn here.</p>
     </section>}
-    {!loading && !error && <section className="project-grid">{visible.map((p,index) => <article className="project-card" key={p.id} style={{"--card-index":index} as React.CSSProperties}><div className="card-sigil" aria-hidden="true"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={19}/></div>
+    {!loading && !error && <section className="project-grid">{visible.map((p,index) => <article className={`project-card project-card-${typeIcons[p.type] ?? "project"}`} key={p.id} style={{"--card-index":index} as React.CSSProperties}><div className="card-sigil" aria-hidden="true"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={19}/></div>
       <div className="card-top"><span>{p.type}</span><span className="card-code">0{(index + 1).toString().slice(-1)} / NODE</span></div>
       <h2><a href={`/project?slug=${encodeURIComponent(p.slug)}`}>{p.name}</a></h2>
       <div className="verified"><EidolonIcon name={p.source.status === "verified" ? "verified" : "project"} size={12}/> {p.source.kind.toUpperCase()} · {p.source.status.toUpperCase()}</div>
