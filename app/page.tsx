@@ -40,6 +40,25 @@ export default function Home() {
             </button>
           ))}
         </div>
+        <section className="landing-intelligence" aria-label="How EIDOLON works">
+          <div className="landing-intelligence-head">
+            <span className="eyebrow">THE EIDOLON MODEL</span>
+            <h2>Things become more useful<br/><em>when they become objects.</em></h2>
+            <p>Every project can carry a source, capabilities, relationships and an optional economy. EIDOLON turns that structure into something you can discover, understand and act on.</p>
+          </div>
+          <div className="landing-primitives">
+            <article><span className="landing-primitive-index">01</span><EidolonIcon name="project" size={20}/><strong>OBJECT</strong><p>A project has an identity instead of being just another link.</p></article>
+            <article><span className="landing-primitive-index">02</span><EidolonIcon name="verified" size={20}/><strong>PROOF</strong><p>Sources and verification separate what is known from what is claimed.</p></article>
+            <article><span className="landing-primitive-index">03</span><EidolonIcon name="graph" size={20}/><strong>NETWORK</strong><p>Real persisted relationships reveal how projects actually connect.</p></article>
+            <article><span className="landing-primitive-index">04</span><EidolonIcon name="commerce" size={20}/><strong>ACTION</strong><p>Use, fund, buy, license, contribute and compose when capability exists.</p></article>
+          </div>
+        </section>
+        <section className="landing-loop" aria-label="EIDOLON network loop">
+          <span className="eyebrow">THE NETWORK LOOP</span>
+          <div className="landing-loop-track">
+            <span>DISCOVER</span><i>→</i><span>VERIFY</span><i>→</i><span>UNDERSTAND</span><i>→</i><span>CONNECT</span><i>→</i><span>USE</span><i>→</i><span>BUILD</span><i>→</i><span>LAUNCH</span>
+          </div>
+        </section>
         <div className="hero-footerline">
           <span>PROJECTS / SOURCES / PEOPLE / ECONOMIES</span>
           <span>Projects can launch with or without their own economy.</span>
