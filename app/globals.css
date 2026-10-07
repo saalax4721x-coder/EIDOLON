@@ -315,3 +315,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .project-card{animation-delay:calc(var(--card-index,0) * 55ms)}
 @media(max-width:760px){.launch-stage-head{display:block}.launch-oracle{width:100%;min-height:90px;margin-top:26px;flex-direction:row}.launch-oracle:before,.launch-oracle:after{display:none}.discover-manifesto{font-size:10px}.search-wrap{width:100%}}
 @media(prefers-reduced-motion:reduce){.launch-constellation:before,.launch-constellation:after,.launch-constellation span,.launch-complete-sigil,.signal-loader i{animation:none!important}}
+
+/* Deep identity surfaces */
+.project-dossier{position:relative}
+.project-dossier-signal{display:flex;align-items:center;gap:12px;min-height:40px}
+.project-dossier-signal .eyebrow{display:flex;align-items:center;gap:7px}
+.project-dossier-icon{width:58px;height:58px;border:1px solid rgba(231,223,204,.16);display:grid;place-items:center;color:var(--accent);background:rgba(231,223,204,.018);box-shadow:inset 0 0 30px rgba(231,223,204,.02);position:relative}
+.project-dossier-icon:before,.project-dossier-icon:after{content:"";position:absolute;inset:6px;border:1px solid rgba(231,223,204,.035);transform:rotate(45deg);pointer-events:none}
+.project-dossier-icon:after{inset:15px;transform:none;border-color:rgba(155,201,216,.025)}
+.project-dossier-code{margin-left:auto;color:#454a53;font-size:7px;letter-spacing:.16em}
+.project-dossier-rail{max-width:var(--max);margin:-55px auto 55px;display:flex;align-items:center;gap:12px;color:#4d525b;font-size:7px;letter-spacing:.16em;position:relative;z-index:2}
+.project-dossier-rail i{height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+.project-sections-enhanced .eyebrow{display:flex;align-items:center;gap:7px}
+.project-sections-enhanced .eyebrow svg{opacity:.72}
+.economy-stage{position:relative}
+.economy-instrument{position:absolute;left:-40px;top:50%;transform:translateY(-50%);width:180px;height:180px;border:1px solid rgba(212,174,131,.13);display:grid;place-items:center;color:var(--commerce);opacity:.7;pointer-events:none}
+.economy-instrument:before,.economy-instrument:after{content:"";position:absolute;inset:18px;border:1px solid rgba(212,174,131,.07);transform:rotate(45deg)}
+.economy-instrument:after{inset:46px;transform:none;border-color:rgba(231,223,204,.035)}
+.economy-instrument span{position:absolute;bottom:17px;left:0;right:0;text-align:center;font-size:6px;letter-spacing:.15em;line-height:1.5;color:#6a5d50}
+.economy-instrument svg{filter:drop-shadow(0 0 14px rgba(212,174,131,.12))}
+.economy-instrument i{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--commerce);animation:eidolon-pulse 3.6s ease-in-out infinite}
+.economy-instrument i:nth-of-type(1){right:12%;top:15%}.economy-instrument i:nth-of-type(2){left:14%;bottom:22%;animation-delay:1.3s}
+.economy-indexline{display:flex;gap:18px;color:#4e535c;font-size:7px;letter-spacing:.17em;margin-bottom:28px}.economy-indexline span:first-child{color:var(--commerce)}
+.account-hero,.connector-hero,.help-hero,.faq-hero{position:relative}
+.account-identity-mark,.connector-hero-mark,.help-hero-mark,.faq-hero-mark{width:62px;height:62px;display:grid;place-items:center;border:1px solid rgba(231,223,204,.12);margin-bottom:24px;position:relative;color:var(--accent)}
+.account-identity-mark:before,.connector-hero-mark:before,.help-hero-mark:before,.faq-hero-mark:before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,255,255,.035);transform:rotate(45deg)}
+.connector-hero-mark{color:var(--signal);border-color:rgba(185,199,173,.18)}
+.help-hero-mark{color:var(--build);border-color:rgba(185,168,216,.18)}
+.faq-hero-mark{color:var(--discover);border-color:rgba(155,201,216,.18)}
+.account-hero:after,.connector-hero:after,.help-hero:after,.faq-hero:after{content:"";position:absolute;right:0;bottom:0;width:45%;height:1px;background:linear-gradient(90deg,transparent,rgba(231,223,204,.1))}
+.connector-card.active{--connector-color:var(--signal);border-top:1px solid rgba(185,199,173,.16)}
+.connector-card.active .connector-status{color:var(--signal)}
+.help-grid>a:nth-child(1){--help-color:var(--launch)}.help-grid>a:nth-child(2){--help-color:var(--discover)}.help-grid>a:nth-child(3){--help-color:var(--build)}.help-grid>a:nth-child(4){--help-color:var(--use)}.help-grid>a:nth-child(5){--help-color:var(--signal)}.help-grid>a:nth-child(6){--help-color:var(--commerce)}
+.help-grid>a:hover h2,.help-grid>a:hover>span{color:var(--help-color)}
+.faq-item.open{background:linear-gradient(90deg,rgba(155,201,216,.025),transparent 55%)}
+.faq-item button strong{transition:color .25s}
+@media(max-width:900px){.economy-instrument{left:auto;right:0;top:120px;transform:none;opacity:.35}.economy-intro{position:relative;z-index:1}.project-dossier-rail{margin-top:-35px}}
+@media(max-width:760px){.project-dossier-signal{align-items:flex-start}.project-dossier-code{display:none}.project-dossier-icon{width:48px;height:48px}.project-dossier-rail{margin:0 0 35px}.economy-instrument{width:120px;height:120px;top:90px;right:-20px}.economy-instrument svg{width:28px}.economy-instrument span{font-size:5px;bottom:10px}.account-identity-mark,.connector-hero-mark,.help-hero-mark,.faq-hero-mark{width:52px;height:52px}.info-hero h1{position:relative;z-index:1}}
