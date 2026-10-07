@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 const intents = [
   { id: "launch", label: "Launch something", detail: "Bring a project into the world.", icon: "launch" as EidolonIconName },
@@ -16,14 +17,7 @@ export default function Home() {
   const [intent, setIntent] = useState<string | null>(null);
   return (
     <main className="shell">
-      <nav className="topbar">
-        <div className="brand"><span className="brand-glyph">E</span><span>EIDOLON</span></div>
-        <div className="topbar-right">
-          <a href="/discover">Discover</a>
-          <a href="/launch">Launch</a>
-          <span className="status-dot" /> Network forming
-        </div>
-      </nav>
+      <EidolonNav />
       <section className="hero">
         <div className="hero-atmosphere" aria-hidden="true"><span className="hero-orbit orbit-a"/><span className="hero-orbit orbit-b"/><span className="hero-orbit orbit-c"/><i className="hero-axis"/><b className="hero-node node-a"/><b className="hero-node node-b"/></div>
         <div className="hero-index" aria-hidden="true"><span>01</span><i/><span>06</span></div>
