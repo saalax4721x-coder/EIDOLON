@@ -1174,3 +1174,230 @@ h1 em{color:var(--discover)}
 .eidolon-object-glyph--green{color:var(--eidolon-emerald)}.eidolon-object-glyph--blue{color:var(--eidolon-blue)}
 @media(max-width:760px){.eidolon-frame{padding:18px}.eidolon-frame h2{font-size:26px}}
 @media(prefers-reduced-motion:reduce){.eidolon-action{transition:none}}
+
+
+/* EIDOLON // SHOWPIECE MOTION LAYER
+   Inspired by the strongest open-source React effect patterns:
+   aurora fields, spotlight borders, tracing beams, shimmer controls and orbital motion.
+   These are intentionally brand-native CSS primitives rather than pasted library chrome. */
+
+:root{
+  --eidolon-cyan-rgb:97,232,255;
+  --eidolon-violet-rgb:157,124,255;
+  --eidolon-gold-rgb:231,199,122;
+}
+
+@keyframes eidolon-aurora-x{
+  0%,100%{transform:translate3d(-4%,0,0) scale(1)}
+  50%{transform:translate3d(5%,2%,0) scale(1.08)}
+}
+@keyframes eidolon-aurora-y{
+  0%,100%{transform:translate3d(3%,2%,0) scale(1.02)}
+  50%{transform:translate3d(-5%,-3%,0) scale(.96)}
+}
+@keyframes eidolon-star-drift{
+  from{background-position:0 0,0 0,0 0}
+  to{background-position:120px 70px,-90px 110px,60px -80px}
+}
+@keyframes eidolon-border-spin{to{transform:rotate(360deg)}}
+@keyframes eidolon-button-sheen{
+  0%{transform:translateX(-140%) skewX(-18deg);opacity:0}
+  18%{opacity:.45}
+  48%{opacity:.08}
+  100%{transform:translateX(160%) skewX(-18deg);opacity:0}
+}
+@keyframes eidolon-arrow-nudge{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(3px,-2px,0)}
+}
+@keyframes eidolon-beam{
+  0%{stroke-dashoffset:800;opacity:0}
+  18%{opacity:.55}
+  70%{opacity:.18}
+  100%{stroke-dashoffset:0;opacity:0}
+}
+
+.shell:before,.discover:before,.graph-page:before,.launch-universe:before{
+  background-image:
+    radial-gradient(circle at 14% 18%,rgba(97,232,255,.11) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 72% 30%,rgba(157,124,255,.10) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 44% 74%,rgba(231,199,122,.07) 0 1px,transparent 1.5px),
+    linear-gradient(var(--eidolon-grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--eidolon-grid) 1px,transparent 1px);
+  background-size:170px 170px,230px 230px,310px 310px,64px 64px,64px 64px;
+  animation:eidolon-star-drift 42s linear infinite;
+}
+.shell:after,.discover:after,.graph-page:after,.launch-universe:after{
+  content:"";
+  position:fixed;
+  inset:-20%;
+  pointer-events:none;
+  z-index:0;
+  background:
+    radial-gradient(42% 30% at 18% 16%,rgba(44,206,255,.09),transparent 72%),
+    radial-gradient(38% 28% at 82% 24%,rgba(126,77,255,.10),transparent 72%),
+    radial-gradient(34% 24% at 52% 82%,rgba(35,154,255,.055),transparent 72%);
+  filter:blur(30px);
+  animation:eidolon-aurora-x 20s ease-in-out infinite alternate;
+  opacity:.82;
+}
+.shell .hero:after,.discover-experience .discover-head:before,.graph-head:before,.launch-experience:before{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  width:520px;
+  height:260px;
+  background:radial-gradient(ellipse,rgba(97,232,255,.10),rgba(157,124,255,.055) 35%,transparent 72%);
+  filter:blur(28px);
+  animation:eidolon-aurora-y 15s ease-in-out infinite alternate;
+}
+.shell .hero:after{right:-180px;top:5%}
+.discover-experience .discover-head:before{right:5%;top:-80px}
+.graph-head:before{right:4%;top:-80px}
+.launch-experience:before{right:-90px;top:-100px}
+
+.intent-card,.choice,.economy,.project-card,.project-action-link,.launch-link,.primary,.quiet-button,.filter,.eidolon-action{
+  isolation:isolate;
+  overflow:hidden;
+}
+.intent-card:before,.choice:before,.economy:before,.project-card:before,
+.project-action-link:before,.launch-link:before,.primary:before,.quiet-button:before,.filter:before,.eidolon-action:before{
+  content:"";
+  position:absolute;
+  inset:-40% -20%;
+  z-index:-1;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.20) 50%,transparent 62%);
+  transform:translateX(-140%) skewX(-18deg);
+  pointer-events:none;
+}
+.intent-card:hover:before,.choice:hover:before,.economy:hover:before,.project-card:hover:before,
+.project-action-link:hover:before,.launch-link:hover:before,.primary:hover:not(:disabled):before,.quiet-button:hover:before,.filter:hover:before,.eidolon-action:hover:before{
+  animation:eidolon-button-sheen 1.1s ease-out both;
+}
+
+.primary,.project-action-link:first-child{
+  position:relative;
+  border:1px solid rgba(166,244,255,.76);
+  background:
+    linear-gradient(135deg,rgba(184,248,255,.98),rgba(89,223,248,.94) 45%,rgba(81,129,255,.94));
+  box-shadow:
+    0 0 0 1px rgba(97,232,255,.08),
+    0 12px 34px rgba(72,154,255,.18),
+    inset 0 1px 0 rgba(255,255,255,.58);
+  transition:transform .24s cubic-bezier(.2,.8,.2,1),box-shadow .24s,border-color .24s,filter .24s;
+}
+.primary:hover:not(:disabled),.project-action-link:first-child:hover{
+  transform:translateY(-2px);
+  filter:saturate(1.08);
+  box-shadow:
+    0 0 0 1px rgba(97,232,255,.16),
+    0 18px 50px rgba(72,154,255,.26),
+    0 0 34px rgba(97,232,255,.12),
+    inset 0 1px 0 rgba(255,255,255,.72);
+}
+.primary:active:not(:disabled),.project-action-link:first-child:active{transform:translateY(0) scale(.985)}
+.primary:disabled{opacity:.38;filter:saturate(.5);box-shadow:none}
+
+.primary span,.project-action-link span{display:inline-block;transition:transform .22s ease}
+.primary:hover:not(:disabled) span,.project-action-link:hover span{animation:eidolon-arrow-nudge 1s ease-in-out infinite}
+
+.quiet-button,.launch-link,.project-action-link.secondary{
+  position:relative;
+  transition:transform .22s,border-color .22s,background .22s,box-shadow .22s;
+}
+.quiet-button:hover,.launch-link:hover,.project-action-link.secondary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 32px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+.filter{
+  position:relative;
+  border:1px solid transparent;
+  transition:color .2s,border-color .2s,background .2s,transform .2s;
+}
+.filter:hover{transform:translateY(-1px);color:#d9f7ff;border-color:rgba(97,232,255,.16)}
+.filter.active{
+  border-color:rgba(97,232,255,.24);
+  background:linear-gradient(135deg,rgba(97,232,255,.09),rgba(157,124,255,.055));
+  box-shadow:0 0 26px rgba(97,232,255,.055),inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+.intent-card,.choice,.economy,.project-card{
+  transition:transform .34s cubic-bezier(.2,.8,.2,1),border-color .34s,background .34s,box-shadow .34s,filter .34s;
+}
+.intent-card:hover,.choice:hover,.economy:hover,.project-card:hover{
+  transform:translateY(-4px);
+}
+.intent-card.selected,.choice.active,.economy.active{
+  box-shadow:
+    0 0 0 1px rgba(97,232,255,.10),
+    0 24px 80px rgba(36,160,255,.11),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+.choice-icon,.card-sigil,.network-node-core,.launch-oracle{
+  position:relative;
+}
+.choice-icon:after,.card-sigil:after,.network-node-core:after,.launch-oracle:after{
+  content:"";
+  position:absolute;
+  inset:-9px;
+  border-radius:50%;
+  border:1px solid currentColor;
+  opacity:.16;
+  animation:eidolon-border-spin 16s linear infinite;
+}
+.card-sigil:after{animation-duration:21s}
+.network-node-core:after{animation-duration:12s}
+
+.network-field-edges line,.graph-edge{
+  stroke-dasharray:7 13;
+  animation:eidolon-beam 8s linear infinite;
+}
+.network-field-edges line:nth-child(2n),.graph-edge:nth-child(2n){animation-delay:-2.7s}
+.network-field-edges line:nth-child(3n),.graph-edge:nth-child(3n){animation-delay:-5.2s}
+
+.network-node{
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s;
+}
+.network-node:hover{
+  transform:translate(-50%,-50%) scale(1.045);
+  filter:drop-shadow(0 0 22px color-mix(in srgb,var(--node-signal,var(--eidolon-cyan)) 34%,transparent));
+  z-index:4;
+}
+.network-node-label{
+  transition:border-color .25s,background .25s,transform .25s;
+}
+.network-node:hover .network-node-label{
+  border-color:color-mix(in srgb,var(--node-signal,var(--eidolon-cyan)) 32%,transparent);
+  background:rgba(9,16,25,.86);
+  transform:translateY(-2px);
+}
+
+.search-wrap{
+  transition:border-color .22s,box-shadow .22s,background .22s;
+}
+.search-wrap:focus-within{
+  border-color:rgba(97,232,255,.34)!important;
+  background:rgba(10,19,31,.76)!important;
+  box-shadow:0 0 0 3px rgba(97,232,255,.045),0 12px 40px rgba(0,0,0,.22);
+}
+.search-wrap:focus-within .eidolon-icon{color:var(--eidolon-cyan);filter:drop-shadow(0 0 8px rgba(97,232,255,.55))}
+
+.launch-panel,.network-field,.graph-field,.graph-core,.panel,.project-dossier,.project-provenance-panel,.economy-console{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    inset 0 0 90px rgba(97,232,255,.018),
+    0 28px 100px rgba(0,0,0,.25);
+}
+
+@media(prefers-reduced-motion:reduce){
+  .shell:before,.discover:before,.graph-page:before,.launch-universe:before,
+  .shell:after,.discover:after,.graph-page:after,.launch-universe:after,
+  .shell .hero:after,.discover-experience .discover-head:before,.graph-head:before,.launch-experience:before,
+  .intent-card:before,.choice:before,.economy:before,.project-card:before,.project-action-link:before,
+  .launch-link:before,.primary:before,.quiet-button:before,.filter:before,.eidolon-action:before,
+  .choice-icon:after,.card-sigil:after,.network-node-core:after,.launch-oracle:after,
+  .network-field-edges line,.graph-edge{animation:none!important}
+  .intent-card:hover,.choice:hover,.economy:hover,.project-card:hover,.network-node:hover,.primary:hover:not(:disabled){transform:none}
+}
