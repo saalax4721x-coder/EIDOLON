@@ -287,3 +287,31 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 @media(prefers-reduced-motion:reduce){
   .hero-atmosphere .hero-orbit,.hero-node,.hero-axis,.project-card,.intent-card,.identity-card,.economy-console,.connector-card,.help-grid>a,.primary:after,.brand-glyph{animation:none!important}
 }
+
+/* Beast-mode surface identity: EIDOLON should read as an instrument, not a SaaS dashboard */
+.launch-universe,.launch-complete{isolation:isolate;position:relative;overflow:hidden}
+.launch-constellation{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.launch-constellation:before{content:"";position:absolute;width:780px;height:780px;border:1px solid rgba(231,223,204,.035);border-radius:50%;right:-280px;top:40px;box-shadow:0 0 0 90px rgba(155,201,216,.008),0 0 0 210px rgba(185,168,216,.006);animation:eidolon-orbit 31s linear infinite}
+.launch-constellation:after{content:"";position:absolute;left:8%;top:38%;width:55%;height:1px;background:linear-gradient(90deg,transparent,rgba(231,223,204,.07),transparent);transform:rotate(-18deg);animation:eidolon-scan 9s ease-in-out infinite}
+.launch-constellation span{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 24px rgba(231,223,204,.4);animation:eidolon-pulse 4s ease-in-out infinite}
+.launch-constellation span:nth-child(1){right:20%;top:22%}.launch-constellation span:nth-child(2){right:42%;top:67%;animation-delay:1s;background:var(--discover)}.launch-constellation span:nth-child(3){left:13%;top:76%;animation-delay:2s;background:var(--build)}
+.launch-panel{position:relative;z-index:1}
+.launch-stage-head{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;margin-bottom:38px}
+.launch-oracle{width:150px;min-height:150px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:var(--accent);background:linear-gradient(145deg,rgba(20,22,27,.6),rgba(8,9,12,.2));box-shadow:inset 0 0 40px rgba(255,255,255,.015),0 30px 100px rgba(0,0,0,.25);position:relative}
+.launch-oracle:before,.launch-oracle:after{content:"";position:absolute;inset:10px;border:1px solid rgba(231,223,204,.035);transform:rotate(45deg);pointer-events:none}
+.launch-oracle:after{inset:27px;transform:rotate(0);border-color:rgba(155,201,216,.025)}
+.launch-oracle span{font-size:7px;letter-spacing:.14em;color:#5d626c;text-align:center;position:relative;z-index:1}
+.choice{display:flex!important;align-items:center;gap:15px!important;text-align:left!important;min-height:82px}
+.choice-icon{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted);transition:.35s}
+.choice-copy{display:grid;gap:5px;flex:1}.choice-copy b{font-size:12px;font-weight:500}.choice-copy small{font-size:7px;letter-spacing:.13em;color:#535861}
+.choice-arrow{font-size:15px;color:#555a63;transition:.3s}.choice:hover .choice-icon,.choice.active .choice-icon{color:var(--accent);border-color:rgba(231,223,204,.28);box-shadow:0 0 28px rgba(231,223,204,.06)}.choice:hover .choice-arrow,.choice.active .choice-arrow{color:var(--accent);transform:translate(2px,-2px)}
+.launch-complete{display:grid;place-items:center;min-height:100vh}.launch-complete .success{position:relative;z-index:1;max-width:760px;width:100%}.launch-complete-sigil{width:82px;height:82px;border:1px solid rgba(231,223,204,.16);display:grid;place-items:center;color:var(--fund);transform:rotate(45deg);margin-bottom:34px;animation:eidolon-pulse 4s ease-in-out infinite}.launch-complete-sigil svg{transform:rotate(-45deg)}
+.discover-manifesto{max-width:570px;color:#676c75;font-size:11px;line-height:1.8;margin-top:18px}
+.search-wrap{position:relative;display:flex;align-items:center;gap:9px}.search-wrap>svg{color:#626771}.search-wrap .search{padding-left:0}
+.card-code{color:#4e535c!important;font-size:7px!important;letter-spacing:.12em}
+.verified{display:flex;align-items:center;gap:7px}
+.signal-loader{display:flex;gap:7px;margin-top:22px}.signal-loader i{display:block;width:3px;height:24px;background:var(--discover);animation:eidolon-loader 1.2s ease-in-out infinite}.signal-loader i:nth-child(2){animation-delay:.15s;background:var(--accent)}.signal-loader i:nth-child(3){animation-delay:.3s;background:var(--build)}
+@keyframes eidolon-loader{0%,100%{transform:scaleY(.3);opacity:.25}50%{transform:scaleY(1);opacity:1}}
+.project-card{animation-delay:calc(var(--card-index,0) * 55ms)}
+@media(max-width:760px){.launch-stage-head{display:block}.launch-oracle{width:100%;min-height:90px;margin-top:26px;flex-direction:row}.launch-oracle:before,.launch-oracle:after{display:none}.discover-manifesto{font-size:10px}.search-wrap{width:100%}}
+@media(prefers-reduced-motion:reduce){.launch-constellation:before,.launch-constellation:after,.launch-constellation span,.launch-complete-sigil,.signal-loader i{animation:none!important}}
