@@ -12,7 +12,7 @@ export function EidolonFrame({ eyebrow, title, meta, children, className="" }: {
 }
 
 export function EidolonAction({ icon, children, tone="cyan", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { icon?:EidolonIconName; tone?:EidolonTone }) {
-  return <button {...props} className={`eidolon-action eidolon-action--${tone} ${props.className ?? ""}`}>{icon && <EidolonIcon name={icon} size={15}/>}<span>{children}</span><i>↗</i></button>;
+  return <button {...props} className={`eidolon-action eidolon-action--${tone} ${props.className ?? ""}`}><span className="eidolon-action-glow" aria-hidden="true"/>{icon && <EidolonIcon name={icon} size={15}/>}<span>{children}</span><i aria-hidden="true">↗</i></button>;
 }
 
 export function EidolonStatus({ label, value, tone="cyan" }: { label:string; value:string; tone?:EidolonTone }) {
