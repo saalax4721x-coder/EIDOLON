@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { discoveryFilters } from "@/lib/eidolon";
-import { discoveryMatches, discoverySort, type DiscoveryProject, visibleMetric } from "@/lib/discovery";
+import { discoveryMatches, discoverySort, type DiscoveryProject, type DiscoveryRelationship, visibleMetric } from "@/lib/discovery";
 import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
 
 const isWebSource = (value: string) => value.startsWith("https://") || value.startsWith("http://");
@@ -12,6 +12,7 @@ export default function Discover() {
   const [q, setQ] = useState("");
   const [intent, setIntent] = useState("");
   const [projects, setProjects] = useState<DiscoveryProject[]>([]);
+  const [relationships, setRelationships] = useState<DiscoveryRelationship[]>([]);
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function Discover() {
     fetch("/api/discover", { cache: "no-store" }).then(async (response) => {
       if (!response.ok) throw new Error("Discovery data could not be loaded.");
       return response.json();
-    }).then((data) => { setProjects(data.projects ?? []); setAuthenticated(Boolean(data.authenticated)); }).catch((err) => setError(err instanceof Error ? err.message : "Discovery data could not be loaded.")).finally(() => setLoading(false));
+    }).then((data) => { setProjects(data.projects ?? []); setRelationships(data.relationships ?? []); setAuthenticated(Boolean(data.authenticated)); }).catch((err) => setError(err instanceof Error ? err.message : "Discovery data could not be loaded.")).finally(() => setLoading(false));
   }, []);
 
   const visible = useMemo(() => {
@@ -39,22 +40,33 @@ export default function Discover() {
     {loading && <div className="panel network-state"><span className="eyebrow">LOADING NETWORK</span><h2>Reading verified projects.</h2><div className="signal-loader" aria-hidden="true"><i/><i/><i/></div></div>}
     {!loading && error && <div className="panel"><span className="eyebrow">NETWORK UNAVAILABLE</span><h2>Discovery could not load.</h2><p>{error}</p></div>}
     {!loading && !error && visible.length > 0 && <section className="network-field" aria-label="Live project object field">
-      <div className="network-field-head"><div><span className="eyebrow">OBJECT FIELD / LIVE SET</span><strong>{visible.length} visible project{visible.length === 1 ? "" : "s"}</strong></div><span>Relationships are only drawn when recorded.</span></div>
+      <div className="network-field-head"><div><span className="eyebrow">OBJECT FIELD / LIVE SET</span><strong>{visible.length} visible project{visible.length === 1 ? "" : "s"}</strong></div><span>{relationships.length ? relationships.length + " recorded relationship" + (relationships.length === 1 ? "" : "s") : "No recorded relationships yet."}</span></div>
       <div className="network-field-stage">
         <div className="network-field-axis" aria-hidden="true"><i/><i/></div>
-        {visible.slice(0, 12).map((p, index) => {
-          const angle = (index * 137.5) * Math.PI / 180;
-          const radius = 18 + (index % 4) * 8;
-          const left = 50 + Math.cos(angle) * radius;
-          const top = 50 + Math.sin(angle) * radius * 0.68;
-          return <a className="network-node" key={p.id} href={`/project?slug=${encodeURIComponent(p.slug)}`} style={{left: `${left}%`, top: `${top}%`}}>
-            <span className="network-node-core"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={14}/></span>
-            <span className="network-node-label"><b>{p.name}</b><small>{p.type} · {p.source.status}</small></span>
-          </a>;
-        })}
-        <div className="network-field-center"><EidolonIcon name="graph" size={20}/><span>LIVE<br/>OBJECTS</span></div>
+        {(() => {
+          const fieldProjects = visible.slice(0, 12);
+          const positions = new Map(fieldProjects.map((p, index) => {
+            const angle = (index * 137.5) * Math.PI / 180;
+            const radius = 18 + (index % 4) * 8;
+            return [p.id, { left: 50 + Math.cos(angle) * radius, top: 50 + Math.sin(angle) * radius * 0.68 }];
+          }));
+          const fieldEdges = relationships.filter((edge) => positions.has(edge.sourceProjectId) && positions.has(edge.targetProjectId));
+          return <>
+            <svg className="network-field-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              {fieldEdges.map((edge) => { const a = positions.get(edge.sourceProjectId)!; const b = positions.get(edge.targetProjectId)!; return <line key={edge.id} x1={a.left} y1={a.top} x2={b.left} y2={b.top} />; })}
+            </svg>
+            {fieldProjects.map((p) => {
+              const pos = positions.get(p.id)!;
+              return <a className="network-node" key={p.id} href={"/project?slug=" + encodeURIComponent(p.slug)} style={{left: pos.left + "%", top: pos.top + "%"}}>
+                <span className="network-node-core"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={14}/></span>
+                <span className="network-node-label"><b>{p.name}</b><small>{p.type} · {p.source.status}</small></span>
+              </a>;
+            })}
+            <div className="network-field-center"><EidolonIcon name="graph" size={20}/><span>LIVE<br/>OBJECTS</span></div>
+          </>;
+        })()}
       </div>
-      <p className="network-field-note">The field visualizes the projects currently returned by discovery. It does not imply a relationship that EIDOLON has not recorded.</p>
+      <p className="network-field-note">Edges connect only persisted relationships between projects visible in this field. Hidden projects may have relationships that are intentionally not drawn here.</p>
     </section>}
     {!loading && !error && <section className="project-grid">{visible.map((p,index) => <article className="project-card" key={p.id} style={{"--card-index":index} as React.CSSProperties}><div className="card-sigil" aria-hidden="true"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={19}/></div>
       <div className="card-top"><span>{p.type}</span><span className="card-code">0{(index + 1).toString().slice(-1)} / NODE</span></div>
