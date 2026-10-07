@@ -39,6 +39,14 @@ export async function POST(request: Request) {
   const user = await userResponse.json().catch(() => null) as { id?: string } | null;
   if (!user?.id) return NextResponse.json({ error: "Authentication session is no longer valid." }, { status: 401 });
 
+  const targetResponse = await fetch(
+    supabaseUrl + "/rest/v1/projects?id=eq." + encodeURIComponent(targetProjectId) + "&select=id,name,slug,type&limit=1",
+    { headers: supabaseHeaders, cache: "no-store" },
+  );
+  const targetRows = targetResponse.ok ? await targetResponse.json().catch(() => []) : [];
+  const target = Array.isArray(targetRows) ? targetRows[0] : null;
+  if (!target) return NextResponse.json({ error: "Target project could not be found." }, { status: 404 });
+
   const response = await fetch(supabaseUrl + "/rest/v1/project_relationships", {
     method: "POST",
     headers: { ...supabaseHeaders, Authorization: "Bearer " + token, "content-type": "application/json", Prefer: "return=representation" },
@@ -46,7 +54,7 @@ export async function POST(request: Request) {
     cache: "no-store",
   });
   if (!response.ok) {\n    const detail = await response.text();\n    if (response.status === 409 || detail.includes("23505")) return NextResponse.json({ error: "That relationship is already recorded." }, { status: 409 });\n    return NextResponse.json({ error: "Relationship could not be recorded." }, { status: response.status === 401 || response.status === 403 ? 403 : 502 });\n  }
-  return NextResponse.json({ relationship: (await response.json().catch(() => null))?.[0] ?? null });
+  const createdRows = await response.json().catch(() => []);\n  const created = Array.isArray(createdRows) ? createdRows[0] : null;\n  return NextResponse.json({ relationship: created ? { ...created, target } : null });
 }
 
 export async function DELETE(request: NextRequest) {
