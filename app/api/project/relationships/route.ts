@@ -34,10 +34,15 @@ export async function POST(request: Request) {
   if (!sourceProjectId || !targetProjectId || sourceProjectId === targetProjectId) return NextResponse.json({ error: "Two different project ids are required." }, { status: 400 });
   if (!relationship || !relationshipPattern.test(relationship)) return NextResponse.json({ error: "Invalid project relationship." }, { status: 400 });
 
+  const userResponse = await fetch(supabaseUrl + "/auth/v1/user", { headers: { ...supabaseHeaders, Authorization: "Bearer " + token }, cache: "no-store" });
+  if (!userResponse.ok) return NextResponse.json({ error: "Authentication session is no longer valid." }, { status: 401 });
+  const user = await userResponse.json().catch(() => null) as { id?: string } | null;
+  if (!user?.id) return NextResponse.json({ error: "Authentication session is no longer valid." }, { status: 401 });
+
   const response = await fetch(supabaseUrl + "/rest/v1/project_relationships", {
     method: "POST",
     headers: { ...supabaseHeaders, Authorization: "Bearer " + token, "content-type": "application/json", Prefer: "return=representation" },
-    body: JSON.stringify({ source_project_id: sourceProjectId, target_project_id: targetProjectId, relationship }),
+    body: JSON.stringify({ source_project_id: sourceProjectId, target_project_id: targetProjectId, relationship, created_by: user.id }),
     cache: "no-store",
   });
   if (!response.ok) return NextResponse.json({ error: "Relationship could not be recorded." }, { status: response.status === 401 || response.status === 403 ? 403 : 502 });
