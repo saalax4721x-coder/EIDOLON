@@ -5,7 +5,7 @@ import type { ProjectRelationship } from "@/lib/eidolon";
 
 export const dynamic = "force-dynamic";
 
-const relationshipPattern = /^(uses|depends_on|forked_from|built_with|funds|competes_with|complements|licenses|provides|consumes|derived_from|composed_with|invested_in|contributes_to)$/;
+const relationshipPattern = /^(uses|depends_on|forked_from|built_with|funds|competes_with|complements|licenses|provides|consumes|derived_from|composed_with|invested_in|contributes_to)$/;\nconst uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get("projectId")?.trim();
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const targetProjectId = body?.targetProjectId?.trim();
   const relationship = body?.relationship?.trim() as ProjectRelationship | undefined;
 
-  if (!sourceProjectId || !targetProjectId || sourceProjectId === targetProjectId) return NextResponse.json({ error: "Two different project ids are required." }, { status: 400 });
+  if (!sourceProjectId || !targetProjectId || sourceProjectId === targetProjectId) return NextResponse.json({ error: "Two different project ids are required." }, { status: 400 });\n  if (!uuidPattern.test(sourceProjectId) || !uuidPattern.test(targetProjectId)) return NextResponse.json({ error: "Project ids must be valid." }, { status: 400 });
   if (!relationship || !relationshipPattern.test(relationship)) return NextResponse.json({ error: "Invalid project relationship." }, { status: 400 });
 
   const userResponse = await fetch(supabaseUrl + "/auth/v1/user", { headers: { ...supabaseHeaders, Authorization: "Bearer " + token }, cache: "no-store" });
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     body: JSON.stringify({ source_project_id: sourceProjectId, target_project_id: targetProjectId, relationship, created_by: user.id }),
     cache: "no-store",
   });
-  if (!response.ok) return NextResponse.json({ error: "Relationship could not be recorded." }, { status: response.status === 401 || response.status === 403 ? 403 : 502 });
+  if (!response.ok) {\n    const detail = await response.text();\n    if (response.status === 409 || detail.includes("23505")) return NextResponse.json({ error: "That relationship is already recorded." }, { status: 409 });\n    return NextResponse.json({ error: "Relationship could not be recorded." }, { status: response.status === 401 || response.status === 403 ? 403 : 502 });\n  }
   return NextResponse.json({ relationship: (await response.json().catch(() => null))?.[0] ?? null });
 }
 
