@@ -247,7 +247,7 @@ export default function ProjectPage() {
 
   if (error || !project) {
     return (
-      <main className="project-page">
+      <main className="project-page project-object-surface">
         <header className="surface-nav">
           <Link href="/" className="wordmark">EIDOLON</Link>
           <span>PROJECT</span>
