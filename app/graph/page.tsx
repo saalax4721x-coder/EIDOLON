@@ -143,7 +143,7 @@ export default function GraphPage() {
               const position = positions.get(project.id);
               if (!position) return null;
               return (
-                <Link key={project.id} href={"/project?slug=" + encodeURIComponent(project.slug)} className="graph-node" style={{ left: position.left + "%", top: position.top + "%" }}>
+                <Link key={project.id} href={"/project?slug=" + encodeURIComponent(project.slug)} className={`graph-node graph-node-${typeIcons[project.type] ?? "project"}`} style={{ left: position.left + "%", top: position.top + "%" }}>
                   <span className="graph-node-core"><EidolonIcon name={typeIcons[project.type] ?? "project"} size={15} /></span>
                   <span className="graph-node-copy"><strong>{project.name}</strong><small>{project.type} · {project.source.status}</small></span>
                 </Link>
