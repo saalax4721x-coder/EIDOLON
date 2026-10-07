@@ -856,3 +856,9 @@ h1 em{color:var(--discover)}
 }
 
 .project-object-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:820px;margin:28px 0 6px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+
+.project-object-facts span{min-height:70px;padding:15px 18px;display:grid;align-content:center;gap:7px;border-right:1px solid var(--line)}
+.project-object-facts span:last-child{border-right:0}
+.project-object-facts b{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text)}
+.project-object-facts small{font-size:7px;letter-spacing:.16em;color:var(--muted-2)}
+@media(max-width:760px){.project-object-facts{grid-template-columns:repeat(2,1fr)}.project-object-facts span:nth-child(2){border-right:0}.project-object-facts span:nth-child(-n+2){border-bottom:1px solid var(--line)}}
