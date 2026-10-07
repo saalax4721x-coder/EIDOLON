@@ -16,6 +16,8 @@ export default function GraphPage() {
   const [projects, setProjects] = useState<DiscoveryProject[]>([]);
   const [relationships, setRelationships] = useState<DiscoveryRelationship[]>([]);
   const [relationshipFilter, setRelationshipFilter] = useState<"all" | ProjectRelationship>("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "verified" | "unverified">("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,13 +37,17 @@ export default function GraphPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const projectTypes = useMemo(() => Array.from(new Set(projects.map((project) => project.type))).sort(), [projects]);
+
   const visibleProjects = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return projects.slice(0, 24);
-    return projects.filter((project) =>
-      [project.name, project.slug, project.type].some((value) => value.toLowerCase().includes(normalized)),
-    ).slice(0, 24);
-  }, [projects, query]);
+    return projects.filter((project) => {
+      const matchesQuery = !normalized || [project.name, project.slug, project.type].some((value) => value.toLowerCase().includes(normalized));
+      const matchesType = typeFilter === "all" || project.type === typeFilter;
+      const matchesSource = sourceFilter === "all" || (sourceFilter === "verified" ? project.source.status === "verified" : project.source.status !== "verified");
+      return matchesQuery && matchesType && matchesSource;
+    }).slice(0, 24);
+  }, [projects, query, typeFilter, sourceFilter]);
 
   const visibleIds = useMemo(() => new Set(visibleProjects.map((project) => project.id)), [visibleProjects]);
   const visibleEdges = useMemo(
@@ -91,6 +97,21 @@ export default function GraphPage() {
         <label className="search-wrap">
           <EidolonIcon name="discover" size={15} />
           <input aria-label="Search graph" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search objects" />
+        </label>
+        <label className="graph-filter">
+          <span>OBJECT TYPE</span>
+          <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+            <option value="all">All object types</option>
+            {projectTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+          </select>
+        </label>
+        <label className="graph-filter">
+          <span>SOURCE STATE</span>
+          <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as "all" | "verified" | "unverified")}>
+            <option value="all">All source states</option>
+            <option value="verified">Verified sources</option>
+            <option value="unverified">Unverified sources</option>
+          </select>
         </label>
         <label className="graph-filter">
           <span>RELATIONSHIP</span>
