@@ -784,3 +784,73 @@ h1 em{color:var(--discover)}
   .shell:before,.surface:before,.discover:before,.project-page:before,.identity-surface:before,.economy-surface:before,.graph-page:before,.graph-field-grid,
   .eidolon-icon--launch,.eidolon-icon--discover,.eidolon-icon--graph,.eidolon-icon--verified{animation:none!important}
 }
+
+
+/* Second motion pass — visible at a glance, still premium */
+@keyframes eidolon-orbit-drift {
+  from { transform:rotate(-18deg) rotate(0deg); }
+  to { transform:rotate(-18deg) rotate(360deg); }
+}
+@keyframes eidolon-orbit-drift-reverse {
+  from { transform:rotate(22deg) rotate(360deg); }
+  to { transform:rotate(22deg) rotate(0deg); }
+}
+@keyframes eidolon-atmosphere-breathe {
+  0%,100% { opacity:.38; filter:blur(28px); }
+  50% { opacity:.68; filter:blur(42px); }
+}
+@keyframes eidolon-sweep {
+  0% { transform:translateX(-120%) rotate(-12deg); opacity:0; }
+  18% { opacity:.22; }
+  52% { opacity:.08; }
+  100% { transform:translateX(160%) rotate(-12deg); opacity:0; }
+}
+@keyframes eidolon-node-float {
+  0%,100% { transform:translate3d(0,0,0); }
+  50% { transform:translate3d(0,-7px,0); }
+}
+
+.hero-orbit.orbit-a{animation:eidolon-orbit-drift 38s linear infinite}
+.hero-orbit.orbit-b{animation:eidolon-orbit-drift-reverse 28s linear infinite}
+.hero-orbit.orbit-c{animation:eidolon-orbit-drift 20s linear infinite}
+.hero-node.node-a{animation:eidolon-node-float 5s ease-in-out infinite}
+.hero-node.node-b{animation:eidolon-node-float 7s ease-in-out infinite reverse}
+
+.hero-atmosphere:before,.discover-atmosphere:after,.graph-atmosphere:after{
+  content:"";
+  position:absolute;
+  width:34vw;
+  height:12vw;
+  min-width:280px;
+  min-height:100px;
+  background:linear-gradient(90deg,transparent,rgba(118,216,232,.10),rgba(185,155,242,.08),transparent);
+  filter:blur(22px);
+  transform:translateX(-120%) rotate(-12deg);
+  animation:eidolon-sweep 17s ease-in-out infinite;
+}
+.discover-atmosphere:after{
+  width:38vw;
+  background:linear-gradient(90deg,transparent,rgba(118,216,232,.12),rgba(118,155,244,.08),transparent);
+  animation-duration:21s;
+  animation-delay:-7s;
+}
+.graph-atmosphere:after{
+  width:42vw;
+  background:linear-gradient(90deg,transparent,rgba(82,214,237,.12),rgba(164,139,239,.12),transparent);
+  animation-duration:24s;
+  animation-delay:-12s;
+}
+
+.shell:before,.surface:before,.discover:before,.project-page:before,.identity-surface:before,.economy-surface:before,.graph-page:before{
+  animation:eidolon-atmosphere-breathe 11s ease-in-out infinite,eidolon-drift-a 24s ease-in-out infinite;
+}
+.graph-page:before{animation:eidolon-atmosphere-breathe 13s ease-in-out infinite,eidolon-drift-b 28s ease-in-out infinite}
+
+.choice,.economy,.intent-card,.project-card{transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,background .35s,box-shadow .35s}
+.choice:hover,.economy:hover,.intent-card:hover,.project-card:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 22px 70px rgba(0,0,0,.22)}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-orbit.orbit-a,.hero-orbit.orbit-b,.hero-orbit.orbit-c,.hero-node.node-a,.hero-node.node-b,
+  .hero-atmosphere:before,.discover-atmosphere:after,.graph-atmosphere:after,
+  .shell:before,.surface:before,.discover:before,.project-page:before,.identity-surface:before,.economy-surface:before,.graph-page:before{animation:none!important}
+}
