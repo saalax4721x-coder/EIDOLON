@@ -291,6 +291,7 @@ export default function ProjectPage() {
           </div>
         ) : <p>{project.description}</p>}
 
+        <div className="project-object-facts" aria-label="Recorded project facts"><span><b>{project.type}</b><small>OBJECT TYPE</small></span><span><b>{project.source.status.toUpperCase()}</b><small>SOURCE STATE</small></span><span><b>{relationships.length}</b><small>RECORDED LINKS</small></span><span><b>{project.economy === "token" ? "ECONOMY" : "NONE"}</b><small>ECONOMY</small></span></div>
         <div className="project-actions" aria-label="Project actions">
           {isOwner && !editing && <button type="button" onClick={() => setEditing(true)}>Edit project</button>}
           {useAction && sourceIsLink && (
