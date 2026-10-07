@@ -28,7 +28,7 @@ export default function Discover() {
 
   const visible = useMemo(() => {
     const intentTerms: Record<string, string[]> = {build:["github project","api","protocol","dataset"],commerce:["digital asset","creator / business","app","website","web app"],fund:["protocol","ai product","creator / business","github project"],use:["website","web app","app","api","game","ai product"]};
-    const terms = intentTerms[intent] ?? [];
+    const terms = (intentTerms[intent] ?? []).map((term) => term.toLowerCase());
     return discoverySort(projects.filter((project) => discoveryMatches(project, q) && (!terms.length || terms.includes(project.type.toLowerCase()))), filter);
   }, [filter, q, projects, intent]);
 
