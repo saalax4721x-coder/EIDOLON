@@ -29,7 +29,7 @@ const paths: Record<EidolonIconName, React.ReactNode> = {
 
 export function EidolonIcon({ name, size = 22, ...props }: EidolonIconProps) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <svg className={"eidolon-icon eidolon-icon--" + name} viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
       {paths[name]}
     </svg>
   );
