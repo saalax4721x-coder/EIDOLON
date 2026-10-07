@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EidolonIcon } from "@/components/eidolon-icon";
 
 type SessionState = "checking" | "signed-in" | "signed-out";
 type AccountProject = { id: string; name: string; slug: string; type: string; description: string | null; economy: "none" | "token"; verification_status: string; created_at: string };
@@ -40,8 +41,8 @@ export default function Account() {
         <a href="/" className="wordmark">EIDOLON</a>
         <nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><a href="/connectors">Connectors</a><span>ACCOUNT</span></nav>
       </header>
-      <section className="info-hero">
-        <span className="eyebrow">IDENTITY / ACCOUNT</span>
+      <section className="info-hero account-hero">
+        <div className="account-identity-mark"><EidolonIcon name="project" size={34} /></div><span className="eyebrow">IDENTITY / ACCOUNT</span>
         <h1>Your place<br/><em>in the network.</em></h1>
         <p>{state === "checking" ? "Checking your session…" : state === "signed-in" ? "Your EIDOLON session is active." : "You are not currently signed in."}</p>
       </section>
@@ -61,7 +62,7 @@ export default function Account() {
       </section>
       {state === "signed-in" && (
         <section className="account-projects">
-          <div className="section-heading"><span className="eyebrow">YOUR PROJECTS</span><span>{projects.length} {projects.length === 1 ? "PROJECT" : "PROJECTS"}</span></div>
+          <div className="section-heading"><span className="eyebrow"><EidolonIcon name="launch" size={13} /> YOUR PROJECTS</span><span>{projects.length} {projects.length === 1 ? "PROJECT" : "PROJECTS"}</span></div>
           {projects.length === 0 ? (
             <div className="panel"><h2>Nothing launched yet.</h2><p>Your projects will appear here once you create their real EIDOLON identity.</p><a className="primary" href="/launch">Launch your first project <span>↗</span></a></div>
           ) : (
