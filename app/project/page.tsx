@@ -7,8 +7,10 @@ import {
   projectActionCapability,
   projectActionDescriptions,
   projectActionLabels,
+  projectRelationshipLabels,
   type Project,
   type ProjectAction,
+  type ProjectRelationship,
 } from "@/lib/eidolon";
 
 const isWebSource = (value: string) => value.startsWith("https://") || value.startsWith("http://");
@@ -30,7 +32,12 @@ export default function ProjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [followError, setFollowError] = useState<string | null>(null);
   const [githubMessage, setGithubMessage] = useState<string | null>(null);
-  const [relationships, setRelationships] = useState<Array<{id:string;relationship:string;source_project_id:string;target_project_id:string;source?:{name:string;slug:string;type:string};target?:{name:string;slug:string;type:string}}>>([]);
+  const [relationships, setRelationships] = useState<Array<{id:string;relationship:ProjectRelationship;source_project_id:string;target_project_id:string;created_by:string;source?:{name:string;slug:string;type:string};target?:{name:string;slug:string;type:string}}>>([]);
+  const [targetProjects, setTargetProjects] = useState<Array<{id:string;name:string;slug:string;type:string}>>([]);
+  const [targetProjectId, setTargetProjectId] = useState("");
+  const [relationshipType, setRelationshipType] = useState<ProjectRelationship>("uses");
+  const [relationshipBusy, setRelationshipBusy] = useState(false);
+  const [relationshipError, setRelationshipError] = useState<string | null>(null);
 
   const load = () => {
     const slug = new URLSearchParams(window.location.search).get("slug");
@@ -46,7 +53,7 @@ export default function ProjectPage() {
         if (!response.ok) throw new Error(data.error ?? "Project could not be loaded.");
         return data;
       })
-      .then((data) => {
+      .then(async (data) => {
         setProject(data.project);
         setEconomy(data.economyDetail);
         setIsFollowing(Boolean(data.isFollowing));
@@ -58,6 +65,13 @@ export default function ProjectPage() {
         const relationshipResponse = await fetch("/api/project/relationships?projectId=" + encodeURIComponent(data.project.id), { cache: "no-store" });
         const relationshipData = await relationshipResponse.json().catch(() => null);
         if (relationshipResponse.ok && Array.isArray(relationshipData?.relationships)) setRelationships(relationshipData.relationships);
+        if (Boolean(data.isOwner)) {
+          const projectsResponse = await fetch("/api/discover", { cache: "no-store" });
+          const projectsData = await projectsResponse.json().catch(() => null);
+          if (projectsResponse.ok && Array.isArray(projectsData?.projects)) {
+            setTargetProjects(projectsData.projects.filter((candidate: { id: string }) => candidate.id !== data.project.id));
+          }
+        }
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Project could not be loaded."))
       .finally(() => setLoading(false));
@@ -129,6 +143,49 @@ export default function ProjectPage() {
       setFollowError(cause instanceof Error ? cause.message : "Project could not be updated.");
     } finally {
       setEditBusy(false);
+    }
+  };
+
+  const createRelationship = async () => {
+    if (!project || !isOwner || relationshipBusy) return;
+    if (!targetProjectId) {
+      setRelationshipError("Choose a project to connect.");
+      return;
+    }
+    setRelationshipBusy(true);
+    setRelationshipError(null);
+    try {
+      const response = await fetch("/api/project/relationships", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sourceProjectId: project.id, targetProjectId, relationship: relationshipType }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Relationship could not be recorded.");
+      if (data?.relationship) {
+        setRelationships((current) => [data.relationship, ...current]);
+        setTargetProjectId("");
+      }
+    } catch (cause) {
+      setRelationshipError(cause instanceof Error ? cause.message : "Relationship could not be recorded.");
+    } finally {
+      setRelationshipBusy(false);
+    }
+  };
+
+  const removeRelationship = async (relationshipId: string) => {
+    if (!isOwner || relationshipBusy) return;
+    setRelationshipBusy(true);
+    setRelationshipError(null);
+    try {
+      const response = await fetch("/api/project/relationships?id=" + encodeURIComponent(relationshipId), { method: "DELETE" });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Relationship could not be removed.");
+      setRelationships((current) => current.filter((edge) => edge.id !== relationshipId));
+    } catch (cause) {
+      setRelationshipError(cause instanceof Error ? cause.message : "Relationship could not be removed.");
+    } finally {
+      setRelationshipBusy(false);
     }
   };
 
@@ -282,10 +339,44 @@ export default function ProjectPage() {
           <Link className="economy-link" href={"/economy?project=" + encodeURIComponent(project.slug)}>Explore economy →</Link>
         </article>
 
-        <article>
-          <span className="eyebrow">GRAPH</span><h2>Connected projects</h2><p>Dependencies, collaborators, services and compositions will appear here as the network grows.</p>
-        </article>
-      </section>
+        <article className="project-network-panel">
+          <span className="eyebrow"><EidolonIcon name="graph" size={13} /> GRAPH / NETWORK</span>
+          <h2>Connected projects</h2>
+          <p>{relationships.length ? "These are recorded relationships in the live project graph." : "No recorded relationships yet. EIDOLON never invents graph edges from visual similarity or popularity."}</p>
+          {isOwner && (
+            <div className="relationship-composer" aria-label="Connect this project">
+              <div className="relationship-composer-head">
+                <div><strong>Connect this project</strong><span>Declare a real relationship from this project to another project.</span></div>
+                <span>OWNER CONTROL</span>
+              </div>
+              <div className="relationship-composer-grid">
+                <label><span>RELATIONSHIP</span><select value={relationshipType} onChange={(event) => setRelationshipType(event.target.value as ProjectRelationship)} disabled={relationshipBusy}>{Object.entries(projectRelationshipLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                <label><span>TARGET PROJECT</span><select value={targetProjectId} onChange={(event) => setTargetProjectId(event.target.value)} disabled={relationshipBusy}><option value="">Choose a project…</option>{targetProjects.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name} · {candidate.type}</option>)}</select></label>
+                <button type="button" className="primary" onClick={createRelationship} disabled={relationshipBusy || !targetProjectId}>{relationshipBusy ? "Updating…" : "Record relationship"}</button>
+              </div>
+              {relationshipError && <p className="action-error" role="alert">{relationshipError}</p>}
+              <p className="action-note">The source is always <strong>{project.name}</strong>. Only the source project owner can create a relationship.</p>
+            </div>
+          )}
+          {relationships.length > 0 && (
+            <div className="project-network-list">
+              {relationships.map((edge) => {
+                const connected = edge.source_project_id === project.id ? edge.target : edge.source;
+                const outbound = edge.source_project_id === project.id;
+                if (!connected) return null;
+                return <div className="project-network-edge" key={edge.id}>
+                  <Link className="project-network-node" href={"/project?slug=" + encodeURIComponent(connected.slug)}>
+                    <EidolonIcon name="project" size={17} />
+                    <b>{connected.name}</b>
+                    <small>{connected.type}</small>
+                  </Link>
+                  <div className="project-network-relation"><em>{outbound ? "OUTBOUND" : "INBOUND"}</em><strong>{projectRelationshipLabels[edge.relationship]}</strong></div>
+                  {outbound && isOwner ? <button type="button" className="project-network-remove" onClick={() => removeRelationship(edge.id)} disabled={relationshipBusy} aria-label={"Remove relationship with " + connected.name}>×</button> : <span className="project-network-arrow" aria-hidden="true">↗</span>}
+                </div>;
+              })}
+            </div>
+          )}
+        </article></section>
     </main>
   );
 }
