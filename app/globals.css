@@ -692,3 +692,95 @@ h1 em{color:var(--discover)}
 @media(max-width:760px){
   .graph-page{padding-left:20px;padding-right:20px}
 }
+
+
+/* Atmospheric motion + restrained glass layer */
+@keyframes eidolon-drift-a {
+  0%,100% { transform:translate3d(-2%, -1%, 0) scale(1); opacity:.52; }
+  50% { transform:translate3d(3%, 2%, 0) scale(1.06); opacity:.72; }
+}
+@keyframes eidolon-drift-b {
+  0%,100% { transform:translate3d(2%, 1%, 0) scale(1.04); opacity:.38; }
+  50% { transform:translate3d(-3%, -2%, 0) scale(.96); opacity:.62; }
+}
+@keyframes eidolon-grid-drift {
+  0% { background-position:0 0,0 0; }
+  100% { background-position:56px 28px,-56px -28px; }
+}
+
+.shell:before,.surface:before,.discover:before,.project-page:before,.identity-surface:before,.economy-surface:before,.graph-page:before{
+  content:"";
+  position:absolute;
+  inset:-18%;
+  pointer-events:none;
+  z-index:0;
+  background:
+    radial-gradient(38% 30% at 14% 20%,rgba(118,216,232,.075),transparent 72%),
+    radial-gradient(34% 28% at 82% 24%,rgba(185,155,242,.065),transparent 72%),
+    radial-gradient(30% 34% at 64% 84%,rgba(231,199,127,.045),transparent 72%);
+  filter:blur(18px);
+  animation:eidolon-drift-a 18s ease-in-out infinite;
+  will-change:transform,opacity;
+}
+.discover:before{
+  background:
+    radial-gradient(34% 30% at 18% 18%,rgba(118,216,232,.13),transparent 72%),
+    radial-gradient(32% 30% at 84% 72%,rgba(118,155,244,.085),transparent 72%);
+}
+.graph-page:before{
+  background:
+    radial-gradient(34% 30% at 18% 24%,rgba(82,214,237,.12),transparent 72%),
+    radial-gradient(38% 34% at 84% 30%,rgba(164,139,239,.11),transparent 72%);
+  animation:eidolon-drift-b 22s ease-in-out infinite;
+}
+.launch-universe:before,.launch-complete:before,.economy-surface:before{
+  background:
+    radial-gradient(34% 30% at 78% 18%,rgba(231,199,127,.13),transparent 72%),
+    radial-gradient(28% 32% at 16% 76%,rgba(214,151,62,.065),transparent 72%);
+}
+
+.shell>*:not(.topbar),.surface>*:not(.surface-nav),.discover>*:not(.surface-nav),.project-page>*:not(.surface-nav),.identity-surface>*:not(.surface-nav),.economy-surface>*:not(.surface-nav),.graph-page>*{
+  position:relative;
+  z-index:1;
+}
+
+/* Subtle glass: depth and translucency without turning EIDOLON into a card grid. */
+.intent-card,.choice,.economy,.project-card,.panel,.identity-card,.economy-console,.success,.project-sections article,.project-network-panel,.project-dossier,.project-provenance-panel,.graph-field,.graph-core{
+  background-color:rgba(10,14,18,.54);
+  -webkit-backdrop-filter:blur(18px) saturate(125%);
+  backdrop-filter:blur(18px) saturate(125%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 18px 60px rgba(0,0,0,.16);
+}
+.intent-card,.choice,.economy,.project-card{
+  border-color:rgba(255,255,255,.105);
+}
+.intent-card:after,.choice:after,.economy:after,.project-card:before,.identity-card:after,.economy-console:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,.055),transparent 24%,transparent 72%,rgba(255,255,255,.018));
+  opacity:.62;
+}
+.project-card:before{z-index:0}
+.project-card>*{position:relative;z-index:1}
+.graph-field{
+  background:
+    radial-gradient(circle at 50% 50%,rgba(130,217,238,.045),transparent 62%),
+    rgba(7,12,16,.50);
+}
+.graph-field-grid{
+  animation:eidolon-grid-drift 26s linear infinite;
+}
+.graph-core{
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  backdrop-filter:blur(22px) saturate(140%);
+}
+.eidolon-icon--launch{animation:eidolon-glyph 7s ease-in-out infinite}
+.eidolon-icon--discover,.eidolon-icon--graph{animation:eidolon-pulse 6s ease-in-out infinite}
+.eidolon-icon--verified{animation:eidolon-pulse 8s ease-in-out infinite}
+
+@media(prefers-reduced-motion:reduce){
+  .shell:before,.surface:before,.discover:before,.project-page:before,.identity-surface:before,.economy-surface:before,.graph-page:before,.graph-field-grid,
+  .eidolon-icon--launch,.eidolon-icon--discover,.eidolon-icon--graph,.eidolon-icon--verified{animation:none!important}
+}
