@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EidolonIcon } from "@/components/eidolon-icon";
 
 type GithubStatus = {
   connected: boolean;
@@ -33,8 +34,8 @@ export default function Connectors() {
           <a href="/discover">Discover</a><a href="/launch">Launch</a><a href="/auth">Sign in</a><span>CONNECTORS</span>
         </nav>
       </header>
-      <section className="info-hero">
-        <span className="eyebrow">SOURCE / PROOF / CAPABILITY</span>
+      <section className="info-hero connector-hero">
+        <div className="connector-hero-mark"><EidolonIcon name="verified" size={34} /></div><span className="eyebrow">SOURCE / PROOF / CAPABILITY</span>
         <h1>Your sources.<br/><em>Your proof.</em></h1>
         <p>Connectors establish real relationships with external systems. They are never decorative badges.</p>
       </section>
@@ -43,7 +44,7 @@ export default function Connectors() {
         <article className="connector-card active">
           <div>
             <span className="connector-status">{github === null ? "CHECKING" : githubConnected ? "CONNECTED" : github?.expired ? "EXPIRED" : "AVAILABLE"}</span>
-            <span className="connector-mark">GH</span>
+            <span className="connector-mark"><EidolonIcon name="verified" size={20} /></span>
           </div>
           <h2>GitHub</h2>
           <p>Connect GitHub to prove control of supported repositories. Verification uses the real provider account and repository.</p>
