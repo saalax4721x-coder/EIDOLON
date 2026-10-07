@@ -15,6 +15,13 @@ import {
 
 const isWebSource = (value: string) => value.startsWith("https://") || value.startsWith("http://");
 
+const formatRecordedDate = (value: string | null | undefined) => {
+  if (!value) return "Not recorded";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not recorded";
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(date) + " UTC";
+};
+
 export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [economy, setEconomy] = useState<any>(null);
@@ -340,6 +347,18 @@ export default function ProjectPage() {
           <h2>{project.economy === "token" ? "Token economy enabled" : "No token enabled"}</h2>
           <p>{project.economy === "token" ? economy?.chain ? "Economy is configured for " + economy.chain + "." : "Token configuration is persisted; chain details are not yet available." : "This project launched without a token. An economy can be activated later without changing the canonical project identity."}</p>
           <Link className="economy-link" href={"/economy?project=" + encodeURIComponent(project.slug)}>Explore economy →</Link>
+        </article>
+
+        <article className="project-provenance-panel">
+          <span className="eyebrow"><EidolonIcon name="verified" size={13} /> PROVENANCE / RECORD</span>
+          <h2>Why this object is here.</h2>
+          <p>These timestamps describe what EIDOLON has actually recorded. They are not claims about activity that has not been observed.</p>
+          <dl className="provenance-list">
+            <div><dt>Object recorded</dt><dd>{formatRecordedDate(project.createdAt)}</dd></div>
+            <div><dt>Source state</dt><dd>{project.source.status.toUpperCase()}</dd></div>
+            <div><dt>Source verified</dt><dd>{formatRecordedDate(project.source.verifiedAt)}</dd></div>
+            <div><dt>Object identifier</dt><dd>{project.id}</dd></div>
+          </dl>
         </article>
 
         <article className="project-network-panel">
