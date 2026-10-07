@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { EidolonIcon } from "@/components/eidolon-icon";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -42,13 +43,13 @@ export default function AuthPage() {
       </header>
       <section className="identity-stage">
         <div className="identity-orbit" aria-hidden="true"><span/><span/><span/></div>
-        <div className="identity-copy">
+        <div className="identity-copy"><div className="threshold-mark"><EidolonIcon name="verified" size={32} /></div>
           <div className="eyebrow">IDENTITY / ACCESS</div>
           <h1>Enter the<br/><em>network.</em></h1>
           <p>One secure link. No password to remember. Your identity stays attached to the projects, follows and proofs you create.</p>
         </div>
         <div className="identity-card">
-          <div className="identity-card-top"><span>SECURE ACCESS</span><span>01</span></div>
+          <div className="identity-card-top"><span><EidolonIcon name="verified" size={12} /> SECURE ACCESS</span><span>01 / THRESHOLD</span></div>
           {sent ? (
             <div className="identity-sent">
               <div className="signal-ring">✓</div>
