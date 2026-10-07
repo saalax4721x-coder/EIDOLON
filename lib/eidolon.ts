@@ -6,6 +6,18 @@ export type VerificationStatus = "unverified" | "pending" | "verified" | "reject
 
 export type SourceKind = "github" | "domain" | "wallet" | "app_store" | "play_store" | "game" | "brokerage" | "other";
 
+export type ProjectRelationship =
+  | "uses" | "depends_on" | "forked_from" | "built_with" | "funds" | "competes_with"
+  | "complements" | "licenses" | "provides" | "consumes" | "derived_from"
+  | "composed_with" | "invested_in" | "contributes_to";
+
+export const projectRelationshipLabels: Record<ProjectRelationship, string> = {
+  uses: "Uses", depends_on: "Depends on", forked_from: "Forked from", built_with: "Built with",
+  funds: "Funds", competes_with: "Competes with", complements: "Complements", licenses: "Licenses",
+  provides: "Provides", consumes: "Consumes", derived_from: "Derived from", composed_with: "Composed with",
+  invested_in: "Invested in", contributes_to: "Contributes to",
+};
+
 export type ProjectAction =
   | "use" | "buy" | "sell" | "fund" | "subscribe" | "license"
   | "sponsor" | "bounty" | "contribute" | "rent" | "borrow"
@@ -56,6 +68,31 @@ export const projectActionDescriptions: Record<ProjectAction, string> = {
   compose: "Build something using this project.",
   reserve: "Reserve an available resource or capacity.",
   follow: "Follow the project and its updates.",
+};
+
+export type ActionCapability = "live" | "account" | "source" | "network";
+
+export interface ActionCapabilityState {
+  action: ProjectAction;
+  capability: ActionCapability;
+  label: string;
+}
+
+export const projectActionCapability = (
+  project: Project,
+  action: ProjectAction,
+  authenticated: boolean,
+): ActionCapabilityState => {
+  if (action === "follow") {
+    return { action, capability: authenticated ? "live" : "account", label: authenticated ? "Ready" : "Sign in" };
+  }
+  if (action === "use" && project.source.reference.startsWith("http")) {
+    return { action, capability: "live", label: "Open source" };
+  }
+  if (action === "license" && project.source.status === "verified") {
+    return { action, capability: "source", label: "Source verified" };
+  }
+  return { action, capability: "network", label: "Network layer" };
 };
 
 export const canShowAction = (project: Project, action: ProjectAction) =>

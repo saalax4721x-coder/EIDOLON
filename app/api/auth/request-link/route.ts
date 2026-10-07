@@ -5,8 +5,16 @@ import { supabaseUrl, supabasePublishableKey } from "@/lib/supabase-config";
 const base64Url = (input: Buffer) =>
   input.toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 
+const safeNext = (value: unknown) => {
+  if (typeof value !== "string") return "/launch";
+  const trimmed = value.trim();
+  return trimmed.startsWith("/") && !trimmed.startsWith("//") ? trimmed : "/launch";
+};
+
 export async function POST(request: Request) {
-  const { email } = await request.json();
+  const body = await request.json().catch(() => null);
+  const email = body?.email;
+  const next = safeNext(body?.next);
   if (typeof email !== "string" || !email.includes("@")) {
     return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
   }
@@ -40,6 +48,13 @@ export async function POST(request: Request) {
 
   const result = NextResponse.json({ ok: true });
   result.cookies.set("eidolon_pkce_verifier", verifier, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 600,
+  });
+  result.cookies.set("eidolon_auth_next", next, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
