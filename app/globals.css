@@ -425,3 +425,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .project-network-dismiss:hover{border-color:rgba(201,157,146,.45);color:var(--danger);transform:rotate(90deg)}
 @media(max-width:760px){.relationship-composer-head{display:block}.relationship-composer-head>span{display:block;margin-top:8px}.relationship-composer-grid{grid-template-columns:1fr;align-items:stretch}.relationship-composer-grid .primary{width:100%}}
 @media(prefers-reduced-motion:reduce){.project-network-dismiss{transition:none}}
+
+.project-network-edge button{width:24px;height:24px;border:1px solid rgba(201,157,146,.18);background:transparent;color:#8d6c64;font-size:16px;line-height:1;cursor:pointer;transition:.2s}
+.project-network-edge button:hover{border-color:rgba(201,157,146,.45);color:var(--danger);transform:rotate(90deg)}
+@media(prefers-reduced-motion:reduce){.project-network-edge button{transition:none}}
