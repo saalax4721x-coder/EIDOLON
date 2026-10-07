@@ -35,6 +35,7 @@ export default function ProjectPage() {
   const [relationships, setRelationships] = useState<Array<{id:string;relationship:ProjectRelationship;source_project_id:string;target_project_id:string;created_by:string;source?:{name:string;slug:string;type:string};target?:{name:string;slug:string;type:string}}>>([]);
   const [targetProjects, setTargetProjects] = useState<Array<{id:string;name:string;slug:string;type:string}>>([]);
   const [targetProjectId, setTargetProjectId] = useState("");
+  const [targetProjectQuery, setTargetProjectQuery] = useState("");
   const [relationshipType, setRelationshipType] = useState<ProjectRelationship>("uses");
   const [relationshipBusy, setRelationshipBusy] = useState(false);
   const [relationshipError, setRelationshipError] = useState<string | null>(null);
@@ -62,15 +63,15 @@ export default function ProjectPage() {
         setEditName(data.project.name);
         setEditDescription(data.project.description);
         setEditSlug(data.project.slug);
-        const relationshipResponse = await fetch("/api/project/relationships?projectId=" + encodeURIComponent(data.project.id), { cache: "no-store" });
-        const relationshipData = await relationshipResponse.json().catch(() => null);
+        const relationshipPromise = fetch("/api/project/relationships?projectId=" + encodeURIComponent(data.project.id), { cache: "no-store" })
+          .then((response) => response.json().catch(() => null).then((payload) => ({ response, payload })));
+        const discoveryPromise = Boolean(data.isOwner)
+          ? fetch("/api/discover", { cache: "no-store" }).then((response) => response.json().catch(() => null).then((payload) => ({ response, payload })))
+          : Promise.resolve(null);
+        const [{ response: relationshipResponse, payload: relationshipData }, discoveryResult] = await Promise.all([relationshipPromise, discoveryPromise]);
         if (relationshipResponse.ok && Array.isArray(relationshipData?.relationships)) setRelationships(relationshipData.relationships);
-        if (Boolean(data.isOwner)) {
-          const projectsResponse = await fetch("/api/discover", { cache: "no-store" });
-          const projectsData = await projectsResponse.json().catch(() => null);
-          if (projectsResponse.ok && Array.isArray(projectsData?.projects)) {
-            setTargetProjects(projectsData.projects.filter((candidate: { id: string }) => candidate.id !== data.project.id));
-          }
+        if (discoveryResult?.response.ok && Array.isArray(discoveryResult.payload?.projects)) {
+          setTargetProjects(discoveryResult.payload.projects.filter((candidate: { id: string }) => candidate.id !== data.project.id));
         }
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Project could not be loaded."))
@@ -165,6 +166,7 @@ export default function ProjectPage() {
       if (data?.relationship) {
         setRelationships((current) => [data.relationship, ...current]);
         setTargetProjectId("");
+        setTargetProjectQuery("");
       }
     } catch (cause) {
       setRelationshipError(cause instanceof Error ? cause.message : "Relationship could not be recorded.");
@@ -351,7 +353,7 @@ export default function ProjectPage() {
               </div>
               <div className="relationship-composer-grid">
                 <label><span>RELATIONSHIP</span><select value={relationshipType} onChange={(event) => setRelationshipType(event.target.value as ProjectRelationship)} disabled={relationshipBusy}>{Object.entries(projectRelationshipLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-                <label><span>TARGET PROJECT</span><select value={targetProjectId} onChange={(event) => setTargetProjectId(event.target.value)} disabled={relationshipBusy}><option value="">Choose a project…</option>{targetProjects.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name} · {candidate.type}</option>)}</select></label>
+                <label><span>TARGET PROJECT</span><input value={targetProjectQuery} onChange={(event) => setTargetProjectQuery(event.target.value)} placeholder="Search projects…" disabled={relationshipBusy} aria-label="Search target projects" /><select value={targetProjectId} onChange={(event) => setTargetProjectId(event.target.value)} disabled={relationshipBusy}><option value="">Choose a project…</option>{targetProjects.filter((candidate) => !targetProjectQuery.trim() || [candidate.name, candidate.slug, candidate.type].some((value) => value.toLowerCase().includes(targetProjectQuery.trim().toLowerCase()))).map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name} · {candidate.type}</option>)}</select></label>
                 <button type="button" className="primary" onClick={createRelationship} disabled={relationshipBusy || !targetProjectId}>{relationshipBusy ? "Updating…" : "Record relationship"}</button>
               </div>
               {relationshipError && <p className="action-error" role="alert">{relationshipError}</p>}
