@@ -12,15 +12,17 @@ export async function PATCH(request: Request) {
   const projectId = body?.projectId?.trim();
   const name = body?.name?.trim();
   const description = body?.description?.trim();
+  const slug = body?.slug?.trim();
 
   if (!projectId) return NextResponse.json({ error: "Missing project id." }, { status: 400 });
   if (!name || name.length < 2 || name.length > 120) return NextResponse.json({ error: "Project name must be 2–120 characters." }, { status: 400 });
   if (description === undefined || description.length > 4000) return NextResponse.json({ error: "Description must be 0–4000 characters." }, { status: 400 });
+  if (slug !== undefined && (!slug || slug.length > 160 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))) return NextResponse.json({ error: "Slug must use lowercase letters, numbers and hyphens." }, { status: 400 });
 
   const headers = { ...supabaseHeaders, Authorization: "Bearer " + token, "content-type": "application/json" };
   const response = await fetch(
     supabaseUrl + "/rest/v1/projects?id=eq." + encodeURIComponent(projectId),
-    { method: "PATCH", headers: { ...headers, Prefer: "return=representation" }, body: JSON.stringify({ name, description }), cache: "no-store" },
+    { method: "PATCH", headers: { ...headers, Prefer: "return=representation" }, body: JSON.stringify({ name, description, ...(slug !== undefined ? { slug } : {}) }), cache: "no-store" },
   );
 
   if (!response.ok) {
