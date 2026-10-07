@@ -30,6 +30,7 @@ export default function ProjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [followError, setFollowError] = useState<string | null>(null);
   const [githubMessage, setGithubMessage] = useState<string | null>(null);
+  const [relationships, setRelationships] = useState<Array<{id:string;relationship:string;source_project_id:string;target_project_id:string;source?:{name:string;slug:string;type:string};target?:{name:string;slug:string;type:string}}>>([]);
 
   const load = () => {
     const slug = new URLSearchParams(window.location.search).get("slug");
@@ -54,6 +55,9 @@ export default function ProjectPage() {
         setEditName(data.project.name);
         setEditDescription(data.project.description);
         setEditSlug(data.project.slug);
+        const relationshipResponse = await fetch("/api/project/relationships?projectId=" + encodeURIComponent(data.project.id), { cache: "no-store" });
+        const relationshipData = await relationshipResponse.json().catch(() => null);
+        if (relationshipResponse.ok && Array.isArray(relationshipData?.relationships)) setRelationships(relationshipData.relationships);
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Project could not be loaded."))
       .finally(() => setLoading(false));
