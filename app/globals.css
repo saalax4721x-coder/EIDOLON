@@ -352,3 +352,28 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .faq-item button strong{transition:color .25s}
 @media(max-width:900px){.economy-instrument{left:auto;right:0;top:120px;transform:none;opacity:.35}.economy-intro{position:relative;z-index:1}.project-dossier-rail{margin-top:-35px}}
 @media(max-width:760px){.project-dossier-signal{align-items:flex-start}.project-dossier-code{display:none}.project-dossier-icon{width:48px;height:48px}.project-dossier-rail{margin:0 0 35px}.economy-instrument{width:120px;height:120px;top:90px;right:-20px}.economy-instrument svg{width:28px}.economy-instrument span{font-size:5px;bottom:10px}.account-identity-mark,.connector-hero-mark,.help-hero-mark,.faq-hero-mark{width:52px;height:52px}.info-hero h1{position:relative;z-index:1}}
+
+/* Object-specific internal surfaces */
+.project-page .project-hero{isolation:isolate}
+.project-page .project-hero:before{content:"";position:absolute;right:-12%;top:12%;width:42vw;height:42vw;max-width:520px;max-height:520px;border:1px solid rgba(155,201,216,.055);border-radius:50%;box-shadow:0 0 80px rgba(155,201,216,.025);pointer-events:none}
+.project-page .project-hero:after{content:"";position:absolute;right:7%;top:24%;width:12px;height:12px;border:1px solid rgba(155,201,216,.3);transform:rotate(45deg);animation:eidolon-pulse 4s ease-in-out infinite;pointer-events:none}
+.account-project{position:relative}
+.account-project:before{content:"";position:absolute;left:0;top:0;width:1px;height:100%;background:var(--account-color,var(--accent));transform:scaleY(0);transform-origin:bottom;transition:transform .3s ease}
+.account-project:hover:before{transform:scaleY(1)}
+.account-project:nth-child(3n+1){--account-color:var(--launch)}.account-project:nth-child(3n+2){--account-color:var(--discover)}.account-project:nth-child(3n){--account-color:var(--build)}
+.account-project-meta span:first-child{color:var(--account-color,var(--muted))}
+.identity-stage{isolation:isolate}
+.identity-stage:before{content:"";position:absolute;left:4%;top:18%;width:1px;height:62%;background:linear-gradient(transparent,rgba(231,223,204,.12),transparent);pointer-events:none}
+.identity-stage:after{content:"IDENTITY GATE / PKCE";position:absolute;left:4%;bottom:12%;writing-mode:vertical-rl;color:#3f434b;font-size:6px;letter-spacing:.2em;pointer-events:none}
+.connector-card{--connector-accent:#565d64}
+.connector-card:nth-child(2){--connector-accent:var(--commerce)}.connector-card:nth-child(3){--connector-accent:var(--use)}.connector-card:nth-child(4){--connector-accent:var(--discover)}
+.connector-card .connector-mark{color:var(--connector-accent);border-color:color-mix(in srgb,var(--connector-accent) 22%, transparent)}
+.connector-card:not(.active):hover{border-top-color:color-mix(in srgb,var(--connector-accent) 35%, transparent)}
+.help-grid>a{--help-color:#777d86}
+.help-grid>a>span{color:var(--help-color)}
+.help-grid>a:nth-child(1){--help-color:var(--launch)}.help-grid>a:nth-child(2){--help-color:var(--discover)}.help-grid>a:nth-child(3){--help-color:var(--build)}.help-grid>a:nth-child(4){--help-color:var(--use)}.help-grid>a:nth-child(5){--help-color:var(--fund)}.help-grid>a:nth-child(6){--help-color:var(--commerce)}
+.faq-list{position:relative}
+.faq-list:before{content:"ARCHIVE / 08";position:absolute;right:0;top:-30px;color:#3f434b;font-size:6px;letter-spacing:.18em}
+.faq-item{transition:background .25s ease,border-color .25s ease}
+.faq-item.open button strong{color:var(--discover)}
+@media(max-width:760px){.project-page .project-hero:before{width:70vw;height:70vw;right:-35%;top:18%;opacity:.6}.identity-stage:after{display:none}.faq-list:before{display:none}}
