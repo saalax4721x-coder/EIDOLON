@@ -238,3 +238,52 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .account-project-meta{display:flex;align-items:center;gap:14px;align-self:center;white-space:nowrap;font-size:9px;letter-spacing:.13em;color:var(--muted,#8b8b8b)}
 .account-project-meta b{font-size:18px;color:var(--text,#f3f0e8)}
 @media (max-width:700px){.account-projects{width:min(100% - 28px,1120px);margin-bottom:56px}.account-project{display:block;padding:20px}.account-project-meta{margin-top:18px;justify-content:space-between}.account-project h2{font-size:21px}}
+
+
+/* EIDOLON visual language: motion, signal color and iconography */
+:root{
+  --launch:#e7dfcc;
+  --discover:#9bc9d8;
+  --build:#b9a8d8;
+  --commerce:#d4ae83;
+  --fund:#c6d7a5;
+  --use:#9fb7d8;
+  --danger:#c99d92;
+}
+.intent-mark{display:grid;place-items:center;flex:0 0 24px;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s}
+.intent-card:hover .intent-mark{transform:translateY(-2px) scale(1.08)}
+.intent-mark-launch{color:var(--launch)}.intent-mark-discover{color:var(--discover)}.intent-mark-build{color:var(--build)}
+.intent-mark-commerce{color:var(--commerce)}.intent-mark-fund{color:var(--fund)}.intent-mark-use{color:var(--use)}
+.intent-card:after{content:"";position:absolute;left:0;top:0;width:2px;height:100%;background:currentColor;transform:scaleY(0);transform-origin:bottom;transition:transform .35s ease}
+.intent-card:hover:after,.intent-card.selected:after{transform:scaleY(1)}
+.intent-card:has(.intent-mark-launch){--intent-color:var(--launch)}
+.intent-card:has(.intent-mark-discover){--intent-color:var(--discover)}
+.intent-card:has(.intent-mark-build){--intent-color:var(--build)}
+.intent-card:has(.intent-mark-commerce){--intent-color:var(--commerce)}
+.intent-card:has(.intent-mark-fund){--intent-color:var(--fund)}
+.intent-card:has(.intent-mark-use){--intent-color:var(--use)}
+.intent-card:after{color:var(--intent-color)}
+.hero-atmosphere .hero-orbit{animation:eidolon-orbit 24s linear infinite}
+.hero-atmosphere .orbit-b{animation-duration:17s;animation-direction:reverse}
+.hero-atmosphere .orbit-c{animation-duration:11s}
+.hero-node{animation:eidolon-pulse 3.8s ease-in-out infinite}
+.node-b{animation-delay:1.4s}
+.hero-axis{animation:eidolon-scan 8s ease-in-out infinite}
+.project-card,.intent-card,.identity-card,.economy-console,.connector-card,.help-grid>a{
+  animation:eidolon-rise .65s cubic-bezier(.2,.7,.2,1) both;
+}
+.project-card:nth-child(2),.intent-card:nth-child(2){animation-delay:.06s}
+.project-card:nth-child(3),.intent-card:nth-child(3){animation-delay:.12s}
+.project-card:nth-child(4),.intent-card:nth-child(4){animation-delay:.18s}
+.primary{position:relative;overflow:hidden}
+.primary:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28),transparent 65%);transform:translateX(-130%);animation:eidolon-sheen 5s ease-in-out infinite}
+.brand-glyph{animation:eidolon-glyph 7s ease-in-out infinite}
+@keyframes eidolon-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes eidolon-orbit{to{transform:rotate(342deg)}}
+@keyframes eidolon-pulse{0%,100%{opacity:.2;transform:scale(.85)}50%{opacity:.7;transform:scale(1.2)}}
+@keyframes eidolon-scan{0%,100%{opacity:.18;transform:rotate(-31deg) translateX(-30px)}50%{opacity:.6;transform:rotate(-31deg) translateX(30px)}}
+@keyframes eidolon-sheen{0%,65%{transform:translateX(-130%)}82%,100%{transform:translateX(130%)}}
+@keyframes eidolon-glyph{0%,100%{transform:rotate(0deg)}50%{transform:rotate(90deg)}}
+@media(prefers-reduced-motion:reduce){
+  .hero-atmosphere .hero-orbit,.hero-node,.hero-axis,.project-card,.intent-card,.identity-card,.economy-console,.connector-card,.help-grid>a,.primary:after,.brand-glyph{animation:none!important}
+}
