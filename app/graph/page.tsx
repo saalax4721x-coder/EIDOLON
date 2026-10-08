@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
 import { projectRelationshipLabels, type ProjectRelationship } from "@/lib/eidolon";
 import type { DiscoveryProject, DiscoveryRelationship } from "@/lib/discovery";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 const typeIcons: Record<string, EidolonIconName> = {
   "GitHub project": "build", API: "graph", Protocol: "economy", Dataset: "graph",
@@ -70,14 +71,7 @@ export default function GraphPage() {
 
   return (
     <main className="graph-page">
-      <header className="surface-nav">
-        <Link href="/" className="wordmark">EIDOLON</Link>
-        <nav className="surface-nav-links" aria-label="Graph navigation">
-          <Link href="/discover">Discover</Link>
-          <Link href="/launch">Launch</Link>
-          <span aria-current="page">GRAPH</span>
-        </nav>
-      </header>
+      <EidolonNav section="graph" />
 
       <div className="graph-atmosphere" aria-hidden="true"><span /><span /><span /></div>
 
