@@ -63,7 +63,7 @@ export default function Connectors() {
 
   return (
     <main className="info-page">
-      <header className="surface-nav"><EidolonNav section="connectors" /></header>
+      <EidolonNav section="connectors" />
       <section className="info-hero connector-hero">
         <div className="connector-hero-mark"><EidolonIcon name="verified" size={34} /></div><span className="eyebrow">SOURCE / PROOF / CAPABILITY</span>
         <h1>Your sources.<br/><em>Your proof.</em></h1>
@@ -93,8 +93,9 @@ export default function Connectors() {
         <article className={`connector-card ${wallet ? "active" : ""}`}>
           <div><span className="connector-status">{wallet ? "CONNECTED" : "WALLET"}</span><span className="connector-mark"><EidolonIcon name="economy" size={20} /></span></div>
           <h2>Wallets</h2>
-          <p>Domain ownership proof will arrive through a real DNS or equivalent verification rail. Nothing is simulated today.</p>
-          <span className="connector-muted">Not connected</span>
+          <p>Connect a browser wallet to use wallet-aware capabilities. EIDOLON never asks for a private key or recovery phrase.</p>
+          {wallet ? <><span className="connector-muted">{wallet.chain} · {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}</span><button type="button" className="connector-connect-button" onClick={disconnectWallet}>Disconnect</button></> : <div className="connector-wallet-actions"><button type="button" className="connector-connect-button" disabled={walletBusy} onClick={() => connectWallet("ethereum")}>{walletBusy ? "Connecting…" : "Connect EVM"}</button><button type="button" className="connector-connect-button secondary" disabled={walletBusy} onClick={() => connectWallet("solana")}>Solana</button></div>}
+          {walletError && <span className="connector-error" role="alert">{walletError}</span>}
         </article>
         <article className="connector-card">
           <div><span className="connector-status">COMING LATER</span><span className="connector-mark">◈</span></div>
