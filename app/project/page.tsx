@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
 import {
+import { EidolonNav } from "@/components/eidolon-nav";
   projectActionCapability,
   projectActionDescriptions,
   projectActionLabels,
@@ -267,15 +268,7 @@ export default function ProjectPage() {
 
   return (
     <main className="project-page">
-      <header className="surface-nav">
-        <Link href="/" className="wordmark">EIDOLON</Link>
-        <nav className="surface-nav-links" aria-label="Project navigation">
-          <Link href="/discover">Discover</Link>
-          <Link href="/launch">Launch</Link>
-          <Link href="/graph">Graph</Link>
-          <span aria-current="page">PROJECT / {project.name}</span>
-        </nav>
-      </header>
+      <EidolonNav section="project" />
 
       <section className="project-hero">
         <div className="project-dossier-signal"><span className="project-dossier-icon"><EidolonIcon name="project" size={30} /></span><span className="eyebrow">
