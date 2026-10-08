@@ -98,13 +98,6 @@ export default function Connectors() {
           {walletError && <span className="connector-error" role="alert">{walletError}</span>}
         </article>
         <article className="connector-card">
-          <div><span className="connector-status">COMING LATER</span><span className="connector-mark">◈</span></div>
-          <h2>Wallets</h2>
-          <p>Connect a browser wallet to use wallet-aware capabilities. EIDOLON never asks for a private key or recovery phrase.</p>
-          {wallet ? <><span className="connector-muted">{wallet.chain} · {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}</span><button type="button" className="connector-connect-button" onClick={disconnectWallet}>Disconnect</button></> : <div className="connector-wallet-actions"><button type="button" className="connector-connect-button" disabled={walletBusy} onClick={() => connectWallet("ethereum")}>{walletBusy ? "Connecting…" : "Connect EVM"}</button><button type="button" className="connector-connect-button secondary" disabled={walletBusy} onClick={() => connectWallet("solana")}>Solana</button></div>}
-          {walletError && <span className="connector-error" role="alert">{walletError}</span>}
-        </article>
-        <article className="connector-card">
           <div><span className="connector-status">COMING LATER</span><span className="connector-mark">◇</span></div>
           <h2>Platforms</h2>
           <p>App stores, games and brokerages require their own authorization and policy rails before they can be represented as connected.</p>
