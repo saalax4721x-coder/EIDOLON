@@ -30,7 +30,6 @@ export function EidolonNav({ section }: { section?: string }) {
         <a className="eidolon-nav-icon" href="/help" aria-label="Help">?</a>
         <a className="eidolon-nav-signin" href="/auth">Sign in <span>↗</span></a>
       </div>
-    </nav>
       {open && <div className="eidolon-command-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
         <section className="eidolon-command" role="dialog" aria-modal="true" aria-label="EIDOLON command menu">
           <div className="eidolon-command-head"><div><span>CONTROL / COMMAND</span><strong>Navigate the network.</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close command menu">ESC</button></div>
