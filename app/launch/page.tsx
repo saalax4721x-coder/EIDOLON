@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { projectTypes, type ProjectType, type EconomyMode } from "@/lib/eidolon";
 import { emptyProjectDraft, projectDraftIsReady } from "@/lib/project-draft";
 import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 const steps = ["THE OBJECT", "IDENTITY", "ECONOMY"];
 const typeIcons: Record<string, EidolonIconName> = {
@@ -47,13 +48,10 @@ export default function Launch() {
     }
   }
 
-  if (published) return <main className="surface launch-complete"><div className="launch-complete-sigil"><EidolonIcon name="verified" size={34}/></div><div className="panel success"><span className="eyebrow">PROJECT CREATED</span><h1>Your project has a place in EIDOLON.</h1><p>The project identity is now persisted. Source verification remains pending until the underlying source is actually verified.</p><div className="step-actions">{createdSlug && <a className="primary" href={`/project?slug=${encodeURIComponent(createdSlug)}`}>Open project <span>↗</span></a>}<a className="quiet-button" href="/discover">Enter discovery →</a></div></div></main>;
+  if (published) return <main className="surface launch-complete"><EidolonNav section="launch" /><div className="launch-complete-sigil"><EidolonIcon name="verified" size={34}/></div><div className="panel success"><span className="eyebrow">PROJECT CREATED</span><h1>Your project has a place in EIDOLON.</h1><p>The project identity is now persisted. Source verification remains pending until the underlying source is actually verified.</p><div className="step-actions">{createdSlug && <a className="primary" href={`/project?slug=${encodeURIComponent(createdSlug)}`}>Open project <span>↗</span></a>}<a className="quiet-button" href="/discover">Enter discovery →</a></div></div></main>;
 
   return <main className="surface launch-universe">
-    <header className="surface-nav">
-      <a href="/" className="wordmark">EIDOLON</a>
-      <nav className="surface-nav-links"><a href="/discover">Discover</a><span>LAUNCH</span></nav>
-    </header>
+    <EidolonNav section="launch" />
     <div className="launch-constellation" aria-hidden="true"><span/><span/><span/><i/></div>
     <section className="launch-panel launch-experience">
       <div className="launch-progress"><span>LAUNCH SEQUENCE</span><div>{steps.map((label, index) => <button key={label} className={index === step ? "progress-step active" : index < step ? "progress-step complete" : "progress-step"} onClick={() => index <= step && setStep(index)}><b>{String(index + 1).padStart(2, "0")}</b><small>{label}</small></button>)}</div></div>
