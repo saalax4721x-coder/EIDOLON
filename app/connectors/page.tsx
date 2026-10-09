@@ -116,12 +116,17 @@ export default function Connectors() {
       }
     };
     const onAccountsChanged = (value?: unknown) => {
+      try { if ((JSON.parse(localStorage.getItem("eidolon_wallet") ?? "null") as { kind?: string } | null)?.kind !== "ethereum") return; } catch { return; }
       const accounts = Array.isArray(value) ? value as string[] : [];
       if (!accounts[0]) return clearWallet();
       void syncEvm();
     };
-    const onChainChanged = () => { void syncEvm(); };
+    const onChainChanged = () => {
+      try { if ((JSON.parse(localStorage.getItem("eidolon_wallet") ?? "null") as { kind?: string } | null)?.kind !== "ethereum") return; } catch { return; }
+      void syncEvm();
+    };
     const onSolanaAccountChanged = (value?: unknown) => {
+      try { if ((JSON.parse(localStorage.getItem("eidolon_wallet") ?? "null") as { kind?: string } | null)?.kind !== "solana") return; } catch { return; }
       const address = value && typeof value === "object" && "toString" in value ? String(value) : solana?.publicKey?.toString();
       if (!address || address === "null" || address === "undefined") return clearWallet();
       if (!active) return;
@@ -129,7 +134,10 @@ export default function Connectors() {
       setWallet(next);
       localStorage.setItem("eidolon_wallet", JSON.stringify(next));
     };
-    const onSolanaDisconnect = () => clearWallet();
+    const onSolanaDisconnect = () => {
+      try { if ((JSON.parse(localStorage.getItem("eidolon_wallet") ?? "null") as { kind?: string } | null)?.kind !== "solana") return; } catch { return; }
+      clearWallet();
+    };
     evm?.on?.("accountsChanged", onAccountsChanged);
     evm?.on?.("chainChanged", onChainChanged);
     solana?.on?.("accountChanged", onSolanaAccountChanged);
