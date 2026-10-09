@@ -13,7 +13,7 @@ type GithubStatus = {
 };
 
 type EthereumProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
-type SolanaProvider = { connect: () => Promise<{ publicKey?: { toString: () => string } }> ; disconnect?: () => Promise<void> };
+type SolanaProvider = { connect: () => Promise<{ publicKey?: { toString: () => string } }>; publicKey?: { toString: () => string } | null; disconnect?: () => Promise<void> };
 
 export default function Connectors() {
   const [github, setGithub] = useState<GithubStatus | null>(null);
