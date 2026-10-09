@@ -49,14 +49,56 @@ export default function Connectors() {
   function disconnectWallet() { setWallet(null); localStorage.removeItem("eidolon_wallet"); }
 
   useEffect(() => {
-    try { const saved = localStorage.getItem("eidolon_wallet"); if (saved) setWallet(JSON.parse(saved)); } catch {}
+    let active = true;
+    async function restoreWallet() {
+      try {
+        const savedValue = localStorage.getItem("eidolon_wallet");
+        if (!savedValue) return;
+        const saved = JSON.parse(savedValue) as { kind?: string; address?: string; chain?: string };
+        if ((saved.kind !== "ethereum" && saved.kind !== "solana") || typeof saved.address !== "string") {
+          localStorage.removeItem("eidolon_wallet");
+          return;
+        }
+
+        let currentAddress: string | undefined;
+        let currentChain = saved.chain;
+        if (saved.kind === "ethereum") {
+          const provider = (window as Window & { ethereum?: EthereumProvider }).ethereum;
+          if (provider) {
+            const accounts = await provider.request({ method: "eth_accounts" }) as string[];
+            currentAddress = accounts?.[0];
+            const chainId = await provider.request({ method: "eth_chainId" }) as string;
+            currentChain = chainId === "0x1" ? "Ethereum" : chainId === "0x89" ? "Polygon" : chainId === "0xa" ? "Optimism" : chainId === "0xa4b1" ? "Arbitrum" : chainId;
+          }
+        } else {
+          const provider = (window as Window & { solana?: SolanaProvider }).solana;
+          currentAddress = provider?.publicKey?.toString();
+        }
+
+        if (!active) return;
+        if (currentAddress && currentAddress.toLowerCase() === saved.address.toLowerCase()) {
+          const restored = { kind: saved.kind, address: currentAddress, chain: currentChain };
+          setWallet(restored as { kind: "ethereum" | "solana"; address: string; chain?: string });
+          localStorage.setItem("eidolon_wallet", JSON.stringify(restored));
+        } else {
+          localStorage.removeItem("eidolon_wallet");
+        }
+      } catch {
+        if (active) {
+          localStorage.removeItem("eidolon_wallet");
+          setWallet(null);
+        }
+      }
+    }
+    void restoreWallet();
     fetch("/api/connectors/github", { cache: "no-store" })
       .then(async (response) => {
         const data = await response.json().catch(() => null);
-        if (response.ok) setGithub(data);
-        else setGithub({ connected: false });
+        if (response.ok && active) setGithub(data);
+        else if (active) setGithub({ connected: false });
       })
-      .catch(() => setGithub({ connected: false }));
+      .catch(() => { if (active) setGithub({ connected: false }); });
+    return () => { active = false; };
   }, []);
 
   const githubConnected = github?.connected === true;
