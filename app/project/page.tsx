@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
-import {
 import { EidolonNav } from "@/components/eidolon-nav";
+import {
   projectActionCapability,
   projectActionDescriptions,
   projectActionLabels,
