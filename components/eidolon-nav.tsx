@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
 
 export function EidolonNav({ section }: { section?: string }) {
   const [open, setOpen] = useState(false);
+  const commandButtonRef = useRef<HTMLButtonElement>(null);
+  const commandDialogRef = useRef<HTMLElement>(null);
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (open) {
+      commandDialogRef.current?.querySelector<HTMLElement>("a[href]")?.focus();
+    } else if (wasOpenRef.current) {
+      commandButtonRef.current?.focus();
+    }
+    wasOpenRef.current = open;
+  }, [open]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setOpen((value) => !value); }
@@ -26,12 +38,20 @@ export function EidolonNav({ section }: { section?: string }) {
         <a className={section === "connectors" ? "active" : ""} href="/connectors"><EidolonIcon name="verified" size={14}/>Connect</a>
       </div>
       <div className="eidolon-nav-actions">
-        <button type="button" className="eidolon-nav-command" onClick={() => setOpen(true)} aria-label="Open command menu"><span>COMMAND</span><kbd>⌘K</kbd></button>
+        <button ref={commandButtonRef} type="button" className="eidolon-nav-command" onClick={() => setOpen(true)} aria-label="Open command menu" aria-haspopup="dialog" aria-expanded={open}><span>COMMAND</span><kbd>⌘K</kbd></button>
         <a className="eidolon-nav-icon" href="/help" aria-label="Help">?</a>
         <a className="eidolon-nav-signin" href="/auth">Sign in <span>↗</span></a>
       </div>
       {open && <div className="eidolon-command-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
-        <section className="eidolon-command" role="dialog" aria-modal="true" aria-label="EIDOLON command menu">
+        <section ref={commandDialogRef} className="eidolon-command" role="dialog" aria-modal="true" aria-label="EIDOLON command menu" onKeyDown={(event) => {
+          if (event.key !== "Tab") return;
+          const items = commandDialogRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+          if (!items?.length) return;
+          const first = items[0];
+          const last = items[items.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }}>
           <div className="eidolon-command-head"><div><span>CONTROL / COMMAND</span><strong>Navigate the network.</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close command menu">ESC</button></div>
           <div className="eidolon-command-grid">
             <a href="/discover" onClick={() => setOpen(false)}><EidolonIcon name="discover" size={18}/><span><b>Discover</b><small>Find projects and objects</small></span><i>↗</i></a>
