@@ -11,6 +11,7 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get("projectId")?.trim();
   if (!projectId) return NextResponse.json({ error: "Missing project id." }, { status: 400 });
+  if (!uuidPattern.test(projectId)) return NextResponse.json({ error: "Project id must be a valid UUID." }, { status: 400 });
 
   const response = await fetch(
     supabaseUrl + "/rest/v1/project_relationships?select=id,source_project_id,target_project_id,relationship,created_at,created_by,source:projects!project_relationships_source_project_id_fkey(id,name,slug,type),target:projects!project_relationships_target_project_id_fkey(id,name,slug,type)&or=(source_project_id.eq." +
@@ -71,6 +72,7 @@ export async function DELETE(request: NextRequest) {
 
   const relationshipId = request.nextUrl.searchParams.get("id")?.trim();
   if (!relationshipId) return NextResponse.json({ error: "Missing relationship id." }, { status: 400 });
+  if (!uuidPattern.test(relationshipId)) return NextResponse.json({ error: "Relationship id must be a valid UUID." }, { status: 400 });
 
   const userResponse = await fetch(supabaseUrl + "/auth/v1/user", {
     headers: { ...supabaseHeaders, Authorization: "Bearer " + token },
