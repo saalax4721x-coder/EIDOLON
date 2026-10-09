@@ -12,8 +12,8 @@ type GithubStatus = {
   updatedAt?: string;
 };
 
-type EthereumProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
-type SolanaProvider = { connect: () => Promise<{ publicKey?: { toString: () => string } }>; publicKey?: { toString: () => string } | null; disconnect?: () => Promise<void> };
+type EthereumProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown>; on?: (event: string, listener: (value?: unknown) => void) => void; removeListener?: (event: string, listener: (value?: unknown) => void) => void };
+type SolanaProvider = { connect: () => Promise<{ publicKey?: { toString: () => string } }>; publicKey?: { toString: () => string } | null; disconnect?: () => Promise<void>; on?: (event: string, listener: (value?: unknown) => void) => void; off?: (event: string, listener: (value?: unknown) => void) => void };
 
 export default function Connectors() {
   const [github, setGithub] = useState<GithubStatus | null>(null);
@@ -91,6 +91,50 @@ export default function Connectors() {
       }
     }
     void restoreWallet();
+
+    const evm = (window as Window & { ethereum?: EthereumProvider }).ethereum;
+    const solana = (window as Window & { solana?: SolanaProvider }).solana;
+    const clearWallet = () => {
+      if (!active) return;
+      setWallet(null);
+      localStorage.removeItem("eidolon_wallet");
+    };
+    const syncEvm = async () => {
+      if (!evm) return clearWallet();
+      try {
+        const accounts = await evm.request({ method: "eth_accounts" }) as string[];
+        if (!active) return;
+        if (!accounts?.[0]) return clearWallet();
+        const chainId = await evm.request({ method: "eth_chainId" }) as string;
+        if (!active) return;
+        const chain = chainId === "0x1" ? "Ethereum" : chainId === "0x89" ? "Polygon" : chainId === "0xa" ? "Optimism" : chainId === "0xa4b1" ? "Arbitrum" : chainId;
+        const next = { kind: "ethereum" as const, address: accounts[0], chain };
+        setWallet(next);
+        localStorage.setItem("eidolon_wallet", JSON.stringify(next));
+      } catch {
+        clearWallet();
+      }
+    };
+    const onAccountsChanged = (value?: unknown) => {
+      const accounts = Array.isArray(value) ? value as string[] : [];
+      if (!accounts[0]) return clearWallet();
+      void syncEvm();
+    };
+    const onChainChanged = () => { void syncEvm(); };
+    const onSolanaAccountChanged = (value?: unknown) => {
+      const address = value && typeof value === "object" && "toString" in value ? String(value) : solana?.publicKey?.toString();
+      if (!address || address === "null" || address === "undefined") return clearWallet();
+      if (!active) return;
+      const next = { kind: "solana" as const, address, chain: "Solana" };
+      setWallet(next);
+      localStorage.setItem("eidolon_wallet", JSON.stringify(next));
+    };
+    const onSolanaDisconnect = () => clearWallet();
+    evm?.on?.("accountsChanged", onAccountsChanged);
+    evm?.on?.("chainChanged", onChainChanged);
+    solana?.on?.("accountChanged", onSolanaAccountChanged);
+    solana?.on?.("disconnect", onSolanaDisconnect);
+
     fetch("/api/connectors/github", { cache: "no-store" })
       .then(async (response) => {
         const data = await response.json().catch(() => null);
@@ -98,7 +142,13 @@ export default function Connectors() {
         else if (active) setGithub({ connected: false });
       })
       .catch(() => { if (active) setGithub({ connected: false }); });
-    return () => { active = false; };
+    return () => {
+      active = false;
+      evm?.removeListener?.("accountsChanged", onAccountsChanged);
+      evm?.removeListener?.("chainChanged", onChainChanged);
+      solana?.off?.("accountChanged", onSolanaAccountChanged);
+      solana?.off?.("disconnect", onSolanaDisconnect);
+    };
   }, []);
 
   const githubConnected = github?.connected === true;
