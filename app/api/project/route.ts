@@ -31,5 +31,5 @@ export async function GET(request:NextRequest){
  const sources=s.ok?await s.json() as Source[]:[], actions=a.ok?await a.json() as ActionRow[]:[], economies=e.ok?await e.json():[];
  const follows=f&&f.ok?await f.json() as Array<{project_id:string}>:[]; const source=sources[0];
  const project:Project={id:x.id,name:x.name,slug:x.slug,type:x.type,description:x.description??"",economy:x.economy,createdAt:x.created_at,actions:actions.filter(v=>v.enabled).map(v=>v.action),source:source?{kind:source.kind,reference:source.reference,status:source.status,verifiedAt:source.verified_at??undefined}:{kind:"other",reference:"",status:x.verification_status}};
- return NextResponse.json({project,economyDetail:economies[0]??null,isFollowing:follows.length>0,authenticated:Boolean(authHeaders),isOwner:Boolean(authUserData?.id && authUserData.id === x.owner_id)});
+ return NextResponse.json({project,economyDetail:economies[0]??null,isFollowing:Boolean(authUserData?.id) && follows.length>0,authenticated:Boolean(authUserData?.id),isOwner:Boolean(authUserData?.id && authUserData.id === x.owner_id)});
 }
