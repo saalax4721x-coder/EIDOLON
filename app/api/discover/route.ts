@@ -18,7 +18,22 @@ export async function GET() {
     return NextResponse.json({ projects: [], error: "Supabase is not configured." }, { status: 500 });
 
   const token=(await cookies()).get("eidolon_access_token")?.value;
-  const authHeaders=token?{...supabaseHeaders,Authorization:`Bearer ${token}`}:null;
+  let authenticated = false;
+  if (token) {
+    try {
+      const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: { ...supabaseHeaders, Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      if (authResponse.ok) {
+        const user = await authResponse.json().catch(() => null) as { id?: string } | null;
+        authenticated = Boolean(user?.id);
+      }
+    } catch {
+      authenticated = false;
+    }
+  }
+  const authHeaders=token && authenticated?{...supabaseHeaders,Authorization:`Bearer ${token}`}:null;
   const [projectsResponse, sourcesResponse, actionsResponse, followsResponse, relationshipsResponse] = await Promise.all([
     fetch(`${supabaseUrl}/rest/v1/projects?select=id,name,slug,type,description,economy,verification_status,created_at,updated_at&order=created_at.desc`, { headers: supabaseHeaders, cache: "no-store" }),
     fetch(`${supabaseUrl}/rest/v1/project_sources?select=project_id,kind,reference,status&order=verified_at.desc`, { headers: supabaseHeaders, cache: "no-store" }),
@@ -55,5 +70,5 @@ export async function GET() {
       isFollowing: followed.has(project.id),
     };
   });
-  return NextResponse.json({ projects: result, relationships: relationships.map((edge) => ({ id: edge.id, sourceProjectId: edge.source_project_id, targetProjectId: edge.target_project_id, relationship: edge.relationship })), authenticated:Boolean(authHeaders) });
+  return NextResponse.json({ projects: result, relationships: relationships.map((edge) => ({ id: edge.id, sourceProjectId: edge.source_project_id, targetProjectId: edge.target_project_id, relationship: edge.relationship })), authenticated });
 }
