@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { discoveryFilters } from "@/lib/eidolon";
 import { discoveryMatches, discoverySort, type DiscoveryProject, type DiscoveryRelationship, visibleMetric } from "@/lib/discovery";
 import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 const isWebSource = (value: string) => value.startsWith("https://") || value.startsWith("http://");
 const typeIcons: Record<string, EidolonIconName> = {"GitHub project":"build","API":"graph","Protocol":"economy","Dataset":"graph","Website":"use","Web app":"use","App":"use","Game":"project","AI product":"discover","Digital asset":"commerce","Creator / business":"commerce"};
@@ -33,7 +34,7 @@ export default function Discover() {
   }, [filter, q, projects, intent]);
 
   return <main className="discover discover-experience">
-    <header className="surface-nav"><a href="/" className="wordmark">EIDOLON</a><nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><a href="/graph">Graph</a><span>DISCOVER</span></nav></header>
+    <EidolonNav section="discover" />
     <div className="discover-atmosphere" aria-hidden="true"><span/><span/><span/><i/></div>
     <section className="discover-head"><div><div className="eyebrow">THE NETWORK / LIVE GRAPH</div><h1>Find what the world<br/><em>is building.</em></h1><p className="discover-manifesto">Projects are not posts. They are objects with sources, capabilities, relationships and economies.</p></div><a className="launch-link" href="/launch"><EidolonIcon name="launch" size={15}/> Launch something</a></section>
     <div className="toolbar"><div className="filters">{discoveryFilters.map((x) => <button aria-pressed={filter === x} className={filter === x ? "filter active" : "filter"} onClick={() => setFilter(x)} key={x}>{x}</button>)}</div>{intent && <div className="intent-context">INTENT / {intent.replace("_"," ").toUpperCase()} <button type="button" onClick={() => { setIntent(""); window.history.replaceState({}, "", "/discover"); }}>CLEAR</button></div>}<label className="search-wrap"><EidolonIcon name="discover" size={15}/><input aria-label="Search projects" className="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the network"/></label></div>
@@ -57,7 +58,7 @@ export default function Discover() {
             </svg>
             {fieldProjects.map((p) => {
               const pos = positions.get(p.id)!;
-              return <a className="network-node" key={p.id} href={"/project?slug=" + encodeURIComponent(p.slug)} style={{left: pos.left + "%", top: pos.top + "%"}}>
+              return <a className={`network-node network-node-${typeIcons[p.type] ?? "project"}`} key={p.id} href={"/project?slug=" + encodeURIComponent(p.slug)} style={{left: pos.left + "%", top: pos.top + "%"}}>
                 <span className="network-node-core"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={14}/></span>
                 <span className="network-node-label"><b>{p.name}</b><small>{p.type} · {p.source.status}</small></span>
               </a>;
@@ -68,7 +69,7 @@ export default function Discover() {
       </div>
       <p className="network-field-note">Edges connect only persisted relationships between projects visible in this field. Hidden projects may have relationships that are intentionally not drawn here.</p>
     </section>}
-    {!loading && !error && <section className="project-grid">{visible.map((p,index) => <article className="project-card" key={p.id} style={{"--card-index":index} as React.CSSProperties}><div className="card-sigil" aria-hidden="true"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={19}/></div>
+    {!loading && !error && <section className="project-grid">{visible.map((p,index) => <article className={`project-card project-card-${typeIcons[p.type] ?? "project"}`} key={p.id} style={{"--card-index":index} as React.CSSProperties}><div className="card-sigil" aria-hidden="true"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={19}/></div>
       <div className="card-top"><span>{p.type}</span><span className="card-code">0{(index + 1).toString().slice(-1)} / NODE</span></div>
       <h2><a href={`/project?slug=${encodeURIComponent(p.slug)}`}>{p.name}</a></h2>
       <div className="verified"><EidolonIcon name={p.source.status === "verified" ? "verified" : "project"} size={12}/> {p.source.kind.toUpperCase()} · {p.source.status.toUpperCase()}</div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
+import { EidolonNav } from "@/components/eidolon-nav";
 import {
   projectActionCapability,
   projectActionDescriptions,
@@ -247,7 +248,7 @@ export default function ProjectPage() {
 
   if (error || !project) {
     return (
-      <main className="project-page">
+      <main className="project-page project-object-surface">
         <header className="surface-nav">
           <Link href="/" className="wordmark">EIDOLON</Link>
           <span>PROJECT</span>
@@ -267,15 +268,7 @@ export default function ProjectPage() {
 
   return (
     <main className="project-page">
-      <header className="surface-nav">
-        <Link href="/" className="wordmark">EIDOLON</Link>
-        <nav className="surface-nav-links" aria-label="Project navigation">
-          <Link href="/discover">Discover</Link>
-          <Link href="/launch">Launch</Link>
-          <Link href="/graph">Graph</Link>
-          <span aria-current="page">PROJECT / {project.name}</span>
-        </nav>
-      </header>
+      <EidolonNav section="project" />
 
       <section className="project-hero">
         <div className="project-dossier-signal"><span className="project-dossier-icon"><EidolonIcon name="project" size={30} /></span><span className="eyebrow">
@@ -291,6 +284,7 @@ export default function ProjectPage() {
           </div>
         ) : <p>{project.description}</p>}
 
+        <div className="project-object-facts" aria-label="Recorded project facts"><span><b>{project.type}</b><small>OBJECT TYPE</small></span><span><b>{project.source.status.toUpperCase()}</b><small>SOURCE STATE</small></span><span><b>{relationships.length}</b><small>RECORDED LINKS</small></span><span><b>{project.economy === "token" ? "ECONOMY" : "NONE"}</b><small>ECONOMY</small></span></div>
         <div className="project-actions" aria-label="Project actions">
           {isOwner && !editing && <button type="button" onClick={() => setEditing(true)}>Edit project</button>}
           {useAction && sourceIsLink && (

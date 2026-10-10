@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 type Mode = "none" | "token";
 
@@ -62,10 +63,7 @@ export default function Economy() {
 
   return (
     <main className="surface economy-surface">
-      <header className="surface-nav">
-        <a href="/" className="wordmark">EIDOLON</a>
-        <nav className="surface-nav-links"><a href="/discover">Discover</a><a href="/launch">Launch</a><span>ECONOMY</span></nav>
-      </header>
+      <EidolonNav section="economy" />
       <section className="economy-stage"><div className="economy-instrument" aria-hidden="true"><EidolonIcon name="economy" size={42} /><span>ECONOMIC<br/>INSTRUMENT</span><i/><i/></div>
         <div className="economy-intro"><div className="economy-indexline"><span>02</span><span>OPTIONAL / NATIVE LAYER</span></div>
           <div className="eyebrow">OPTIONAL ECONOMIC LAYER</div>

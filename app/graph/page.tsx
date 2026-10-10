@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
 import { projectRelationshipLabels, type ProjectRelationship } from "@/lib/eidolon";
 import type { DiscoveryProject, DiscoveryRelationship } from "@/lib/discovery";
+import { EidolonNav } from "@/components/eidolon-nav";
 
 const typeIcons: Record<string, EidolonIconName> = {
   "GitHub project": "build", API: "graph", Protocol: "economy", Dataset: "graph",
@@ -70,14 +71,7 @@ export default function GraphPage() {
 
   return (
     <main className="graph-page">
-      <header className="surface-nav">
-        <Link href="/" className="wordmark">EIDOLON</Link>
-        <nav className="surface-nav-links" aria-label="Graph navigation">
-          <Link href="/discover">Discover</Link>
-          <Link href="/launch">Launch</Link>
-          <span aria-current="page">GRAPH</span>
-        </nav>
-      </header>
+      <EidolonNav section="graph" />
 
       <div className="graph-atmosphere" aria-hidden="true"><span /><span /><span /></div>
 
@@ -143,7 +137,7 @@ export default function GraphPage() {
               const position = positions.get(project.id);
               if (!position) return null;
               return (
-                <Link key={project.id} href={"/project?slug=" + encodeURIComponent(project.slug)} className="graph-node" style={{ left: position.left + "%", top: position.top + "%" }}>
+                <Link key={project.id} href={"/project?slug=" + encodeURIComponent(project.slug)} className={`graph-node graph-node-${typeIcons[project.type] ?? "project"}`} aria-label={`Open ${project.name}, ${project.type}, source ${project.source.status}`} title={`${project.name} · ${project.type} · ${project.source.status}`} style={{ left: position.left + "%", top: position.top + "%" }}>
                   <span className="graph-node-core"><EidolonIcon name={typeIcons[project.type] ?? "project"} size={15} /></span>
                   <span className="graph-node-copy"><strong>{project.name}</strong><small>{project.type} · {project.source.status}</small></span>
                 </Link>
