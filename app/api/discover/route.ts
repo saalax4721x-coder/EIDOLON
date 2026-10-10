@@ -14,6 +14,7 @@ type DbAction = { project_id: string; action: ProjectAction; enabled: boolean };
 type DbRelationship = { id: string; source_project_id: string; target_project_id: string; relationship: ProjectRelationship };
 
 export async function GET() {
+  try {
   if (!supabaseUrl || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
     return NextResponse.json({ projects: [], error: "Supabase is not configured." }, { status: 500 });
 
@@ -71,4 +72,7 @@ export async function GET() {
     };
   });
   return NextResponse.json({ projects: result, relationships: relationships.map((edge) => ({ id: edge.id, sourceProjectId: edge.source_project_id, targetProjectId: edge.target_project_id, relationship: edge.relationship })), authenticated });
+  } catch {
+    return NextResponse.json({ projects: [], relationships: [], error: "Discovery service is temporarily unavailable.", authenticated: false }, { status: 503 });
+  }
 }
