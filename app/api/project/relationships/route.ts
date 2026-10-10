@@ -9,6 +9,7 @@ const relationshipPattern = /^(uses|depends_on|forked_from|built_with|funds|comp
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(request: NextRequest) {
+  try {
   const projectId = request.nextUrl.searchParams.get("projectId")?.trim();
   if (!projectId) return NextResponse.json({ error: "Missing project id." }, { status: 400 });
   if (!uuidPattern.test(projectId)) return NextResponse.json({ error: "Project id must be a valid UUID." }, { status: 400 });
@@ -22,9 +23,16 @@ export async function GET(request: NextRequest) {
 
   const rows = await response.json().catch(() => null);
   return NextResponse.json({ relationships: Array.isArray(rows) ? rows : [] });
+  } catch {
+    return NextResponse.json({ error: "Relationship service is temporarily unavailable." }, { status: 503 });
+  }
+  } catch {
+    return NextResponse.json({ error: "Relationship service is temporarily unavailable." }, { status: 503 });
+  }
 }
 
 export async function POST(request: Request) {
+  try {
   const token = (await cookies()).get("eidolon_access_token")?.value;
   if (!token) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
@@ -64,9 +72,13 @@ export async function POST(request: Request) {
   const createdRows = await response.json().catch(() => []);
   const created = Array.isArray(createdRows) ? createdRows[0] : null;
   return NextResponse.json({ relationship: created ? { ...created, target } : null });
+  } catch {
+    return NextResponse.json({ error: "Relationship service is temporarily unavailable." }, { status: 503 });
+  }
 }
 
 export async function DELETE(request: NextRequest) {
+  try {
   const token = (await cookies()).get("eidolon_access_token")?.value;
   if (!token) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
