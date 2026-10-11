@@ -4,8 +4,14 @@ import { supabaseUrl, supabasePublishableKey } from "@/lib/supabase-config";
 
 const safeNext = (value: string | undefined) => {
   if (!value) return "/launch";
-  const decoded = decodeURIComponent(value);
-  return decoded.startsWith("/") && !decoded.startsWith("//") ? decoded : "/launch";
+  // Cookie values are already decoded by Next's cookie API. Avoid a second
+  // decodeURIComponent call, which can throw on a valid path containing "%".
+  return value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\") &&
+    !/[\u0000-\u001f\u007f]/.test(value)
+    ? value
+    : "/launch";
 };
 
 export async function GET(request: Request) {
