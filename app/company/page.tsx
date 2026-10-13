@@ -7,6 +7,7 @@ type Company = { id:string; name:string; slug:string; industry:string; mission:s
 type Connection = { id:string; provider:string; display_name:string; auth_method:string; status:string; created_at:string };
 type Agent = { id:string; name:string; role:string; description:string; runtime:string; provider:string|null; model:string|null; connection_id:string|null; status:string };
 type Artifact = { id:string; title:string; body:string; artifact_type:string; source_provider:string|null; created_at:string };
+type CompanyTask = { id:string; title:string; objective:string; task_type:string; status:string; result:string|null; error_code:string|null; assigned_agent_id:string|null; created_at:string; updated_at:string; completed_at:string|null };
 type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
 const providerNames:Record<string,string> = {openai:"OpenAI",anthropic:"Anthropic / Claude",openrouter:"OpenRouter"};
@@ -19,6 +20,7 @@ export default function CompanyPage() {
   const [agents,setAgents] = useState<Agent[]>([]);
   const [selectedAgentId,setSelectedAgentId] = useState("");
   const [artifacts,setArtifacts] = useState<Artifact[]>([]);
+  const [tasks,setTasks] = useState<CompanyTask[]>([]);
   const [mcpTokens,setMcpTokens] = useState<McpToken[]>([]);
   const [mcpLabel,setMcpLabel] = useState("ChatGPT / Claude company connector");
   const [newMcpToken,setNewMcpToken] = useState("");
@@ -52,7 +54,7 @@ export default function CompanyPage() {
     setCompanyId((current) => items.some((item) => item.id === current) ? current : items[0]?.id ?? "");
   },[]);
   const loadCompanyData = useCallback(async (id:string) => {
-    if (!id) { setConnections([]); setAgents([]); setArtifacts([]); return; }
+    if (!id) { setConnections([]); setAgents([]); setArtifacts([]); setTasks([]); return; }
     const [connectionResponse,agentResponse,workResponse] = await Promise.all([
       fetch("/api/company/connections?companyId="+encodeURIComponent(id),{cache:"no-store"}),
       fetch("/api/company/agents?companyId="+encodeURIComponent(id),{cache:"no-store"}),
@@ -67,6 +69,7 @@ export default function CompanyPage() {
     setAgents(loadedAgents);
     setSelectedAgentId((current) => loadedAgents.some((agent) => agent.id === current && agent.status === "active") ? current : loadedAgents.find((agent) => agent.status === "active" && agent.runtime === "provider")?.id ?? "");
     setArtifacts(workData.artifacts ?? []);
+    setTasks(workData.tasks ?? []);
   },[]);
   const loadMcpTokens = useCallback(async (id:string) => {
     if (!id) { setMcpTokens([]); return; }
@@ -146,6 +149,19 @@ export default function CompanyPage() {
       else if(selectedAgentId===agent.id)setSelectedAgentId("");
       setNotice(status==="active"?agent.name+" is active and ready for assigned tasks.":agent.name+" is now "+status+".");
     } catch(e) { setError(e instanceof Error?e.message:"Employee status could not be updated."); }
+    finally { setBusy(false); }
+  }
+  async function executeQueuedTask(task:CompanyTask) {
+    if(!companyId)return;
+    const agent = agents.find((item)=>item.id===selectedAgentId && item.status==="active" && item.runtime==="provider");
+    if(!agent){setError("Activate and select an AI employee before running queued work.");return;}
+    const connection = connections.find((item)=>item.id===agent.connection_id && item.status==="connected" && item.auth_method==="api_key");
+    if(!connection){setError("The selected employee's provider connection needs attention. Reconnect it before running tasks.");return;}
+    setBusy(true);setError("");setNotice("");setResult("");
+    try {
+      const data = await submitJson("/api/company/generate",{companyId,taskId:task.id,agentId:agent.id,connectionId:connection.id,model:agent.model??model,title:task.title,taskType:task.task_type,prompt:task.objective});
+      setResult(data.result ?? "");await loadCompanyData(companyId);setNotice(agent.name+" completed the queued task and saved its deliverable.");
+    } catch(e) { setError(e instanceof Error?e.message:"Queued task execution failed."); }
     finally { setBusy(false); }
   }
   async function generate() {
@@ -243,6 +259,7 @@ export default function CompanyPage() {
         <label>Instructions<textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} rows={5} minLength={5} maxLength={12000} required/></label>
         <button className="primary" disabled={busy}>{busy?"Executing real provider call…":"Run task & save deliverable"} <span>↗</span></button>
       </form><div className="company-output"><div className="company-output-head"><span>DELIVERABLE PREVIEW</span><span>{result?"GENERATED":"AWAITING TASK"}</span></div>{result?<pre>{result}</pre>:<div className="company-empty"><span>✳</span><strong>Work becomes an artifact</strong><p>Company context and your instructions are sent to the selected connected provider. The returned output is saved to the company archive.</p></div>}</div></div>
+      <div className="company-archive company-task-queue"><div className="eyebrow">WORK QUEUE / ASSIGNED OPERATIONS</div>{tasks.length===0?<p className="company-muted">No company tasks yet. Tasks queued from a connected ChatGPT or Claude assistant will appear here.</p>:tasks.map((task)=><article className="company-artifact company-task-row" key={task.id}><div><b>{task.title}</b><small>{task.task_type} · {task.status} · {new Date(task.created_at).toLocaleString()}</small>{task.status==="failed"&&task.error_code&&<small>Failure: {task.error_code}</small>}</div>{task.status==="queued"?<button type="button" className="quiet-button" disabled={busy||!agents.some((agent)=>agent.id===selectedAgentId&&agent.status==="active"&&agent.runtime==="provider")} onClick={()=>void executeQueuedTask(task)}>Run with selected employee</button>:task.status==="completed"&&task.result?<button type="button" className="quiet-button" onClick={()=>setResult(task.result??"")}>View result</button>:<span className="company-status">{task.status}</span>}</article>)}</div>
       <div className="company-archive"><div className="eyebrow">COMPANY ARCHIVE / RECENT ARTIFACTS</div>{artifacts.length===0?<p className="company-muted">No deliverables recorded yet.</p>:artifacts.map((artifact)=><article className="company-artifact" key={artifact.id}><div><b>{artifact.title}</b><small>{artifact.artifact_type} · {artifact.source_provider??"provider"} · {new Date(artifact.created_at).toLocaleString()}</small></div><button type="button" className="quiet-button" onClick={()=>setResult(artifact.body)}>Open</button></article>)}</div>
     </section></>}
     <footer><span>EIDOLON / COMPANY FOUNDRY</span><span>LAUNCH · STAFF · OPERATE</span></footer>
