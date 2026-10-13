@@ -1486,3 +1486,11 @@ h1 em{color:var(--discover)}
   .company-connection{flex-wrap:wrap}
   .company-connection .quiet-button{margin-left:0}
 }
+
+.company-task-queue{margin-top:28px}
+.company-task-row{gap:16px;align-items:center}
+.company-task-row>div{min-width:0;flex:1}
+.company-task-row b{overflow-wrap:anywhere}
+.company-task-row small{line-height:1.65}
+.company-task-row .quiet-button{flex-shrink:0}
+@media(max-width:680px){.company-task-row{align-items:flex-start;flex-direction:column}.company-task-row .quiet-button{align-self:flex-start}}
