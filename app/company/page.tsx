@@ -34,6 +34,7 @@ export default function CompanyPage() {
   const [apiKey,setApiKey] = useState("");
   const [employeeName,setEmployeeName] = useState("AI Operations Lead");
   const [employeeRole,setEmployeeRole] = useState("Operations manager");
+  const [employeeInstructions,setEmployeeInstructions] = useState("Turn goals into sequenced actions, identify dependencies and risks, track assumptions, and return concise recommendations with measurable next steps.");
   const [employeeProvider,setEmployeeProvider] = useState("openai");
   const [model,setModel] = useState("gpt-4.1-mini");
   const [taskTitle,setTaskTitle] = useState("Company launch plan");
@@ -129,7 +130,7 @@ export default function CompanyPage() {
     setBusy(true);setError("");setNotice("");
     try {
       const connection = connections.find((item)=>item.provider===employeeProvider && item.status==="connected" && item.auth_method==="api_key");
-      const data = await submitJson("/api/company/agents",{companyId,name:employeeName,role:employeeRole,description:"AI employee assigned by the company owner.",runtime:connection?"provider":"eidolon",provider:connection?employeeProvider:null,connectionId:connection?.id,model:connection?model:"",instructions:"Work only on explicitly assigned tasks. State assumptions and never claim external actions were completed unless verified."});
+      const data = await submitJson("/api/company/agents",{companyId,name:employeeName,role:employeeRole,description:"AI employee assigned by the company owner.",runtime:connection?"provider":"eidolon",provider:connection?employeeProvider:null,connectionId:connection?.id,model:connection?model:"",instructions:employeeInstructions.trim()});
       setAgents((items)=>[data.agent,...items]);setNotice(connection?"AI employee created with a connected provider.":"Native EIDOLON employee profile created as a draft; connect a provider to execute model-powered tasks.");
     } catch(e) { setError(e instanceof Error?e.message:"Employee could not be created."); } finally { setBusy(false); }
   }
@@ -225,6 +226,7 @@ export default function CompanyPage() {
       <div className="company-workforce-layout"><form className="company-form" onSubmit={(event)=>{event.preventDefault();void addEmployee();}}>
         <label>Employee name<input value={employeeName} onChange={(e)=>setEmployeeName(e.target.value)} minLength={2} maxLength={100} required/></label>
         <label>Role<input value={employeeRole} onChange={(e)=>setEmployeeRole(e.target.value)} minLength={2} maxLength={120} required/></label>
+        <label>Employee instructions<textarea value={employeeInstructions} onChange={(e)=>setEmployeeInstructions(e.target.value)} rows={3} maxLength={8000} required/></label>
         <label>Preferred provider<select value={employeeProvider} onChange={(e)=>{setEmployeeProvider(e.target.value);setModel(e.target.value==="anthropic"?"claude-sonnet-4-5":e.target.value==="openrouter"?"openai/gpt-4.1-mini":"gpt-4.1-mini");}}><option value="openai">OpenAI</option><option value="anthropic">Anthropic / Claude</option><option value="openrouter">OpenRouter</option></select></label>
         <label>Model ID<input value={model} onChange={(e)=>setModel(e.target.value)} maxLength={160} required placeholder="Exact model ID from provider"/></label>
         <button className="primary" disabled={busy}>{busy?"Saving…":"Add AI employee"} <span>↗</span></button>
