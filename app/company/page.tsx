@@ -11,7 +11,7 @@ type CompanyTask = { id:string; title:string; objective:string; task_type:string
 type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
 const providerNames:Record<string,string> = {openai:"OpenAI",anthropic:"Anthropic / Claude",openrouter:"OpenRouter"};
-const industries = ["AI & software","E-commerce","Creative studio","Marketing agency","Media & publishing","Education","Consulting","Developer tools","Finance & operations","Other"];
+const industries = ["Home services & trades","Wholesale & distribution","Local services","E-commerce","AI & software","Creative studio","Marketing agency","Media & publishing","Education","Consulting","Developer tools","Finance & operations","Other"];
 
 export default function CompanyPage() {
   const [companies,setCompanies] = useState<Company[]>([]);
@@ -182,7 +182,7 @@ export default function CompanyPage() {
     <EidolonNav section="company" />
     <header className="company-hero">
       <div className="eyebrow">EIDOLON / COMPANY FOUNDRY</div>
-      <div className="company-hero-grid"><div><h1>Launch a company.<br/><em>Build its workforce.</em></h1><p>Turn an idea into an operating plan, assemble human and AI roles, connect supported AI providers, and create real company deliverables.</p></div><div className="company-orbit" aria-hidden="true"><span/><span/><span/><i>EC</i></div></div>
+      <div className="company-hero-grid"><div><h1>Launch a company.<br/><em>Find customers. Do the work.</em></h1><p>Build a real operating business with customer acquisition, marketing, service delivery, and a team of people and AI working together. From plumbers and mechanics to wholesalers and software companies.</p></div><div className="company-orbit" aria-hidden="true"><span/><span/><span/><i>EC</i></div></div>
       <div className="company-truth"><span className="status-dot"/> REAL COMPANY RECORDS <span>·</span> REAL PROVIDER CALLS <span>·</span> NO SIMULATED REVENUE OR EMPLOYEES</div>
     </header>
 
@@ -193,11 +193,11 @@ export default function CompanyPage() {
       <div className="company-section-head"><div><div className="eyebrow">01 / FOUNDING</div><h2>Company blueprint</h2></div><span>IDENTITY · MISSION · BUSINESS MODEL</span></div>
       <div className="company-layout">
         <form className="company-form" onSubmit={(event)=>{event.preventDefault();void createCompany();}}>
-          <label>Company name<input value={name} onChange={(e)=>setName(e.target.value)} minLength={2} maxLength={120} required placeholder="e.g. Northstar Digital"/></label>
+          <label>Company name<input value={name} onChange={(e)=>setName(e.target.value)} minLength={2} maxLength={120} required placeholder="e.g. Northstar Electrical Services"/></label>
           <label>Industry<select value={industry} onChange={(e)=>setIndustry(e.target.value)}>{industries.map((item)=><option key={item}>{item}</option>)}</select></label>
-          <label>Mission and what it will do<textarea value={mission} onChange={(e)=>setMission(e.target.value)} minLength={10} maxLength={4000} required rows={4} placeholder="What problem will this company solve, for whom, and why?"/></label>
-          <label>Business model<input value={businessModel} onChange={(e)=>setBusinessModel(e.target.value)} maxLength={240} placeholder="Subscriptions, services, marketplace…"/></label>
-          <label>Target customers<input value={targetCustomer} onChange={(e)=>setTargetCustomer(e.target.value)} maxLength={1000} placeholder="Who will pay or use the product?"/></label>
+          <label>Mission and what it will do<textarea value={mission} onChange={(e)=>setMission(e.target.value)} minLength={10} maxLength={4000} required rows={4} placeholder="What do you sell or do, who needs it, where do you operate, and why will customers choose you?"/></label>
+          <label>Business model<input value={businessModel} onChange={(e)=>setBusinessModel(e.target.value)} maxLength={240} placeholder="Service calls, wholesale, subscriptions, projects…"/></label>
+          <label>Target customers<input value={targetCustomer} onChange={(e)=>setTargetCustomer(e.target.value)} maxLength={1000} placeholder="Homeowners, property managers, workshops, retailers…"/></label>
           <button className="primary" disabled={busy}>{busy?"Working…":"Create company workspace"} <span>↗</span></button>
         </form>
         <aside className="company-records"><div className="company-records-head"><div><div className="eyebrow">YOUR COMPANIES</div><strong>{companies.length.toString().padStart(2,"0")} records</strong></div><span className="company-tag">PERSISTED</span></div>
