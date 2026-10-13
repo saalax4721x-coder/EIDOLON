@@ -3,7 +3,8 @@
 ## What this feature does
 
 - Creates a persisted company workspace and owner membership.
-- Stores human/AI workforce role profiles.
+- Stores human/AI workforce role profiles with owner-defined operating instructions, draft/active/paused lifecycle, and provider/model assignment.
+- Lets owners activate or pause provider-backed employees and assign execution tasks to an active employee; the chosen employee's role/instructions are included in the provider prompt and the task records its assigned employee.
 - Connects OpenAI, Anthropic, or OpenRouter through server-side API keys.
 - Runs real provider requests for planning, research, content, marketing, product, coding, and operations deliverables.
 - Exposes company-scoped EIDOLON tools over a stateless MCP HTTP endpoint so a supported ChatGPT or Claude connector can read the company, review saved artifacts, queue work, and save assistant-generated content to the company archive.
