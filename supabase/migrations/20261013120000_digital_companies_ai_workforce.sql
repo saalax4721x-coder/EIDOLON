@@ -108,12 +108,12 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $is_company_member$
   select exists (
     select 1 from public.company_members m
     where m.company_id = p_company_id and m.user_id = (select auth.uid())
   );
-$;
+$is_company_member$;
 revoke all on function public.is_company_member(uuid) from public, anon;
 grant execute on function public.is_company_member(uuid) to authenticated;
 
