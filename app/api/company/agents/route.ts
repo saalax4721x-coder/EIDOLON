@@ -62,3 +62,37 @@ export async function POST(request: Request) {
     return NextResponse.json({agent:rows[0]},{status:201});
   } catch { return NextResponse.json({error:"AI workforce service is temporarily unavailable."},{status:503}); }
 }
+
+
+export async function PATCH(request: Request) {
+  try {
+    const user = await currentUser();
+    if (!user) return NextResponse.json({ error: "Sign in to manage AI employees." }, { status: 401 });
+    let body: Record<string, unknown>;
+    try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid employee update." }, { status: 400 }); }
+    const companyId = typeof body.companyId === "string" ? body.companyId : "";
+    const agentId = typeof body.agentId === "string" ? body.agentId : "";
+    const status = body.status === "active" || body.status === "paused" || body.status === "draft" ? body.status : "";
+    if (!companyId || !agentId || !status) return NextResponse.json({ error: "Choose an employee and a valid status." }, { status: 400 });
+    if (!(await owns(companyId, user.id, user.headers))) return NextResponse.json({ error: "Company not found or access denied." }, { status: 404 });
+    const lookup = await fetch(`${supabaseUrl}/rest/v1/company_ai_agents?select=id,runtime,provider,model,connection_id&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(agentId)}&limit=1`, { headers: user.headers, cache: "no-store" });
+    if (!lookup.ok) return NextResponse.json({ error: "Employee could not be loaded." }, { status: 502 });
+    const agents = await lookup.json() as Array<{id:string;runtime:string;provider:string|null;model:string|null;connection_id:string|null}>;
+    const agent = agents[0];
+    if (!agent) return NextResponse.json({ error: "Employee not found." }, { status: 404 });
+    if (status === "active") {
+      if (agent.runtime !== "provider" || !agent.provider || !agent.model || !agent.connection_id) return NextResponse.json({ error: "Connect a provider and assign a model before activating this employee." }, { status: 400 });
+      const connection = await fetch(`${supabaseUrl}/rest/v1/company_ai_connections?select=id,status,provider&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(agent.connection_id)}&limit=1`, { headers: user.headers, cache: "no-store" });
+      const rows = connection.ok ? await connection.json() as Array<{id:string;status:string;provider:string}> : [];
+      if (!rows[0] || rows[0].status !== "connected" || rows[0].provider !== agent.provider) return NextResponse.json({ error: "Reconnect this employee's provider before activation." }, { status: 400 });
+    }
+    const response = await fetch(`${supabaseUrl}/rest/v1/company_ai_agents?id=eq.${encodeURIComponent(agentId)}&company_id=eq.${encodeURIComponent(companyId)}`, {
+      method: "PATCH", headers: { ...user.headers, Prefer: "return=representation" },
+      body: JSON.stringify({ status, updated_at: new Date().toISOString() }), cache: "no-store"
+    });
+    if (!response.ok) return NextResponse.json({ error: "Employee status could not be updated." }, { status: 502 });
+    const rows = await response.json() as Array<Record<string, unknown>>;
+    if (!rows[0]) return NextResponse.json({ error: "Employee status update was not confirmed." }, { status: 502 });
+    return NextResponse.json({ agent: rows[0] });
+  } catch { return NextResponse.json({ error: "AI workforce service is temporarily unavailable." }, { status: 503 }); }
+}
