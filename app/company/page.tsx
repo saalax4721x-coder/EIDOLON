@@ -5,7 +5,7 @@ import { EidolonNav } from "@/components/eidolon-nav";
 
 type Company = { id:string; name:string; slug:string; industry:string; mission:string; businessModel:string; targetCustomer:string; status:string };
 type Connection = { id:string; provider:string; display_name:string; auth_method:string; status:string; created_at:string };
-type Agent = { id:string; name:string; role:string; description:string; runtime:string; provider:string|null; model:string|null; status:string };
+type Agent = { id:string; name:string; role:string; description:string; runtime:string; provider:string|null; model:string|null; connection_id:string|null; status:string };
 type Artifact = { id:string; title:string; body:string; artifact_type:string; source_provider:string|null; created_at:string };
 type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
@@ -239,8 +239,6 @@ export default function CompanyPage() {
         <label>Task title<input value={taskTitle} onChange={(e)=>setTaskTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
         <label>Work type<select value={taskType} onChange={(e)=>setTaskType(e.target.value)}><option value="planning">Company planning</option><option value="research">Research brief</option><option value="content">Content creation</option><option value="marketing">Marketing campaign</option><option value="product">Product strategy</option><option value="coding">Coding / technical brief</option><option value="operations">Operations workflow</option><option value="general">General task</option></select></label>
         <label>Instructions<textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} rows={5} minLength={5} maxLength={12000} required/></label>
-        <label>Provider<select value={employeeProvider} onChange={(e)=>setEmployeeProvider(e.target.value)}><option value="openai">OpenAI</option><option value="anthropic">Anthropic / Claude</option><option value="openrouter">OpenRouter</option></select></label>
-        <label>Model ID<input value={model} onChange={(e)=>setModel(e.target.value)} required/></label>
         <button className="primary" disabled={busy}>{busy?"Executing real provider call…":"Run task & save deliverable"} <span>↗</span></button>
       </form><div className="company-output"><div className="company-output-head"><span>DELIVERABLE PREVIEW</span><span>{result?"GENERATED":"AWAITING TASK"}</span></div>{result?<pre>{result}</pre>:<div className="company-empty"><span>✳</span><strong>Work becomes an artifact</strong><p>Company context and your instructions are sent to the selected connected provider. The returned output is saved to the company archive.</p></div>}</div></div>
       <div className="company-archive"><div className="eyebrow">COMPANY ARCHIVE / RECENT ARTIFACTS</div>{artifacts.length===0?<p className="company-muted">No deliverables recorded yet.</p>:artifacts.map((artifact)=><article className="company-artifact" key={artifact.id}><div><b>{artifact.title}</b><small>{artifact.artifact_type} · {artifact.source_provider??"provider"} · {new Date(artifact.created_at).toLocaleString()}</small></div><button type="button" className="quiet-button" onClick={()=>setResult(artifact.body)}>Open</button></article>)}</div>
