@@ -1,0 +1,119 @@
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { decryptAiCredential } from "@/lib/ai-credentials";
+import { supabaseHeaders, supabaseUrl } from "@/lib/supabase-config";
+
+export const dynamic = "force-dynamic";
+type Provider = "openai" | "anthropic" | "openrouter";
+async function auth() {
+  const token = (await cookies()).get("eidolon_access_token")?.value;
+  if (!token) return null;
+  const headers = { ...supabaseHeaders, Authorization: `Bearer ${token}` };
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, { headers, cache: "no-store" });
+  if (!response.ok) return null;
+  const user = await response.json() as { id?: string };
+  return user.id ? { id: user.id, headers } : null;
+}
+async function owns(companyId: string, userId: string, headers: Record<string,string>) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/companies?select=id,name,mission,industry,business_model,target_customer&owner_id=eq.${encodeURIComponent(userId)}&id=eq.${encodeURIComponent(companyId)}&limit=1`, { headers, cache: "no-store" });
+  if (!response.ok) return null;
+  return ((await response.json()) as Array<{id:string;name:string;mission:string;industry:string;business_model:string;target_customer:string}>)[0] ?? null;
+}
+function extractText(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+  const data = value as Record<string, unknown>;
+  if (typeof data.output_text === "string") return data.output_text;
+  if (Array.isArray(data.content)) return data.content.map((part) => part && typeof part === "object" && typeof (part as Record<string,unknown>).text === "string" ? (part as Record<string,string>).text : "").filter(Boolean).join("\n");
+  if (Array.isArray(data.output)) return data.output.flatMap((item) => item && typeof item === "object" && Array.isArray((item as Record<string,unknown>).content) ? ((item as Record<string,unknown>).content as unknown[]).map((part) => part && typeof part === "object" && typeof (part as Record<string,unknown>).text === "string" ? (part as Record<string,string>).text : "") : []).filter(Boolean).join("\n");
+  if (Array.isArray(data.choices)) {
+    const first = data.choices[0] as Record<string,unknown> | undefined;
+    const message = first?.message as Record<string,unknown> | undefined;
+    return typeof message?.content === "string" ? message.content : "";
+  }
+  return "";
+}
+async function runProvider(provider: Provider, key: string, model: string, prompt: string) {
+  const signal = AbortSignal.timeout(90000);
+  let url: string;
+  let headers: Record<string,string>;
+  let body: Record<string,unknown>;
+  if (provider === "anthropic") {
+    url = "https://api.anthropic.com/v1/messages";
+    headers = { "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json" };
+    body = { model, max_tokens:5000, messages:[{role:"user",content:prompt}] };
+  } else if (provider === "openrouter") {
+    url = "https://openrouter.ai/api/v1/chat/completions";
+    headers = { Authorization:`Bearer ${key}`, "content-type":"application/json" };
+    body = { model, messages:[{role:"user",content:prompt}], temperature:0.4 };
+  } else {
+    url = "https://api.openai.com/v1/responses";
+    headers = { Authorization:`Bearer ${key}`, "content-type":"application/json" };
+    body = { model, input:prompt };
+  }
+  const response = await fetch(url,{method:"POST",headers,body:JSON.stringify(body),cache:"no-store",signal});
+  if (!response.ok) {
+    const status = response.status;
+    if (status === 401 || status === 403) throw new Error("provider_auth_rejected");
+    if (status === 429) throw new Error("provider_rate_limited");
+    throw new Error("provider_request_failed");
+  }
+  const data = await response.json();
+  const text = extractText(data);
+  if (!text.trim()) throw new Error("provider_empty_output");
+  return text.trim();
+}
+export async function POST(request: Request) {
+  let taskId = "";
+  let user: Awaited<ReturnType<typeof auth>> = null;
+  try {
+    user = await auth();
+    if (!user) return NextResponse.json({error:"Sign in to run company work."},{status:401});
+    let input: Record<string,unknown>;
+    try { input = await request.json(); } catch { return NextResponse.json({error:"Invalid generation request."},{status:400}); }
+    const companyId = typeof input.companyId === "string" ? input.companyId : "";
+    const connectionId = typeof input.connectionId === "string" ? input.connectionId : "";
+    const model = typeof input.model === "string" ? input.model.trim().slice(0,160) : "";
+    const title = typeof input.title === "string" ? input.title.trim().slice(0,180) : "";
+    const objective = typeof input.prompt === "string" ? input.prompt.trim().slice(0,12000) : "";
+    const taskType = ["planning","research","content","marketing","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
+    if (!companyId || !connectionId || !model || title.length < 2 || objective.length < 5) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
+    const company = await owns(companyId,user.id,user.headers);
+    if (!company) return NextResponse.json({error:"Company not found or access denied."},{status:404});
+    const connectionResponse = await fetch(`${supabaseUrl}/rest/v1/company_ai_connections?select=id,provider,status,credential_ciphertext&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(connectionId)}&limit=1`,{headers:user.headers,cache:"no-store"});
+    if (!connectionResponse.ok) return NextResponse.json({error:"AI provider connection could not be loaded."},{status:502});
+    const connections = await connectionResponse.json() as Array<{id:string;provider:Provider;status:string;credential_ciphertext:string|null}>;
+    const connection = connections[0];
+    if (!connection || connection.status !== "connected" || !connection.credential_ciphertext) return NextResponse.json({error:"Select an active API connection for this company."},{status:400});
+    let key: string;
+    try { key = decryptAiCredential(connection.credential_ciphertext); } catch { return NextResponse.json({error:"AI credentials cannot be decrypted on this deployment. Verify EIDOLON_AI_ENCRYPTION_KEY."},{status:503}); }
+
+    const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,title,objective,task_type:taskType,status:"running"}),cache:"no-store"});
+    if (!taskResponse.ok) return NextResponse.json({error:"The task could not be recorded, so no model call was made."},{status:502});
+    const taskRows = await taskResponse.json() as Array<{id:string}>;
+    taskId = taskRows[0]?.id ?? "";
+    if (!taskId) return NextResponse.json({error:"Task identity could not be confirmed."},{status:502});
+
+    const prompt = `You are assisting the owner of the digital company "${company.name}".\nCompany industry: ${company.industry}.\nMission: ${company.mission}\nBusiness model: ${company.business_model}\nTarget customer: ${company.target_customer || "Not specified"}\n\nTask category: ${taskType}.\nOwner's instruction: ${objective}\n\nProduce a useful, specific deliverable. Separate assumptions from known facts. Do not invent completed work, customers, revenue, market data, citations, or actions you did not perform. Use clear headings and actionable next steps.`;
+    let result: string;
+    try { result = await runProvider(connection.provider,key,model,prompt); }
+    catch (error) {
+      const code = error instanceof Error ? error.message : "provider_request_failed";
+      const message = code === "provider_auth_rejected" ? "The provider rejected the saved key. Reconnect the provider." : code === "provider_rate_limited" ? "The provider rate limit or quota was reached." : code === "provider_empty_output" ? "The provider returned no readable text." : "The provider request failed. Check model availability and provider status.";
+      await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"failed",error_code:code,updated_at:new Date().toISOString()}),cache:"no-store"}).catch(()=>null);
+      return NextResponse.json({error:message,taskId},{status:code==="provider_auth_rejected"?400:502});
+    }
+
+    const artifactType = taskType === "planning" ? "plan" : taskType === "content" || taskType === "marketing" ? "content" : taskType === "research" ? "report" : "document";
+    const artifactResponse = await fetch(`${supabaseUrl}/rest/v1/company_artifacts`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,task_id:taskId,created_by:user.id,artifact_type:artifactType,title,body:result,source_provider:connection.provider}),cache:"no-store"});
+    if (!artifactResponse.ok) {
+      await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"review",result,updated_at:new Date().toISOString()}),cache:"no-store"}).catch(()=>null);
+      return NextResponse.json({error:"The model completed the task, but saving the deliverable failed. The result is returned so you can copy it.",result,taskId},{status:502});
+    }
+    await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"completed",result,completed_at:new Date().toISOString(),updated_at:new Date().toISOString()}),cache:"no-store"});
+    const artifacts = await artifactResponse.json() as Array<{id:string}>;
+    return NextResponse.json({task:{id:taskId,status:"completed"},artifact:artifacts[0]??null,result,provider:connection.provider,model},{status:201});
+  } catch {
+    if (taskId && user) await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"failed",error_code:"internal_failure",updated_at:new Date().toISOString()}),cache:"no-store"}).catch(()=>null);
+    return NextResponse.json({error:"Company work service is temporarily unavailable."},{status:503});
+  }
+}
