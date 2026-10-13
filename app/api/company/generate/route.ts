@@ -71,14 +71,28 @@ export async function POST(request: Request) {
     let input: Record<string,unknown>;
     try { input = await request.json(); } catch { return NextResponse.json({error:"Invalid generation request."},{status:400}); }
     const companyId = typeof input.companyId === "string" ? input.companyId : "";
-    const connectionId = typeof input.connectionId === "string" ? input.connectionId : "";
-    const model = typeof input.model === "string" ? input.model.trim().slice(0,160) : "";
+    let connectionId = typeof input.connectionId === "string" ? input.connectionId : "";
+    const agentId = typeof input.agentId === "string" ? input.agentId : "";
+    let model = typeof input.model === "string" ? input.model.trim().slice(0,160) : "";
+    let agentContext = "No named AI employee was assigned.";
     const title = typeof input.title === "string" ? input.title.trim().slice(0,180) : "";
     const objective = typeof input.prompt === "string" ? input.prompt.trim().slice(0,12000) : "";
     const taskType = ["planning","research","content","marketing","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
+    let assignedAgentId: string | null = null;
     if (!companyId || !connectionId || !model || title.length < 2 || objective.length < 5) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
     const company = await owns(companyId,user.id,user.headers);
     if (!company) return NextResponse.json({error:"Company not found or access denied."},{status:404});
+    if (agentId) {
+      const agentResponse = await fetch(`${supabaseUrl}/rest/v1/company_ai_agents?select=id,name,role,instructions,runtime,provider,model,connection_id,status&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(agentId)}&limit=1`,{headers:user.headers,cache:"no-store"});
+      if (!agentResponse.ok) return NextResponse.json({error:"The selected AI employee could not be loaded."},{status:502});
+      const agentRows = await agentResponse.json() as Array<{id:string;name:string;role:string;instructions:string;runtime:string;provider:string|null;model:string|null;connection_id:string|null;status:string}>;
+      const agent = agentRows[0];
+      if (!agent || agent.status !== "active" || agent.runtime !== "provider" || !agent.provider || !agent.model || !agent.connection_id) return NextResponse.json({error:"Select an active provider-backed AI employee. Draft and paused employees cannot execute tasks."},{status:400});
+      connectionId = agent.connection_id;
+      model = agent.model;
+      assignedAgentId = agent.id;
+      agentContext = `Assigned AI employee: ${agent.name}. Role: ${agent.role}. Employee instructions: ${agent.instructions || "Follow the company mission and task objective."}. Provider: ${agent.provider}. Model: ${agent.model}.`;
+    }
     const connectionResponse = await fetch(`${supabaseUrl}/rest/v1/company_ai_connections?select=id,provider,status,credential_ciphertext&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(connectionId)}&limit=1`,{headers:user.headers,cache:"no-store"});
     if (!connectionResponse.ok) return NextResponse.json({error:"AI provider connection could not be loaded."},{status:502});
     const connections = await connectionResponse.json() as Array<{id:string;provider:Provider;status:string;credential_ciphertext:string|null}>;
@@ -87,13 +101,13 @@ export async function POST(request: Request) {
     let key: string;
     try { key = decryptAiCredential(connection.credential_ciphertext); } catch { return NextResponse.json({error:"AI credentials cannot be decrypted on this deployment. Verify EIDOLON_AI_ENCRYPTION_KEY."},{status:503}); }
 
-    const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,title,objective,task_type:taskType,status:"running"}),cache:"no-store"});
+    const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,assigned_agent_id:assignedAgentId,title,objective,task_type:taskType,status:"running"}),cache:"no-store"});
     if (!taskResponse.ok) return NextResponse.json({error:"The task could not be recorded, so no model call was made."},{status:502});
     const taskRows = await taskResponse.json() as Array<{id:string}>;
     taskId = taskRows[0]?.id ?? "";
     if (!taskId) return NextResponse.json({error:"Task identity could not be confirmed."},{status:502});
 
-    const prompt = `You are assisting the owner of the digital company "${company.name}".\nCompany industry: ${company.industry}.\nMission: ${company.mission}\nBusiness model: ${company.business_model}\nTarget customer: ${company.target_customer || "Not specified"}\n\nTask category: ${taskType}.\nOwner's instruction: ${objective}\n\nProduce a useful, specific deliverable. Separate assumptions from known facts. Do not invent completed work, customers, revenue, market data, citations, or actions you did not perform. Use clear headings and actionable next steps.`;
+    const prompt = `You are assisting the owner of the digital company "${company.name}".\nCompany industry: ${company.industry}.\nMission: ${company.mission}\nBusiness model: ${company.business_model}\nTarget customer: ${company.target_customer || "Not specified"}\n\n${agentContext}\n\nTask category: ${taskType}.\nOwner's instruction: ${objective}\n\nProduce a useful, specific deliverable. Separate assumptions from known facts. Do not invent completed work, customers, revenue, market data, citations, or actions you did not perform. Use clear headings and actionable next steps.`;
     let result: string;
     try { result = await runProvider(connection.provider,key,model,prompt); }
     catch (error) {
@@ -111,7 +125,7 @@ export async function POST(request: Request) {
     }
     await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"completed",result,completed_at:new Date().toISOString(),updated_at:new Date().toISOString()}),cache:"no-store"});
     const artifacts = await artifactResponse.json() as Array<{id:string}>;
-    return NextResponse.json({task:{id:taskId,status:"completed"},artifact:artifacts[0]??null,result,provider:connection.provider,model},{status:201});
+    return NextResponse.json({task:{id:taskId,status:"completed",assignedAgentId},artifact:artifacts[0]??null,result,provider:connection.provider,model},{status:201});
   } catch {
     if (taskId && user) await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"failed",error_code:"internal_failure",updated_at:new Date().toISOString()}),cache:"no-store"}).catch(()=>null);
     return NextResponse.json({error:"Company work service is temporarily unavailable."},{status:503});
