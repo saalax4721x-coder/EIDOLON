@@ -75,14 +75,26 @@ export async function POST(request: Request) {
     const agentId = typeof input.agentId === "string" ? input.agentId : "";
     let model = typeof input.model === "string" ? input.model.trim().slice(0,160) : "";
     let agentContext = "No named AI employee was assigned.";
-    const title = typeof input.title === "string" ? input.title.trim().slice(0,180) : "";
-    const objective = typeof input.prompt === "string" ? input.prompt.trim().slice(0,12000) : "";
-    const taskType = ["planning","research","content","marketing","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
+    let title = typeof input.title === "string" ? input.title.trim().slice(0,180) : "";
+    const existingTaskId = typeof input.taskId === "string" ? input.taskId : "";
+    let objective = typeof input.prompt === "string" ? input.prompt.trim().slice(0,12000) : "";
+    let taskType = ["planning","research","content","marketing","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
     let assignedAgentId: string | null = null;
     let assignedAgentProvider: string | null = null;
-    if (!companyId || !connectionId || !model || title.length < 2 || objective.length < 5) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
+    if (!companyId || !connectionId || !model || (!existingTaskId && (title.length < 2 || objective.length < 5))) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
     const company = await owns(companyId,user.id,user.headers);
     if (!company) return NextResponse.json({error:"Company not found or access denied."},{status:404});
+    if (existingTaskId) {
+      const queuedResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks?select=id,title,objective,task_type,status&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(existingTaskId)}&limit=1`,{headers:user.headers,cache:"no-store"});
+      if (!queuedResponse.ok) return NextResponse.json({error:"Queued company task could not be loaded."},{status:502});
+      const queuedRows = await queuedResponse.json() as Array<{id:string;title:string;objective:string;task_type:string;status:string}>;
+      const queued = queuedRows[0];
+      if (!queued) return NextResponse.json({error:"Task not found in this company."},{status:404});
+      if (queued.status !== "queued") return NextResponse.json({error:"Only queued tasks can be executed from the work queue."},{status:409});
+      title = queued.title;
+      objective = queued.objective;
+      taskType = queued.task_type;
+    }
     if (agentId) {
       const agentResponse = await fetch(`${supabaseUrl}/rest/v1/company_ai_agents?select=id,name,role,instructions,runtime,provider,model,connection_id,status&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(agentId)}&limit=1`,{headers:user.headers,cache:"no-store"});
       if (!agentResponse.ok) return NextResponse.json({error:"The selected AI employee could not be loaded."},{status:502});
@@ -104,11 +116,19 @@ export async function POST(request: Request) {
     let key: string;
     try { key = decryptAiCredential(connection.credential_ciphertext); } catch { return NextResponse.json({error:"AI credentials cannot be decrypted on this deployment. Verify EIDOLON_AI_ENCRYPTION_KEY."},{status:503}); }
 
-    const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,assigned_agent_id:assignedAgentId,title,objective,task_type:taskType,status:"running"}),cache:"no-store"});
-    if (!taskResponse.ok) return NextResponse.json({error:"The task could not be recorded, so no model call was made."},{status:502});
-    const taskRows = await taskResponse.json() as Array<{id:string}>;
-    taskId = taskRows[0]?.id ?? "";
-    if (!taskId) return NextResponse.json({error:"Task identity could not be confirmed."},{status:502});
+    if (existingTaskId) {
+      const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(existingTaskId)}&company_id=eq.${encodeURIComponent(companyId)}&status=eq.queued`,{method:"PATCH",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({status:"running",assigned_agent_id:assignedAgentId,updated_at:new Date().toISOString()}),cache:"no-store"});
+      if (!taskResponse.ok) return NextResponse.json({error:"The queued task could not be claimed, so no model call was made."},{status:502});
+      const taskRows = await taskResponse.json() as Array<{id:string}>;
+      taskId = taskRows[0]?.id ?? "";
+      if (!taskId) return NextResponse.json({error:"This task was already claimed or is no longer queued."},{status:409});
+    } else {
+      const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,assigned_agent_id:assignedAgentId,title,objective,task_type:taskType,status:"running"}),cache:"no-store"});
+      if (!taskResponse.ok) return NextResponse.json({error:"The task could not be recorded, so no model call was made."},{status:502});
+      const taskRows = await taskResponse.json() as Array<{id:string}>;
+      taskId = taskRows[0]?.id ?? "";
+      if (!taskId) return NextResponse.json({error:"Task identity could not be confirmed."},{status:502});
+    }
 
     const prompt = `You are assisting the owner of the digital company "${company.name}".\nCompany industry: ${company.industry}.\nMission: ${company.mission}\nBusiness model: ${company.business_model}\nTarget customer: ${company.target_customer || "Not specified"}\n\n${agentContext}\n\nTask category: ${taskType}.\nOwner's instruction: ${objective}\n\nProduce a useful, specific deliverable. Separate assumptions from known facts. Do not invent completed work, customers, revenue, market data, citations, or actions you did not perform. Use clear headings and actionable next steps.`;
     let result: string;
