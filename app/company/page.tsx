@@ -7,6 +7,7 @@ type Company = { id:string; name:string; slug:string; industry:string; mission:s
 type Connection = { id:string; provider:string; display_name:string; auth_method:string; status:string; created_at:string };
 type Agent = { id:string; name:string; role:string; description:string; runtime:string; provider:string|null; model:string|null; status:string };
 type Artifact = { id:string; title:string; body:string; artifact_type:string; source_provider:string|null; created_at:string };
+type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
 const providerNames:Record<string,string> = {openai:"OpenAI",anthropic:"Anthropic / Claude",openrouter:"OpenRouter"};
 const industries = ["AI & software","E-commerce","Creative studio","Marketing agency","Media & publishing","Education","Consulting","Developer tools","Finance & operations","Other"];
@@ -17,6 +18,9 @@ export default function CompanyPage() {
   const [connections,setConnections] = useState<Connection[]>([]);
   const [agents,setAgents] = useState<Agent[]>([]);
   const [artifacts,setArtifacts] = useState<Artifact[]>([]);
+  const [mcpTokens,setMcpTokens] = useState<McpToken[]>([]);
+  const [mcpLabel,setMcpLabel] = useState("ChatGPT / Claude company connector");
+  const [newMcpToken,setNewMcpToken] = useState("");
   const [error,setError] = useState("");
   const [notice,setNotice] = useState("");
   const [busy,setBusy] = useState(false);
@@ -60,8 +64,16 @@ export default function CompanyPage() {
     setAgents(agentData.agents ?? []);
     setArtifacts(workData.artifacts ?? []);
   },[]);
+  const loadMcpTokens = useCallback(async (id:string) => {
+    if (!id) { setMcpTokens([]); return; }
+    try {
+      const response = await fetch("/api/company/mcp-tokens?companyId="+encodeURIComponent(id),{cache:"no-store"});
+      const data = await response.json();
+      if (response.ok) setMcpTokens((data.tokens ?? []) as McpToken[]);
+    } catch { /* Optional until the company MCP migration is deployed. */ }
+  },[]);
   useEffect(() => { loadCompanies().catch((e:unknown)=>setError(e instanceof Error?e.message:"Company service unavailable.")); },[loadCompanies]);
-  useEffect(() => { if(companyId) loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); },[companyId,loadCompanyData]);
+  useEffect(() => { if(companyId) { loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); loadMcpTokens(companyId); } },[companyId,loadCompanyData,loadMcpTokens]);
 
   async function submitJson(url:string,body:unknown) {
     const response = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
@@ -85,6 +97,29 @@ export default function CompanyPage() {
       await submitJson("/api/company/connections",{companyId,provider,apiKey});
       setApiKey("");await loadCompanyData(companyId);setNotice(providerNames[provider]+" API connection verified and saved encrypted.");
     } catch(e) { setError(e instanceof Error?e.message:"Provider connection failed."); } finally { setBusy(false); }
+  }
+  async function createMcpToken() {
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");setNewMcpToken("");
+    try {
+      const data = await submitJson("/api/company/mcp-tokens",{companyId,label:mcpLabel});
+      setNewMcpToken(data.token as string);
+      await loadMcpTokens(companyId);
+      setNotice("Company-scoped MCP connection created. Copy the token now; it cannot be retrieved again.");
+    } catch(e) { setError(e instanceof Error?e.message:"MCP connection could not be created."); }
+    finally { setBusy(false); }
+  }
+  async function revokeMcpToken(tokenId:string) {
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try {
+      const response = await fetch("/api/company/mcp-tokens",{method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify({companyId,tokenId})});
+      const data = await response.json();
+      if(!response.ok) throw new Error(data.error ?? "Access could not be revoked.");
+      await loadMcpTokens(companyId);setNotice("External assistant access revoked.");
+      if(newMcpToken) setNewMcpToken("");
+    } catch(e) { setError(e instanceof Error?e.message:"MCP access could not be revoked."); }
+    finally { setBusy(false); }
   }
   async function addEmployee() {
     if(!companyId)return;
@@ -146,6 +181,24 @@ export default function CompanyPage() {
         </form>
       </div>
       <div className="company-connection-list">{connections.length===0?<span className="company-muted">No providers connected to this company.</span>:connections.map((connection)=><div key={connection.id} className="company-connection"><span className="company-provider-mark">{connection.provider==="anthropic"?"A":connection.provider==="openrouter"?"R":"O"}</span><span><b>{connection.display_name}</b><small>{connection.auth_method.replace("_"," ")} · {connection.status}</small></span><span className={connection.status==="connected"?"company-status live":"company-status"}>{connection.status}</span></div>)}</div>
+    </section>
+
+    <section className="company-section">
+      <div className="company-section-head"><div><div className="eyebrow">02B / EXTERNAL INTELLIGENCE</div><h2>Connect ChatGPT or Claude</h2></div><span>SCOPED MCP CONNECTION</span></div>
+      <div className="company-connect-layout">
+        <div className="company-connect-copy">
+          <p>Connect this company's workspace to an assistant that supports remote MCP. ChatGPT or Claude can read the company overview, review saved deliverables, queue work, and save content it creates directly into the EIDOLON archive.</p>
+          <p className="company-muted">This connection exposes EIDOLON tools to ChatGPT/Claude; it does not import a private Custom GPT or Claude Project as an autonomous runtime inside EIDOLON. For AI employees that execute inside EIDOLON, connect an official provider API above. Never paste your ChatGPT or Claude account password here.</p>
+          <div className="company-endpoint"><span>MCP ENDPOINT</span><code>{typeof window !== "undefined" ? window.location.origin : ""}/api/mcp/company</code></div>
+        </div>
+        <form className="company-form company-connect-form" onSubmit={(event)=>{event.preventDefault();void createMcpToken();}}>
+          <label>Connection label<input value={mcpLabel} onChange={(e)=>setMcpLabel(e.target.value)} minLength={2} maxLength={100} required/></label>
+          <button className="primary" disabled={busy}>{busy?"Creating…":"Create secure MCP connection"} <span>↗</span></button>
+        </form>
+      </div>
+      {newMcpToken && <div className="company-mcp-token" role="status"><strong>Copy this token now</strong><p>It is shown only once. Store it in the external assistant's secure connector configuration.</p><code>{newMcpToken}</code><button type="button" className="quiet-button" onClick={()=>navigator.clipboard.writeText(newMcpToken)}>Copy token</button><div className="company-muted">Use the endpoint above with this bearer token. Revoke it here if it is exposed.</div></div>}
+      <div className="company-connection-list">{mcpTokens.length===0?<span className="company-muted">No external assistant tokens recorded. Create one to enable the MCP connection.</span>:mcpTokens.map((token)=><div key={token.id} className="company-connection"><span className="company-provider-mark">M</span><span><b>{token.label}</b><small>{token.scopes.join(" · ")} · created {new Date(token.created_at).toLocaleDateString()}</small></span><span className={"company-status "+(!token.revoked_at?"live":"")}>{token.revoked_at?"revoked":token.last_used_at?"used":"active"}</span>{!token.revoked_at&&<button type="button" className="quiet-button" disabled={busy} onClick={()=>void revokeMcpToken(token.id)}>Revoke</button>}</div>)}</div>
+      <div className="company-muted">Setup: add a remote MCP/custom connector in ChatGPT or Claude, use the endpoint above, select bearer-token authentication, and paste the token. Exact UI and availability depend on your plan and provider's current connector support.</div>
     </section>
 
     <section className="company-section">
