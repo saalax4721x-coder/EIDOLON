@@ -79,6 +79,7 @@ export async function POST(request: Request) {
     const objective = typeof input.prompt === "string" ? input.prompt.trim().slice(0,12000) : "";
     const taskType = ["planning","research","content","marketing","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
     let assignedAgentId: string | null = null;
+    let assignedAgentProvider: string | null = null;
     if (!companyId || !connectionId || !model || title.length < 2 || objective.length < 5) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
     const company = await owns(companyId,user.id,user.headers);
     if (!company) return NextResponse.json({error:"Company not found or access denied."},{status:404});
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
       connectionId = agent.connection_id;
       model = agent.model;
       assignedAgentId = agent.id;
+      assignedAgentProvider = agent.provider;
       agentContext = `Assigned AI employee: ${agent.name}. Role: ${agent.role}. Employee instructions: ${agent.instructions || "Follow the company mission and task objective."}. Provider: ${agent.provider}. Model: ${agent.model}.`;
     }
     const connectionResponse = await fetch(`${supabaseUrl}/rest/v1/company_ai_connections?select=id,provider,status,credential_ciphertext&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(connectionId)}&limit=1`,{headers:user.headers,cache:"no-store"});
@@ -98,6 +100,7 @@ export async function POST(request: Request) {
     const connections = await connectionResponse.json() as Array<{id:string;provider:Provider;status:string;credential_ciphertext:string|null}>;
     const connection = connections[0];
     if (!connection || connection.status !== "connected" || !connection.credential_ciphertext) return NextResponse.json({error:"Select an active API connection for this company."},{status:400});
+    if (assignedAgentProvider && connection.provider !== assignedAgentProvider) return NextResponse.json({error:"The selected employee and provider connection do not match."},{status:400});
     let key: string;
     try { key = decryptAiCredential(connection.credential_ciphertext); } catch { return NextResponse.json({error:"AI credentials cannot be decrypted on this deployment. Verify EIDOLON_AI_ENCRYPTION_KEY."},{status:503}); }
 
