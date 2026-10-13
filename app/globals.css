@@ -1464,3 +1464,25 @@ h1 em{color:var(--discover)}
 @keyframes eidolon-command-in{from{opacity:0}.to{opacity:1}}
 @media (max-width:760px){.eidolon-nav-command span{display:none}.eidolon-nav-command{width:34px;justify-content:center;padding:0}.eidolon-command-grid{grid-template-columns:1fr}.eidolon-command-backdrop{padding-top:72px}.eidolon-command-head strong{font-size:21px}}
 @media (prefers-reduced-motion:reduce){.eidolon-command-backdrop,.eidolon-command-grid a,.eidolon-nav-command{animation:none;transition:none}}
+
+/* Company Foundry and scoped external-assistant connection surfaces */
+.company-endpoint{margin-top:22px;border:1px solid var(--line);padding:14px;display:grid;gap:9px;min-width:0}
+.company-endpoint>span{color:var(--muted-2);font-size:9px;letter-spacing:.18em}
+.company-endpoint code,.company-mcp-token code{display:block;overflow-wrap:anywhere;white-space:pre-wrap;color:var(--accent);font-size:11px;line-height:1.7}
+.company-mcp-token{margin-top:18px;border:1px solid rgba(185,199,173,.32);background:rgba(185,199,173,.045);padding:20px;display:grid;gap:10px}
+.company-mcp-token>strong{font-family:Georgia,serif;font-size:22px;font-weight:400}
+.company-mcp-token>p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}
+.company-mcp-token code{padding:13px;border:1px solid var(--line);background:#07080a}
+.company-mcp-token .quiet-button{justify-self:start}
+.company-mcp-token .company-muted{font-size:10px}
+.company-connection .quiet-button{margin-left:auto;flex-shrink:0}
+.company-connection{min-width:0}
+.company-connection>span:nth-child(2){min-width:0;flex:1}
+.company-connection small{overflow-wrap:anywhere}
+.company-foundry .company-section{position:relative}
+.company-foundry .company-muted{line-height:1.75}
+@media(max-width:760px){
+  .company-endpoint,.company-mcp-token{padding:14px}
+  .company-connection{flex-wrap:wrap}
+  .company-connection .quiet-button{margin-left:0}
+}
