@@ -34,6 +34,7 @@ export function EidolonNav({ section }: { section?: string }) {
         <a className={section === "discover" ? "active" : ""} href="/discover"><EidolonIcon name="discover" size={14}/>Discover</a>
         <a className={section === "graph" ? "active" : ""} href="/graph"><EidolonIcon name="graph" size={14}/>Graph</a>
         <a className={section === "launch" ? "active" : ""} href="/launch"><EidolonIcon name="launch" size={14}/>Launch</a>
+        <a className={section === "company" ? "active" : ""} href="/company"><EidolonIcon name="project" size={14}/>Company</a>
         <a className={section === "economy" ? "active" : ""} href="/economy"><EidolonIcon name="economy" size={14}/>Economy</a>
         <a className={section === "connectors" ? "active" : ""} href="/connectors"><EidolonIcon name="verified" size={14}/>Connect</a>
       </div>
@@ -57,6 +58,7 @@ export function EidolonNav({ section }: { section?: string }) {
             <a href="/discover" onClick={() => setOpen(false)}><EidolonIcon name="discover" size={18}/><span><b>Discover</b><small>Find projects and objects</small></span><i>↗</i></a>
             <a href="/graph" onClick={() => setOpen(false)}><EidolonIcon name="graph" size={18}/><span><b>Graph</b><small>Inspect recorded relationships</small></span><i>↗</i></a>
             <a href="/launch" onClick={() => setOpen(false)}><EidolonIcon name="launch" size={18}/><span><b>Launch</b><small>Create a new object</small></span><i>↗</i></a>
+            <a href="/company" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Company Foundry</b><small>Launch a company and AI workforce</small></span><i>↗</i></a>
             <a href="/economy" onClick={() => setOpen(false)}><EidolonIcon name="economy" size={18}/><span><b>Economy</b><small>Shape a project's economic layer</small></span><i>↗</i></a>
             <a href="/connectors" onClick={() => setOpen(false)}><EidolonIcon name="verified" size={18}/><span><b>Connect</b><small>Link GitHub and wallets</small></span><i>↗</i></a>
             <a href="/help" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Help</b><small>Understand EIDOLON</small></span><i>↗</i></a>
