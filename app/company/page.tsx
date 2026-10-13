@@ -17,6 +17,7 @@ export default function CompanyPage() {
   const [companyId,setCompanyId] = useState("");
   const [connections,setConnections] = useState<Connection[]>([]);
   const [agents,setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId,setSelectedAgentId] = useState("");
   const [artifacts,setArtifacts] = useState<Artifact[]>([]);
   const [mcpTokens,setMcpTokens] = useState<McpToken[]>([]);
   const [mcpLabel,setMcpLabel] = useState("ChatGPT / Claude company connector");
@@ -61,7 +62,9 @@ export default function CompanyPage() {
     if (!agentResponse.ok) throw new Error(agentData.error ?? "AI workforce could not be loaded.");
     if (!workResponse.ok) throw new Error(workData.error ?? "Company work history could not be loaded.");
     setConnections(connectionData.connections ?? []);
-    setAgents(agentData.agents ?? []);
+    const loadedAgents = (agentData.agents ?? []) as Agent[];
+    setAgents(loadedAgents);
+    setSelectedAgentId((current) => loadedAgents.some((agent) => agent.id === current && agent.status === "active") ? current : loadedAgents.find((agent) => agent.status === "active" && agent.runtime === "provider")?.id ?? "");
     setArtifacts(workData.artifacts ?? []);
   },[]);
   const loadMcpTokens = useCallback(async (id:string) => {
@@ -130,14 +133,30 @@ export default function CompanyPage() {
       setAgents((items)=>[data.agent,...items]);setNotice(connection?"AI employee created with a connected provider.":"Native EIDOLON employee profile created as a draft; connect a provider to execute model-powered tasks.");
     } catch(e) { setError(e instanceof Error?e.message:"Employee could not be created."); } finally { setBusy(false); }
   }
+  async function setAgentStatus(agent:Agent,status:"active"|"paused"|"draft") {
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try {
+      const response = await fetch("/api/company/agents",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({companyId,agentId:agent.id,status})});
+      const data = await response.json();
+      if(!response.ok)throw new Error(data.error??"Employee status could not be updated.");
+      setAgents((items)=>items.map((item)=>item.id===agent.id?{...item,...data.agent}:item));
+      if(status==="active")setSelectedAgentId(agent.id);
+      else if(selectedAgentId===agent.id)setSelectedAgentId("");
+      setNotice(status==="active"?agent.name+" is active and ready for assigned tasks.":agent.name+" is now "+status+".");
+    } catch(e) { setError(e instanceof Error?e.message:"Employee status could not be updated."); }
+    finally { setBusy(false); }
+  }
   async function generate() {
     if(!companyId)return;
-    const connection = connections.find((item)=>item.provider===employeeProvider && item.status==="connected" && item.auth_method==="api_key");
-    if(!connection){setError("Connect the selected provider's API key first. A ChatGPT or Claude consumer subscription is not automatically API access.");return;}
+    const agent = agents.find((item)=>item.id===selectedAgentId && item.status==="active" && item.runtime==="provider");
+    if(!agent){setError("Activate a provider-backed AI employee before assigning work.");return;}
+    const connection = connections.find((item)=>item.id===agent.connection_id && item.status==="connected" && item.auth_method==="api_key");
+    if(!connection){setError("The selected employee's provider connection needs attention. Reconnect it before running tasks.");return;}
     setBusy(true);setError("");setNotice("");setResult("");
     try {
-      const data = await submitJson("/api/company/generate",{companyId,connectionId:connection.id,model,title:taskTitle,taskType,prompt});
-      setResult(data.result ?? "");await loadCompanyData(companyId);setNotice("Task completed and the deliverable was saved to the company archive.");
+      const data = await submitJson("/api/company/generate",{companyId,agentId:agent.id,connectionId:connection.id,model:agent.model??model,title:taskTitle,taskType,prompt});
+      setResult(data.result ?? "");await loadCompanyData(companyId);setNotice(agent.name+" completed the task and the deliverable was saved to the company archive.");
     } catch(e) { setError(e instanceof Error?e.message:"Generation failed."); } finally { setBusy(false); }
   }
 
@@ -210,12 +229,13 @@ export default function CompanyPage() {
         <label>Model ID<input value={model} onChange={(e)=>setModel(e.target.value)} maxLength={160} required placeholder="Exact model ID from provider"/></label>
         <button className="primary" disabled={busy}>{busy?"Saving…":"Add AI employee"} <span>↗</span></button>
       </form>
-      <div className="company-agent-list">{agents.length===0?<div className="company-empty"><span>⌘</span><strong>Your workforce starts here</strong><p>Create role profiles and assign connected model providers. New employees start as drafts.</p></div>:agents.map((agent)=><article key={agent.id} className="company-agent"><div className="company-agent-icon">{agent.runtime==="provider"?"✳":"◇"}</div><div className="company-agent-main"><div className="company-agent-top"><strong>{agent.name}</strong><span className={"company-status "+(agent.status==="active"?"live":"")}>{agent.status}</span></div><span>{agent.role}</span><small>{agent.runtime==="provider"?providerNames[agent.provider??""]+" · "+(agent.model??"Model not set"):"Native EIDOLON profile · provider needed for model execution"}</small></div></article>)}</div></div>
+      <div className="company-agent-list">{agents.length===0?<div className="company-empty"><span>⌘</span><strong>Your workforce starts here</strong><p>Create role profiles and assign connected model providers. Activate a provider-backed employee to execute work.</p></div>:agents.map((agent)=><article key={agent.id} className="company-agent"><div className="company-agent-icon">{agent.runtime==="provider"?"✳":"◇"}</div><div className="company-agent-main"><div className="company-agent-top"><strong>{agent.name}</strong><span className={"company-status "+(agent.status==="active"?"live":"")}>{agent.status}</span></div><span>{agent.role}</span><small>{agent.runtime==="provider"?providerNames[agent.provider??""]+" · "+(agent.model??"Model not set"):"Native EIDOLON profile · provider needed for model execution"}</small></div><div className="company-agent-actions">{agent.status==="active"?<button type="button" className="quiet-button" disabled={busy} onClick={()=>void setAgentStatus(agent,"paused")}>Pause</button>:<button type="button" className="quiet-button" disabled={busy||agent.runtime!=="provider"} onClick={()=>void setAgentStatus(agent,"active")}>Activate</button>}</div></article>)}</div></div>
     </section>
 
     <section className="company-section">
       <div className="company-section-head"><div><div className="eyebrow">04 / OPERATIONS</div><h2>Plan, research and create</h2></div><span>PROVIDER-EXECUTED DELIVERABLES</span></div>
       <div className="company-generation-layout"><form className="company-form" onSubmit={(event)=>{event.preventDefault();void generate();}}>
+        <label>Assigned AI employee<select value={selectedAgentId} onChange={(e)=>setSelectedAgentId(e.target.value)} required><option value="">Choose an active employee</option>{agents.filter((agent)=>agent.status==="active"&&agent.runtime==="provider").map((agent)=><option key={agent.id} value={agent.id}>{agent.name} · {agent.role}</option>)}</select></label>
         <label>Task title<input value={taskTitle} onChange={(e)=>setTaskTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
         <label>Work type<select value={taskType} onChange={(e)=>setTaskType(e.target.value)}><option value="planning">Company planning</option><option value="research">Research brief</option><option value="content">Content creation</option><option value="marketing">Marketing campaign</option><option value="product">Product strategy</option><option value="coding">Coding / technical brief</option><option value="operations">Operations workflow</option><option value="general">General task</option></select></label>
         <label>Instructions<textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} rows={5} minLength={5} maxLength={12000} required/></label>
