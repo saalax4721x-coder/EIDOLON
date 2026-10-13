@@ -102,9 +102,28 @@ alter table public.company_ai_agents enable row level security;
 alter table public.company_tasks enable row level security;
 alter table public.company_artifacts enable row level security;
 
+create or replace function public.is_company_member(p_company_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1 from public.company_members m
+    where m.company_id = p_company_id and m.user_id = (select auth.uid())
+  );
+$;
+revoke all on function public.is_company_member(uuid) from public, anon;
+grant execute on function public.is_company_member(uuid) to authenticated;
+
 drop policy if exists "company members can read companies" on public.companies;
 create policy "company members can read companies" on public.companies for select to authenticated
-using (exists (select 1 from public.company_members m where m.company_id = id and m.user_id = (select auth.uid())));
+using (public.is_company_member(id));
+
+drop policy if exists "company owners can create companies" on public.companies;
+create policy "company owners can create companies" on public.companies for insert to authenticated
+with check (owner_id = (select auth.uid()));
 
 drop policy if exists "owners can update companies" on public.companies;
 create policy "owners can update companies" on public.companies for update to authenticated
@@ -112,7 +131,7 @@ using (owner_id = (select auth.uid())) with check (owner_id = (select auth.uid()
 
 drop policy if exists "members can read company membership" on public.company_members;
 create policy "members can read company membership" on public.company_members for select to authenticated
-using (exists (select 1 from public.company_members own where own.company_id = company_id and own.user_id = (select auth.uid())));
+using (public.is_company_member(company_id));
 
 drop policy if exists "company owners manage membership" on public.company_members;
 create policy "company owners manage membership" on public.company_members for all to authenticated
@@ -121,7 +140,7 @@ with check (exists (select 1 from public.companies c where c.id = company_id and
 
 drop policy if exists "company members read AI connections metadata" on public.company_ai_connections;
 create policy "company members read AI connections metadata" on public.company_ai_connections for select to authenticated
-using (exists (select 1 from public.company_members m where m.company_id = company_id and m.user_id = (select auth.uid())));
+using (public.is_company_member(company_id));
 
 drop policy if exists "company owners manage AI connections" on public.company_ai_connections;
 create policy "company owners manage AI connections" on public.company_ai_connections for all to authenticated
@@ -143,7 +162,7 @@ using (exists (select 1 from public.company_members m where m.company_id = compa
 
 drop policy if exists "company members create tasks" on public.company_tasks;
 create policy "company members create tasks" on public.company_tasks for insert to authenticated
-with check (created_by = (select auth.uid()) and exists (select 1 from public.company_members m where m.company_id = company_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','member')));
+with check (created_by = (select auth.uid()) and public.is_company_member(company_id) and exists (select 1 from public.company_members m where m.company_id = company_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','member')));
 
 drop policy if exists "company owners manage tasks" on public.company_tasks;
 create policy "company owners manage tasks" on public.company_tasks for update to authenticated
