@@ -94,6 +94,18 @@ export default function CompanyPage() {
     } catch(e){setError(e instanceof Error?e.message:"Lead could not be saved.");}
     finally{setBusy(false);}
   }
+  async function saveLeadFollowUp(lead:Lead,nextAction:string) {
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try {
+      const response=await fetch("/api/company/leads",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({companyId,leadId:lead.id,stage:lead.stage,nextAction})});
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error??"Follow-up could not be saved.");
+      setLeads(items=>items.map(item=>item.id===lead.id?{...item,...data.lead}:item));
+      setNotice("Follow-up action saved.");
+    } catch(e){setError(e instanceof Error?e.message:"Follow-up could not be saved.");}
+    finally{setBusy(false);}
+  }
   async function changeLeadStage(lead:Lead,stage:string) {
     if(!companyId)return;
     setBusy(true);setError("");setNotice("");
@@ -296,7 +308,7 @@ export default function CompanyPage() {
           <button className="primary" disabled={busy}>{busy?"Saving…":"Add real lead"} <span>↗</span></button>
         </form>
         <div className="company-archive"><div className="eyebrow">PIPELINE / {leads.length} SAVED LEADS</div>
-          {leads.length===0?<p className="company-muted">No leads recorded. Add a genuine enquiry or prospect; EIDOLON does not fabricate customers.</p>:leads.map((lead)=><article className="company-artifact" key={lead.id}><div><b>{lead.name}</b><small>{lead.contact||"No contact provided"} · {lead.source} · {new Date(lead.created_at).toLocaleDateString()}</small>{lead.notes&&<p>{lead.notes}</p>}{lead.next_action&&<p><strong>Next:</strong> {lead.next_action}</p>}</div><label>Stage<select aria-label={"Stage for "+lead.name} value={lead.stage} disabled={busy} onChange={(event)=>void changeLeadStage(lead,event.target.value)}>{["new","contacted","qualified","quoted","won","lost"].map(stage=><option key={stage} value={stage}>{stage}</option>)}</select></label></article>)}
+          {leads.length===0?<p className="company-muted">No leads recorded. Add a genuine enquiry or prospect; EIDOLON does not fabricate customers.</p>:leads.map((lead)=><article className="company-artifact" key={lead.id}><div><b>{lead.name}</b><small>{lead.contact||"No contact provided"} · {lead.source} · {new Date(lead.created_at).toLocaleDateString()}</small>{lead.notes&&<p>{lead.notes}</p>}<form onSubmit={(event)=>{event.preventDefault();const data=new FormData(event.currentTarget);void saveLeadFollowUp(lead,String(data.get("nextAction")??""));}}><label>Next follow-up<input name="nextAction" key={lead.id+lead.next_action} defaultValue={lead.next_action} maxLength={500} placeholder="Next call, quote or reminder"/></label><button type="submit" className="quiet-button" disabled={busy}>Save follow-up</button></form></div><label>Stage<select aria-label={"Stage for "+lead.name} value={lead.stage} disabled={busy} onChange={(event)=>void changeLeadStage(lead,event.target.value)}>{["new","contacted","qualified","quoted","won","lost"].map(stage=><option key={stage} value={stage}>{stage}</option>)}</select></label></article>)}
         </div>
       </div>
       <p className="company-muted">A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
