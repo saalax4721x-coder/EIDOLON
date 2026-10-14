@@ -32,6 +32,9 @@ export default function CompanyPage() {
   const [jobs,setJobs] = useState<Job[]>([]);
   const [operationLead,setOperationLead] = useState("");
   const [operationTitle,setOperationTitle] = useState("");
+  const [jobTitle,setJobTitle] = useState("");
+  const [jobDescription,setJobDescription] = useState("");
+  const [jobLead,setJobLead] = useState("");
   const [operationDescription,setOperationDescription] = useState("");
   const [quoteAmount,setQuoteAmount] = useState("0");
   const [quoteCurrency,setQuoteCurrency] = useState("USD");
@@ -143,9 +146,9 @@ export default function CompanyPage() {
     if(!companyId)return;
     setBusy(true);setError("");setNotice("");
     try{
-      const payload={companyId,resource,leadId:operationLead,title:operationTitle,description:operationDescription,...(resource==="quotes"?{amount:Number(quoteAmount),currency:quoteCurrency.toUpperCase()}:{scheduledAt:jobSchedule?new Date(jobSchedule).toISOString():null,quoteId:jobQuoteId||null})};
+      const payload={companyId,resource,leadId:resource==="quotes"?operationLead:jobLead,title:resource==="quotes"?operationTitle:jobTitle,description:resource==="quotes"?operationDescription:jobDescription,...(resource==="quotes"?{amount:Number(quoteAmount),currency:quoteCurrency.toUpperCase()}:{scheduledAt:jobSchedule?new Date(jobSchedule).toISOString():null,quoteId:jobQuoteId||null})};
       await submitJson("/api/company/operations",payload);
-      setOperationTitle("");setOperationDescription("");setJobSchedule("");setJobQuoteId("");
+      if(resource==="quotes"){setOperationTitle("");setOperationDescription("");}else{setJobTitle("");setJobDescription("");setJobSchedule("");setJobQuoteId("");}
       await loadOperations(companyId);setNotice(resource==="quotes"?"Quote saved. Sending is a separate real-world action.":"Job saved to the schedule.");
     }catch(e){setError(e instanceof Error?e.message:"Operation could not be saved.");}
     finally{setBusy(false);}
@@ -175,7 +178,7 @@ export default function CompanyPage() {
   useEffect(() => {
     let cancelled=false;
     setConnections([]);setAgents([]);setArtifacts([]);setTasks([]);setLeads([]);setQuotes([]);setJobs([]);setMcpTokens([]);
-    setOperationLead("");setJobQuoteId("");setError("");
+    setOperationLead("");setJobLead("");setJobQuoteId("");setError("");
     if(!companyId){setCompanyDataLoading(false);return;}
     setCompanyDataLoading(true);
     Promise.allSettled([loadCompanyData(companyId),loadLeads(companyId),loadOperations(companyId),loadMcpTokens(companyId)])
@@ -413,10 +416,10 @@ export default function CompanyPage() {
       <div className="company-generation-layout">
         <form className="company-form" onSubmit={event=>{event.preventDefault();void createOperation("jobs");}}>
           <div className="eyebrow">NEW JOB / APPOINTMENT</div>
-          <label>Customer lead<select value={operationLead} onChange={e=>{setOperationLead(e.target.value);setJobQuoteId("");}} required><option value="">Select a recorded customer</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.name}</option>)}</select></label>
-          <label>Job title<input value={operationTitle} onChange={e=>setOperationTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
-          <label>Job instructions<textarea value={operationDescription} onChange={e=>setOperationDescription(e.target.value)} maxLength={4000} rows={3}/></label>
-          <label>Related quotation (optional)<select value={jobQuoteId} onChange={e=>{const quote=quotes.find(q=>q.id===e.target.value);setJobQuoteId(e.target.value);if(quote)setOperationLead(quote.lead_id);}}><option value="">No quotation linked</option>{quotes.filter(q=>!operationLead||q.lead_id===operationLead).map(quote=><option key={quote.id} value={quote.id}>{quote.title} · {quote.currency} {Number(quote.amount).toFixed(2)}</option>)}</select></label>
+          <label>Customer lead<select value={jobLead} onChange={e=>{setJobLead(e.target.value);setJobQuoteId("");}} required><option value="">Select a recorded customer</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.name}</option>)}</select></label>
+          <label>Job title<input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
+          <label>Job instructions<textarea value={jobDescription} onChange={e=>setJobDescription(e.target.value)} maxLength={4000} rows={3}/></label>
+          <label>Related quotation (optional)<select value={jobQuoteId} onChange={e=>{const quote=quotes.find(q=>q.id===e.target.value);setJobQuoteId(e.target.value);if(quote)setJobLead(quote.lead_id);}}><option value="">No quotation linked</option>{quotes.filter(q=>!jobLead||q.lead_id===jobLead).map(quote=><option key={quote.id} value={quote.id}>{quote.title} · {quote.currency} {Number(quote.amount).toFixed(2)}</option>)}</select></label>
           <label>Scheduled date and time<input type="datetime-local" value={jobSchedule} onChange={e=>setJobSchedule(e.target.value)}/></label>
           <button className="primary" disabled={busy||!leads.length}>Save job <span>↗</span></button>
         </form>
