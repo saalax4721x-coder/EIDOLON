@@ -1494,3 +1494,39 @@ h1 em{color:var(--discover)}
 .company-task-row small{line-height:1.65}
 .company-task-row .quiet-button{flex-shrink:0}
 @media(max-width:680px){.company-task-row{align-items:flex-start;flex-direction:column}.company-task-row .quiet-button{align-self:flex-start}}
+
+
+/* Company Foundry: functional desktop workspace and responsive navigation. */
+.company-foundry .foundry-workspace{display:grid;grid-template-columns:226px minmax(0,1fr);gap:28px;max-width:1440px;margin:0 auto;align-items:start}
+.company-foundry .foundry-main{min-width:0}
+.company-foundry .foundry-sidebar{position:sticky;top:18px;min-height:calc(100vh - 36px);padding:25px 14px;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.10);background:linear-gradient(155deg,#141820,#0b0e12 72%);box-shadow:0 24px 65px rgba(0,0,0,.22)}
+.company-foundry .foundry-sidebar-head{display:flex;flex-direction:column;gap:8px;padding:7px 10px 25px;border-bottom:1px solid var(--line)}
+.company-foundry .foundry-sidebar-head .eyebrow{margin:0}
+.company-foundry .foundry-sidebar-head strong{font-size:16px;letter-spacing:-.025em;overflow-wrap:anywhere}
+.company-foundry .foundry-sidebar-head small{color:var(--muted);font-size:11px;line-height:1.5}
+.company-foundry .foundry-sidebar-links{display:grid;gap:4px;padding-top:20px}
+.company-foundry .foundry-sidebar-links a{display:flex;align-items:center;gap:12px;min-height:43px;padding:10px 12px;color:#a6abb5;text-decoration:none;font-size:12px;border:1px solid transparent;transition:background .2s,border-color .2s,color .2s}
+.company-foundry .foundry-sidebar-links a:hover,.company-foundry .foundry-sidebar-links a:focus-visible{color:var(--text);background:rgba(255,255,255,.065);border-color:var(--line);outline:none}
+.company-foundry .foundry-sidebar-links a small{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.company-foundry .foundry-sidebar-foot{margin-top:auto;padding:24px 10px 0;display:flex;align-items:center;gap:9px;color:var(--muted);font-size:9px;letter-spacing:.09em;border-top:1px solid var(--line)}
+.company-foundry .foundry-dashboard{scroll-margin-top:24px;border:1px solid rgba(255,255,255,.12);padding:clamp(22px,3vw,38px);background:radial-gradient(500px 260px at 85% 0%,rgba(144,164,187,.13),transparent 75%),linear-gradient(135deg,#171b23,#0c0f13 72%);margin-bottom:32px}
+.company-foundry .foundry-dashboard-heading{display:flex;justify-content:space-between;align-items:start;gap:20px}
+.company-foundry .foundry-dashboard-heading .eyebrow{margin-bottom:12px}
+.company-foundry .foundry-dashboard h2{font-family:Georgia,serif;font-size:clamp(27px,3vw,40px);font-weight:400;letter-spacing:-.045em;margin:0}
+.company-foundry .foundry-dashboard-heading p{font-size:12px;color:var(--muted);line-height:1.6}
+.company-foundry .foundry-dashboard-tag{font-size:9px;letter-spacing:.1em;color:#b4b9c2;white-space:nowrap}
+.company-foundry .foundry-metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:24px}
+.company-foundry .foundry-metric{display:flex;flex-direction:column;gap:17px;min-height:156px;padding:19px 15px;text-decoration:none;background:rgba(5,7,10,.46);border:1px solid rgba(255,255,255,.09);transition:transform .2s,border-color .2s,background .2s}
+.company-foundry .foundry-metric:hover{transform:translateY(-3px);border-color:rgba(231,223,204,.32);background:rgba(26,30,37,.75)}
+.company-foundry .foundry-metric>span{font-size:9px;letter-spacing:.11em;color:#a3a9b2}
+.company-foundry .foundry-metric strong{font-family:Georgia,serif;font-size:44px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.company-foundry .foundry-metric small{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:5px}
+.company-foundry .foundry-metric small b{color:var(--accent)}
+.company-foundry .foundry-dashboard-foot{display:flex;justify-content:space-between;gap:16px;margin-top:18px;font-size:10px;color:var(--muted);line-height:1.5}
+.company-foundry .foundry-dashboard-foot>span:first-child{display:flex;align-items:center;gap:8px}
+.company-foundry .foundry-mobile-toggle{display:none}
+.company-foundry .company-section{scroll-margin-top:20px}
+@media(max-width:1100px){.company-foundry .foundry-workspace{grid-template-columns:190px minmax(0,1fr);gap:16px}.company-foundry .foundry-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.company-foundry .foundry-workspace{display:block}.company-foundry .foundry-sidebar{display:none;position:static;min-height:0;margin-bottom:16px}.company-foundry .foundry-sidebar.is-open{display:flex}.company-foundry .foundry-mobile-toggle{display:block;width:100%;margin:0 0 16px;padding:13px 16px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);text-align:left;cursor:pointer}.company-foundry .foundry-dashboard-heading{flex-direction:column}.company-foundry .foundry-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.company-foundry .foundry-dashboard-foot{flex-direction:column}}
+@media(max-width:430px){.company-foundry .foundry-metric-grid{grid-template-columns:1fr 1fr}.company-foundry .foundry-metric{padding:14px 10px;min-height:137px}.company-foundry .foundry-metric strong{font-size:35px}.company-foundry .foundry-metric>span{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.company-foundry .foundry-metric,.company-foundry .foundry-sidebar-links a{transition:none}}
