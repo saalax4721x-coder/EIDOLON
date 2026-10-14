@@ -11,7 +11,7 @@ type Artifact = { id:string; title:string; body:string; artifact_type:string; so
 type CompanyTask = { id:string; title:string; objective:string; task_type:string; status:string; result:string|null; error_code:string|null; assigned_agent_id:string|null; created_at:string; updated_at:string; completed_at:string|null };
 type Lead = { id:string; name:string; contact:string; source:string; stage:string; notes:string; next_action:string; created_at:string };
 type Quote = {id:string;lead_id:string;title:string;description:string;amount:number;currency:string;status:string;created_at:string};
-type Job = {id:string;lead_id:string;title:string;description:string;scheduled_at:string|null;status:string;created_at:string};
+type Job = {id:string;lead_id:string;quote_id:string|null;title:string;description:string;scheduled_at:string|null;status:string;created_at:string};
 type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
 const providerNames:Record<string,string> = {openai:"OpenAI",anthropic:"Anthropic / Claude",openrouter:"OpenRouter"};
@@ -35,6 +35,7 @@ export default function CompanyPage() {
   const [quoteAmount,setQuoteAmount] = useState("0");
   const [quoteCurrency,setQuoteCurrency] = useState("USD");
   const [jobSchedule,setJobSchedule] = useState("");
+  const [jobQuoteId,setJobQuoteId] = useState("");
   const [leadName,setLeadName] = useState("");
   const [leadContact,setLeadContact] = useState("");
   const [leadNotes,setLeadNotes] = useState("");
@@ -141,15 +142,18 @@ export default function CompanyPage() {
     if(!companyId)return;
     setBusy(true);setError("");setNotice("");
     try{
-      const payload={companyId,resource,leadId:operationLead,title:operationTitle,description:operationDescription,...(resource==="quotes"?{amount:Number(quoteAmount),currency:quoteCurrency.toUpperCase()}:{scheduledAt:jobSchedule?new Date(jobSchedule).toISOString():null})};
+      const payload={companyId,resource,leadId:operationLead,title:operationTitle,description:operationDescription,...(resource==="quotes"?{amount:Number(quoteAmount),currency:quoteCurrency.toUpperCase()}:{scheduledAt:jobSchedule?new Date(jobSchedule).toISOString():null,quoteId:jobQuoteId||null})};
       await submitJson("/api/company/operations",payload);
-      setOperationTitle("");setOperationDescription("");setJobSchedule("");
+      setOperationTitle("");setOperationDescription("");setJobSchedule("");setJobQuoteId("");
       await loadOperations(companyId);setNotice(resource==="quotes"?"Quote saved. Sending is a separate real-world action.":"Job saved to the schedule.");
     }catch(e){setError(e instanceof Error?e.message:"Operation could not be saved.");}
     finally{setBusy(false);}
   }
   async function updateOperation(resource:"quotes"|"jobs",recordId:string,status:string){
     if(!companyId)return;
+    if((resource==="quotes"&&status==="sent")||(resource==="jobs"&&status==="completed")){
+      if(!window.confirm(resource==="quotes"?"Confirm this quotation was actually sent outside EIDOLON?":"Confirm this job was actually completed in the real world?"))return;
+    }
     setBusy(true);setError("");setNotice("");
     try{
       const response=await fetch("/api/company/operations",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({companyId,resource,recordId,status})});
@@ -398,13 +402,14 @@ export default function CompanyPage() {
       <div className="company-generation-layout">
         <form className="company-form" onSubmit={event=>{event.preventDefault();void createOperation("jobs");}}>
           <div className="eyebrow">NEW JOB / APPOINTMENT</div>
-          <label>Customer lead<select value={operationLead} onChange={e=>setOperationLead(e.target.value)} required><option value="">Select a recorded customer</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.name}</option>)}</select></label>
+          <label>Customer lead<select value={operationLead} onChange={e=>{setOperationLead(e.target.value);setJobQuoteId("");}} required><option value="">Select a recorded customer</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.name}</option>)}</select></label>
           <label>Job title<input value={operationTitle} onChange={e=>setOperationTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
           <label>Job instructions<textarea value={operationDescription} onChange={e=>setOperationDescription(e.target.value)} maxLength={4000} rows={3}/></label>
+          <label>Related quotation (optional)<select value={jobQuoteId} onChange={e=>{const quote=quotes.find(q=>q.id===e.target.value);setJobQuoteId(e.target.value);if(quote)setOperationLead(quote.lead_id);}}><option value="">No quotation linked</option>{quotes.filter(q=>!operationLead||q.lead_id===operationLead).map(quote=><option key={quote.id} value={quote.id}>{quote.title} · {quote.currency} {Number(quote.amount).toFixed(2)}</option>)}</select></label>
           <label>Scheduled date and time<input type="datetime-local" value={jobSchedule} onChange={e=>setJobSchedule(e.target.value)}/></label>
           <button className="primary" disabled={busy||!leads.length}>Save job <span>↗</span></button>
         </form>
-        <div className="company-archive"><div className="eyebrow">JOBS / {jobs.length}</div>{jobs.length===0?<p className="company-muted">No jobs scheduled. Scheduling here does not notify customers or dispatch workers.</p>:jobs.map(job=><article key={job.id} className="company-artifact"><div><b>{job.title}</b><small>{leads.find(l=>l.id===job.lead_id)?.name??"Customer"} · {job.scheduled_at?new Date(job.scheduled_at).toLocaleString():"Unscheduled"}</small>{job.description&&<p>{job.description}</p>}</div><label>Status<select aria-label={"Job status for "+job.title} disabled={busy} value={job.status} onChange={e=>void updateOperation("jobs",job.id,e.target.value)}>{["planned","scheduled","in_progress","completed","cancelled"].map(status=><option key={status} value={status}>{status.replaceAll("_"," ")}</option>)}</select></label></article>)}</div>
+        <div className="company-archive"><div className="eyebrow">JOBS / {jobs.length}</div>{jobs.length===0?<p className="company-muted">No jobs scheduled. Scheduling here does not notify customers or dispatch workers.</p>:jobs.map(job=><article key={job.id} className="company-artifact"><div><b>{job.title}</b><small>{leads.find(l=>l.id===job.lead_id)?.name??"Customer"} · {job.scheduled_at?new Date(job.scheduled_at).toLocaleString():"Unscheduled"}</small>{job.description&&<p>{job.description}</p>}{job.quote_id&&<small>Linked quote: {quotes.find(q=>q.id===job.quote_id)?.title??"Recorded quotation"}</small>}</div><label>Status<select aria-label={"Job status for "+job.title} disabled={busy} value={job.status} onChange={e=>void updateOperation("jobs",job.id,e.target.value)}>{["planned","scheduled","in_progress","completed","cancelled"].map(status=><option key={status} value={status}>{status.replaceAll("_"," ")}</option>)}</select></label></article>)}</div>
       </div>
       <p className="company-muted">Statuses are owner-maintained records. No quote is sent, job dispatched, or payment collected by changing a status.</p>
     </section>
