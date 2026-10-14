@@ -26,6 +26,7 @@ export default function CompanyPage() {
   const [leadName,setLeadName] = useState("");
   const [leadContact,setLeadContact] = useState("");
   const [leadNotes,setLeadNotes] = useState("");
+  const [leadNextAction,setLeadNextAction] = useState("");
   const [mcpTokens,setMcpTokens] = useState<McpToken[]>([]);
   const [mcpLabel,setMcpLabel] = useState("ChatGPT / Claude company connector");
   const [newMcpToken,setNewMcpToken] = useState("");
@@ -87,8 +88,8 @@ export default function CompanyPage() {
     if(!companyId)return;
     setBusy(true);setError("");setNotice("");
     try {
-      await submitJson("/api/company/leads",{companyId,name:leadName,contact:leadContact,notes:leadNotes});
-      setLeadName("");setLeadContact("");setLeadNotes("");
+      await submitJson("/api/company/leads",{companyId,name:leadName,contact:leadContact,notes:leadNotes,nextAction:leadNextAction});
+      setLeadName("");setLeadContact("");setLeadNotes("");setLeadNextAction("");
       await loadLeads(companyId);setNotice("Lead saved to your company pipeline.");
     } catch(e){setError(e instanceof Error?e.message:"Lead could not be saved.");}
     finally{setBusy(false);}
@@ -291,17 +292,18 @@ export default function CompanyPage() {
           <label>Customer or organization<input value={leadName} onChange={(e)=>setLeadName(e.target.value)} minLength={2} maxLength={160} required placeholder="e.g. Riverside Property Management"/></label>
           <label>Contact detail<input value={leadContact} onChange={(e)=>setLeadContact(e.target.value)} maxLength={320} placeholder="Email or phone, if provided"/></label>
           <label>Enquiry or opportunity<textarea value={leadNotes} onChange={(e)=>setLeadNotes(e.target.value)} maxLength={4000} rows={3} placeholder="What does this customer need?"/></label>
+          <label>Next follow-up action<input value={leadNextAction} onChange={(e)=>setLeadNextAction(e.target.value)} maxLength={500} placeholder="e.g. Call to confirm requirements"/></label>
           <button className="primary" disabled={busy}>{busy?"Saving…":"Add real lead"} <span>↗</span></button>
         </form>
         <div className="company-archive"><div className="eyebrow">PIPELINE / {leads.length} SAVED LEADS</div>
-          {leads.length===0?<p className="company-muted">No leads recorded. Add a genuine enquiry or prospect; EIDOLON does not fabricate customers.</p>:leads.map((lead)=><article className="company-artifact" key={lead.id}><div><b>{lead.name}</b><small>{lead.contact||"No contact provided"} · {lead.source} · {new Date(lead.created_at).toLocaleDateString()}</small>{lead.notes&&<p>{lead.notes}</p>}</div><label>Stage<select aria-label={"Stage for "+lead.name} value={lead.stage} disabled={busy} onChange={(event)=>void changeLeadStage(lead,event.target.value)}>{["new","contacted","qualified","quoted","won","lost"].map(stage=><option key={stage} value={stage}>{stage}</option>)}</select></label></article>)}
+          {leads.length===0?<p className="company-muted">No leads recorded. Add a genuine enquiry or prospect; EIDOLON does not fabricate customers.</p>:leads.map((lead)=><article className="company-artifact" key={lead.id}><div><b>{lead.name}</b><small>{lead.contact||"No contact provided"} · {lead.source} · {new Date(lead.created_at).toLocaleDateString()}</small>{lead.notes&&<p>{lead.notes}</p>}{lead.next_action&&<p><strong>Next:</strong> {lead.next_action}</p>}</div><label>Stage<select aria-label={"Stage for "+lead.name} value={lead.stage} disabled={busy} onChange={(event)=>void changeLeadStage(lead,event.target.value)}>{["new","contacted","qualified","quoted","won","lost"].map(stage=><option key={stage} value={stage}>{stage}</option>)}</select></label></article>)}
         </div>
       </div>
       <p className="company-muted">A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
     </section>
 
     <section className="company-section">
-      <div className="company-section-head"><div><div className="eyebrow">04 / OPERATIONS</div><h2>Plan, research and create</h2></div><span>PROVIDER-EXECUTED DELIVERABLES</span></div>
+      <div className="company-section-head"><div><div className="eyebrow">05 / OPERATIONS</div><h2>Plan, research and create</h2></div><span>PROVIDER-EXECUTED DELIVERABLES</span></div>
       <div className="company-generation-layout"><form className="company-form" onSubmit={(event)=>{event.preventDefault();void generate();}}>
         <label>Assigned AI employee<select value={selectedAgentId} onChange={(e)=>setSelectedAgentId(e.target.value)} required><option value="">Choose an active employee</option>{agents.filter((agent)=>agent.status==="active"&&agent.runtime==="provider").map((agent)=><option key={agent.id} value={agent.id}>{agent.name} · {agent.role}</option>)}</select></label>
         <label>Task title<input value={taskTitle} onChange={(e)=>setTaskTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
