@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { EidolonNav } from "@/components/eidolon-nav";
+import { EidolonIcon } from "@/components/eidolon-icon";
 
 type Company = { id:string; name:string; slug:string; industry:string; mission:string; businessModel:string; targetCustomer:string; status:string };
 type Connection = { id:string; provider:string; display_name:string; auth_method:string; status:string; created_at:string };
@@ -23,6 +24,7 @@ export default function CompanyPage() {
   const [artifacts,setArtifacts] = useState<Artifact[]>([]);
   const [tasks,setTasks] = useState<CompanyTask[]>([]);
   const [leads,setLeads] = useState<Lead[]>([]);
+  const [sidebarOpen,setSidebarOpen] = useState(false);
   const [leadName,setLeadName] = useState("");
   const [leadContact,setLeadContact] = useState("");
   const [leadNotes,setLeadNotes] = useState("");
@@ -233,10 +235,36 @@ export default function CompanyPage() {
       <div className="company-truth"><span className="status-dot"/> REAL COMPANY RECORDS <span>·</span> REAL PROVIDER CALLS <span>·</span> NO SIMULATED REVENUE OR EMPLOYEES</div>
     </header>
 
+    <div className="foundry-workspace">
+      <aside id="foundry-navigation" className={"foundry-sidebar "+(sidebarOpen?"is-open":"")} aria-label="Company workspace navigation">
+        <div className="foundry-sidebar-head"><span className="eyebrow">WORKSPACE / CONTROL</span><strong>{selectedCompany?.name??"Your company"}</strong><small>{selectedCompany?.industry??"Create a company to begin"}</small></div>
+        <nav className="foundry-sidebar-links" aria-label="Workspace sections">
+          <a href="#foundry-overview" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="graph" size={16}/> Overview</a>
+          <a href="#foundry-blueprint" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="launch" size={16}/> Company setup</a>
+          <a href="#foundry-connections" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="verified" size={16}/> AI connections</a>
+          <a href="#foundry-external" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="discover" size={16}/> External assistants</a>
+          <a href="#foundry-workforce" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="project" size={16}/> Workforce <small>{agents.length}</small></a>
+          <a href="#foundry-leads" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="graph" size={16}/> Customer pipeline <small>{leads.length}</small></a>
+          <a href="#foundry-operations" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="economy" size={16}/> Operations <small>{tasks.length}</small></a>
+        </nav>
+        <div className="foundry-sidebar-foot"><span className="status-dot"/> COMPANY DATA / LIVE DATABASE</div>
+      </aside>
+      <div className="foundry-main">
+      <button type="button" className="foundry-mobile-toggle" onClick={()=>setSidebarOpen(v=>!v)} aria-expanded={sidebarOpen} aria-controls="foundry-navigation">{sidebarOpen?"Close workspace menu":"☰ Workspace menu"}</button>
+      <section className="foundry-dashboard" id="foundry-overview" aria-label="Company dashboard">
+        <div className="foundry-dashboard-heading"><div><span className="eyebrow">COMPANY / OVERVIEW</span><h2>Operations at a glance.</h2><p>{selectedCompany?selectedCompany.name+" · "+selectedCompany.industry:"Create your company to unlock the operating workspace."}</p></div><span className="foundry-dashboard-tag">LIVE RECORDS / NO ESTIMATES</span></div>
+        <div className="foundry-metric-grid">
+          <a href="#foundry-leads" className="foundry-metric"><span>01 / CUSTOMER PIPELINE</span><strong>{leads.length.toLocaleString()}</strong><small>Saved leads <b>↗</b></small></a>
+          <a href="#foundry-leads" className="foundry-metric"><span>02 / OPEN OPPORTUNITIES</span><strong>{leads.filter(l=>!["won","lost"].includes(l.stage)).length.toLocaleString()}</strong><small>Not yet closed <b>↗</b></small></a>
+          <a href="#foundry-workforce" className="foundry-metric"><span>03 / ACTIVE AI TEAM</span><strong>{agents.filter(a=>a.status==="active").length.toLocaleString()}</strong><small>Provider-backed agents <b>↗</b></small></a>
+          <a href="#foundry-operations" className="foundry-metric"><span>04 / SAVED DELIVERABLES</span><strong>{artifacts.length.toLocaleString()}</strong><small>Recent archive items <b>↗</b></small></a>
+        </div>
+        <div className="foundry-dashboard-foot"><span><span className="status-dot"/> {companyId?"Connected company workspace":"Awaiting company setup"}</span><span>Metrics reflect loaded records only; lead and artifact lists are capped by the API.</span></div>
+      </section>
     {error && <div className="company-alert error" role="alert">{error}</div>}
     {notice && <div className="company-alert success" role="status">{notice}</div>}
 
-    <section className="company-section">
+    <section className="company-section" id="foundry-blueprint">
       <div className="company-section-head"><div><div className="eyebrow">01 / FOUNDING</div><h2>Company blueprint</h2></div><span>IDENTITY · MISSION · BUSINESS MODEL</span></div>
       <div className="company-layout">
         <form className="company-form" onSubmit={(event)=>{event.preventDefault();void createCompany();}}>
@@ -254,7 +282,7 @@ export default function CompanyPage() {
       </div>
     </section>
 
-    {selectedCompany&&<><section className="company-section">
+    {selectedCompany&&<><section className="company-section" id="foundry-connections">
       <div className="company-section-head"><div><div className="eyebrow">02 / INTELLIGENCE</div><h2>Connect AI providers</h2></div><span>SERVER-SIDE ENCRYPTED CREDENTIALS</span></div>
       <div className="company-connect-layout"><div className="company-connect-copy"><p>Connect an OpenAI, Anthropic, or OpenRouter <strong>API key</strong>. EIDOLON verifies it against the provider and encrypts it before storage. Keys are never returned by the connection-list API.</p><p className="company-muted">A ChatGPT Plus or Claude Pro subscription is not the same as API access. Consumer-account agent linking will only be offered through an official supported OAuth/MCP integration—not by collecting passwords or automating account sessions.</p></div>
         <form className="company-form company-connect-form" onSubmit={(event)=>{event.preventDefault();void connectProvider();}}>
@@ -266,7 +294,7 @@ export default function CompanyPage() {
       <div className="company-connection-list">{connections.length===0?<span className="company-muted">No providers connected to this company.</span>:connections.map((connection)=><div key={connection.id} className="company-connection"><span className="company-provider-mark">{connection.provider==="anthropic"?"A":connection.provider==="openrouter"?"R":"O"}</span><span><b>{connection.display_name}</b><small>{connection.auth_method.replace("_"," ")} · {connection.status}</small></span><span className={connection.status==="connected"?"company-status live":"company-status"}>{connection.status}</span></div>)}</div>
     </section>
 
-    <section className="company-section">
+    <section className="company-section" id="foundry-external">
       <div className="company-section-head"><div><div className="eyebrow">02B / EXTERNAL INTELLIGENCE</div><h2>Connect ChatGPT or Claude</h2></div><span>SCOPED MCP CONNECTION</span></div>
       <div className="company-connect-layout">
         <div className="company-connect-copy">
@@ -284,7 +312,7 @@ export default function CompanyPage() {
       <div className="company-muted">Setup: add a remote MCP/custom connector in ChatGPT or Claude, use the endpoint above, select bearer-token authentication, and paste the token. Exact UI and availability depend on your plan and provider's current connector support.</div>
     </section>
 
-    <section className="company-section">
+    <section className="company-section" id="foundry-workforce">
       <div className="company-section-head"><div><div className="eyebrow">03 / ORGANIZATION</div><h2>AI employees</h2></div><span>ROLE · INSTRUCTIONS · PROVIDER</span></div>
       <div className="company-workforce-layout"><form className="company-form" onSubmit={(event)=>{event.preventDefault();void addEmployee();}}>
         <label>Employee name<input value={employeeName} onChange={(e)=>setEmployeeName(e.target.value)} minLength={2} maxLength={100} required/></label>
@@ -297,7 +325,7 @@ export default function CompanyPage() {
       <div className="company-agent-list">{agents.length===0?<div className="company-empty"><span>⌘</span><strong>Your workforce starts here</strong><p>Create role profiles and assign connected model providers. Activate a provider-backed employee to execute work.</p></div>:agents.map((agent)=><article key={agent.id} className="company-agent"><div className="company-agent-icon">{agent.runtime==="provider"?"✳":"◇"}</div><div className="company-agent-main"><div className="company-agent-top"><strong>{agent.name}</strong><span className={"company-status "+(agent.status==="active"?"live":"")}>{agent.status}</span></div><span>{agent.role}</span><small>{agent.runtime==="provider"?providerNames[agent.provider??""]+" · "+(agent.model??"Model not set"):"Native EIDOLON profile · provider needed for model execution"}</small></div><div className="company-agent-actions">{agent.status==="active"?<button type="button" className="quiet-button" disabled={busy} onClick={()=>void setAgentStatus(agent,"paused")}>Pause</button>:<button type="button" className="quiet-button" disabled={busy||agent.runtime!=="provider"} onClick={()=>void setAgentStatus(agent,"active")}>Activate</button>}</div></article>)}</div></div>
     </section>
 
-    <section className="company-section">
+    <section className="company-section" id="foundry-leads">
       <div className="company-section-head"><div><div className="eyebrow">04 / CUSTOMER PIPELINE</div><h2>Real leads. Real follow-through.</h2></div><span>OWNER-MANAGED · PERSISTED RECORDS</span></div>
       <div className="company-generation-layout">
         <form className="company-form" onSubmit={(event)=>{event.preventDefault();void addLead();}}>
@@ -314,7 +342,7 @@ export default function CompanyPage() {
       <p className="company-muted">A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
     </section>
 
-    <section className="company-section">
+    <section className="company-section" id="foundry-operations">
       <div className="company-section-head"><div><div className="eyebrow">05 / OPERATIONS</div><h2>Plan, research and create</h2></div><span>PROVIDER-EXECUTED DELIVERABLES</span></div>
       <div className="company-generation-layout"><form className="company-form" onSubmit={(event)=>{event.preventDefault();void generate();}}>
         <label>Assigned AI employee<select value={selectedAgentId} onChange={(e)=>setSelectedAgentId(e.target.value)} required><option value="">Choose an active employee</option>{agents.filter((agent)=>agent.status==="active"&&agent.runtime==="provider").map((agent)=><option key={agent.id} value={agent.id}>{agent.name} · {agent.role}</option>)}</select></label>
@@ -326,6 +354,8 @@ export default function CompanyPage() {
       <div className="company-archive company-task-queue"><div className="eyebrow">WORK QUEUE / ASSIGNED OPERATIONS</div>{tasks.length===0?<p className="company-muted">No company tasks yet. Tasks queued from a connected ChatGPT or Claude assistant will appear here.</p>:tasks.map((task)=><article className="company-artifact company-task-row" key={task.id}><div><b>{task.title}</b><small>{task.task_type} · {task.status} · {new Date(task.created_at).toLocaleString()}</small>{task.status==="failed"&&task.error_code&&<small>Failure: {task.error_code}</small>}</div>{task.status==="queued"?<button type="button" className="quiet-button" disabled={busy||!agents.some((agent)=>agent.id===selectedAgentId&&agent.status==="active"&&agent.runtime==="provider")} onClick={()=>void executeQueuedTask(task)}>Run with selected employee</button>:task.status==="completed"&&task.result?<button type="button" className="quiet-button" onClick={()=>setResult(task.result??"")}>View result</button>:<span className="company-status">{task.status}</span>}</article>)}</div>
       <div className="company-archive"><div className="eyebrow">COMPANY ARCHIVE / RECENT ARTIFACTS</div>{artifacts.length===0?<p className="company-muted">No deliverables recorded yet.</p>:artifacts.map((artifact)=><article className="company-artifact" key={artifact.id}><div><b>{artifact.title}</b><small>{artifact.artifact_type} · {artifact.source_provider??"provider"} · {new Date(artifact.created_at).toLocaleString()}</small></div><button type="button" className="quiet-button" onClick={()=>setResult(artifact.body)}>Open</button></article>)}</div>
     </section></>}
+      </div>
+    </div>
     <footer><span>EIDOLON / COMPANY FOUNDRY</span><span>LAUNCH · STAFF · OPERATE</span></footer>
   </main>;
 }
