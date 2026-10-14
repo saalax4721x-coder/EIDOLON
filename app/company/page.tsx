@@ -20,6 +20,7 @@ const industries = ["Home services & trades","Wholesale & distribution","Local s
 export default function CompanyPage() {
   const [companies,setCompanies] = useState<Company[]>([]);
   const [companyId,setCompanyId] = useState("");
+  const [companyDataLoading,setCompanyDataLoading] = useState(false);
   const [connections,setConnections] = useState<Connection[]>([]);
   const [agents,setAgents] = useState<Agent[]>([]);
   const [selectedAgentId,setSelectedAgentId] = useState("");
@@ -171,7 +172,17 @@ export default function CompanyPage() {
     } catch { /* Optional until the company MCP migration is deployed. */ }
   },[]);
   useEffect(() => { loadCompanies().catch((e:unknown)=>setError(e instanceof Error?e.message:"Company service unavailable.")); },[loadCompanies]);
-  useEffect(() => { if(companyId) { loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); loadMcpTokens(companyId); loadLeads(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Leads unavailable.")); loadOperations(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Operations unavailable.")); } },[companyId,loadCompanyData,loadMcpTokens,loadLeads,loadOperations]);
+  useEffect(() => {
+    let cancelled=false;
+    setConnections([]);setAgents([]);setArtifacts([]);setTasks([]);setLeads([]);setQuotes([]);setJobs([]);setMcpTokens([]);
+    setOperationLead("");setJobQuoteId("");setError("");
+    if(!companyId){setCompanyDataLoading(false);return;}
+    setCompanyDataLoading(true);
+    Promise.allSettled([loadCompanyData(companyId),loadLeads(companyId),loadOperations(companyId),loadMcpTokens(companyId)])
+      .then(results=>{if(cancelled)return;const rejected=results.find(result=>result.status==="rejected");if(rejected?.status==="rejected")setError(rejected.reason instanceof Error?rejected.reason.message:"Company data unavailable.");})
+      .finally(()=>{if(!cancelled)setCompanyDataLoading(false);});
+    return ()=>{cancelled=true;};
+  },[companyId,loadCompanyData,loadMcpTokens,loadLeads,loadOperations]);
 
   async function submitJson(url:string,body:unknown) {
     const response = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
@@ -295,12 +306,12 @@ export default function CompanyPage() {
       <div className="foundry-main">
       <button type="button" className="foundry-mobile-toggle" onClick={()=>setSidebarOpen(v=>!v)} aria-expanded={sidebarOpen} aria-controls="foundry-navigation">{sidebarOpen?"Close workspace menu":"☰ Workspace menu"}</button>
       <section className="foundry-dashboard" id="foundry-overview" aria-label="Company dashboard">
-        <div className="foundry-dashboard-heading"><div><span className="eyebrow">COMPANY / OVERVIEW</span><h2>Operations at a glance.</h2><p>{selectedCompany?selectedCompany.name+" · "+selectedCompany.industry:"Create your company to unlock the operating workspace."}</p></div><span className="foundry-dashboard-tag">LIVE RECORDS / NO ESTIMATES</span></div>
-        <div className="foundry-metric-grid">
-          <a href="#foundry-leads" className="foundry-metric"><span>01 / CUSTOMER PIPELINE</span><strong>{leads.length.toLocaleString()}</strong><small>Saved leads <b>↗</b></small></a>
-          <a href="#foundry-leads" className="foundry-metric"><span>02 / OPEN OPPORTUNITIES</span><strong>{leads.filter(l=>!["won","lost"].includes(l.stage)).length.toLocaleString()}</strong><small>Not yet closed <b>↗</b></small></a>
-          <a href="#foundry-workforce" className="foundry-metric"><span>03 / ACTIVE AI TEAM</span><strong>{agents.filter(a=>a.status==="active").length.toLocaleString()}</strong><small>Provider-backed agents <b>↗</b></small></a>
-          <a href="#foundry-operations" className="foundry-metric"><span>04 / SAVED DELIVERABLES</span><strong>{artifacts.length.toLocaleString()}</strong><small>Recent archive items <b>↗</b></small></a>
+        <div className="foundry-dashboard-heading"><div><span className="eyebrow">COMPANY / OVERVIEW</span><h2>Operations at a glance.</h2><p>{selectedCompany?selectedCompany.name+" · "+selectedCompany.industry:"Create your company to unlock the operating workspace."}</p></div><span className="foundry-dashboard-tag">{companyDataLoading?"LOADING COMPANY DATA":"LIVE RECORDS / NO ESTIMATES"}</span></div>
+        <div className="foundry-metric-grid" aria-busy={companyDataLoading}>
+          <a href="#foundry-leads" className="foundry-metric"><span>01 / CUSTOMER PIPELINE</span><strong>{leads.length.toLocaleString()}</strong><small>{companyDataLoading?"Loading…":"Saved leads"} <b>↗</b></small></a>
+          <a href="#foundry-leads" className="foundry-metric"><span>02 / OPEN OPPORTUNITIES</span><strong>{leads.filter(l=>!["won","lost"].includes(l.stage)).length.toLocaleString()}</strong><small>{companyDataLoading?"Loading…":"Not yet closed"} <b>↗</b></small></a>
+          <a href="#foundry-workforce" className="foundry-metric"><span>03 / ACTIVE AI TEAM</span><strong>{agents.filter(a=>a.status==="active").length.toLocaleString()}</strong><small>{companyDataLoading?"Loading…":"Provider-backed agents"} <b>↗</b></small></a>
+          <a href="#foundry-operations" className="foundry-metric"><span>04 / SAVED DELIVERABLES</span><strong>{artifacts.length.toLocaleString()}</strong><small>{companyDataLoading?"Loading…":"Recent archive items"} <b>↗</b></small></a>
         </div>
         <div className="foundry-dashboard-foot"><span><span className="status-dot"/> {companyId?"Connected company workspace":"Awaiting company setup"}</span><span>Metrics reflect loaded records only; lead and artifact lists are capped by the API.</span></div>
       </section>
