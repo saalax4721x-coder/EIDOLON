@@ -23,3 +23,6 @@ using (private.is_company_owner(company_id))
 with check (private.is_company_owner(company_id) and created_by = (select auth.uid()));
 create policy "company owners delete leads" on public.company_leads for delete to authenticated
 using (private.is_company_owner(company_id));
+
+-- Data API access is gated by row-level security policies above.
+grant select, insert, update, delete on public.company_leads to authenticated;
