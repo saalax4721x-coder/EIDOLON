@@ -8,6 +8,7 @@ type Connection = { id:string; provider:string; display_name:string; auth_method
 type Agent = { id:string; name:string; role:string; description:string; runtime:string; provider:string|null; model:string|null; connection_id:string|null; status:string };
 type Artifact = { id:string; title:string; body:string; artifact_type:string; source_provider:string|null; created_at:string };
 type CompanyTask = { id:string; title:string; objective:string; task_type:string; status:string; result:string|null; error_code:string|null; assigned_agent_id:string|null; created_at:string; updated_at:string; completed_at:string|null };
+type Lead = { id:string; name:string; contact:string; source:string; stage:string; notes:string; next_action:string; created_at:string };
 type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
 const providerNames:Record<string,string> = {openai:"OpenAI",anthropic:"Anthropic / Claude",openrouter:"OpenRouter"};
@@ -21,6 +22,10 @@ export default function CompanyPage() {
   const [selectedAgentId,setSelectedAgentId] = useState("");
   const [artifacts,setArtifacts] = useState<Artifact[]>([]);
   const [tasks,setTasks] = useState<CompanyTask[]>([]);
+  const [leads,setLeads] = useState<Lead[]>([]);
+  const [leadName,setLeadName] = useState("");
+  const [leadContact,setLeadContact] = useState("");
+  const [leadNotes,setLeadNotes] = useState("");
   const [mcpTokens,setMcpTokens] = useState<McpToken[]>([]);
   const [mcpLabel,setMcpLabel] = useState("ChatGPT / Claude company connector");
   const [newMcpToken,setNewMcpToken] = useState("");
@@ -71,6 +76,35 @@ export default function CompanyPage() {
     setArtifacts(workData.artifacts ?? []);
     setTasks(workData.tasks ?? []);
   },[]);
+  const loadLeads = useCallback(async (id:string) => {
+    if(!id){setLeads([]);return;}
+    const response=await fetch("/api/company/leads?companyId="+encodeURIComponent(id),{cache:"no-store"});
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error??"Leads unavailable.");
+    setLeads(data.leads??[]);
+  },[]);
+  async function addLead() {
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try {
+      await submitJson("/api/company/leads",{companyId,name:leadName,contact:leadContact,notes:leadNotes});
+      setLeadName("");setLeadContact("");setLeadNotes("");
+      await loadLeads(companyId);setNotice("Lead saved to your company pipeline.");
+    } catch(e){setError(e instanceof Error?e.message:"Lead could not be saved.");}
+    finally{setBusy(false);}
+  }
+  async function changeLeadStage(lead:Lead,stage:string) {
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try {
+      const response=await fetch("/api/company/leads",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({companyId,leadId:lead.id,stage,nextAction:lead.next_action})});
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error??"Lead update failed.");
+      setLeads(items=>items.map(item=>item.id===lead.id?{...item,...data.lead}:item));
+      setNotice("Lead stage updated.");
+    } catch(e){setError(e instanceof Error?e.message:"Lead update failed.");}
+    finally{setBusy(false);}
+  }
   const loadMcpTokens = useCallback(async (id:string) => {
     if (!id) { setMcpTokens([]); return; }
     try {
@@ -80,7 +114,7 @@ export default function CompanyPage() {
     } catch { /* Optional until the company MCP migration is deployed. */ }
   },[]);
   useEffect(() => { loadCompanies().catch((e:unknown)=>setError(e instanceof Error?e.message:"Company service unavailable.")); },[loadCompanies]);
-  useEffect(() => { if(companyId) { loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); loadMcpTokens(companyId); } },[companyId,loadCompanyData,loadMcpTokens]);
+  useEffect(() => { if(companyId) { loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); loadMcpTokens(companyId); loadLeads(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Leads unavailable.")); } },[companyId,loadCompanyData,loadMcpTokens,loadLeads]);
 
   async function submitJson(url:string,body:unknown) {
     const response = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
@@ -248,6 +282,22 @@ export default function CompanyPage() {
         <button className="primary" disabled={busy}>{busy?"Saving…":"Add AI employee"} <span>↗</span></button>
       </form>
       <div className="company-agent-list">{agents.length===0?<div className="company-empty"><span>⌘</span><strong>Your workforce starts here</strong><p>Create role profiles and assign connected model providers. Activate a provider-backed employee to execute work.</p></div>:agents.map((agent)=><article key={agent.id} className="company-agent"><div className="company-agent-icon">{agent.runtime==="provider"?"✳":"◇"}</div><div className="company-agent-main"><div className="company-agent-top"><strong>{agent.name}</strong><span className={"company-status "+(agent.status==="active"?"live":"")}>{agent.status}</span></div><span>{agent.role}</span><small>{agent.runtime==="provider"?providerNames[agent.provider??""]+" · "+(agent.model??"Model not set"):"Native EIDOLON profile · provider needed for model execution"}</small></div><div className="company-agent-actions">{agent.status==="active"?<button type="button" className="quiet-button" disabled={busy} onClick={()=>void setAgentStatus(agent,"paused")}>Pause</button>:<button type="button" className="quiet-button" disabled={busy||agent.runtime!=="provider"} onClick={()=>void setAgentStatus(agent,"active")}>Activate</button>}</div></article>)}</div></div>
+    </section>
+
+    <section className="company-section">
+      <div className="company-section-head"><div><div className="eyebrow">04 / CUSTOMER PIPELINE</div><h2>Real leads. Real follow-through.</h2></div><span>OWNER-MANAGED · PERSISTED RECORDS</span></div>
+      <div className="company-generation-layout">
+        <form className="company-form" onSubmit={(event)=>{event.preventDefault();void addLead();}}>
+          <label>Customer or organization<input value={leadName} onChange={(e)=>setLeadName(e.target.value)} minLength={2} maxLength={160} required placeholder="e.g. Riverside Property Management"/></label>
+          <label>Contact detail<input value={leadContact} onChange={(e)=>setLeadContact(e.target.value)} maxLength={320} placeholder="Email or phone, if provided"/></label>
+          <label>Enquiry or opportunity<textarea value={leadNotes} onChange={(e)=>setLeadNotes(e.target.value)} maxLength={4000} rows={3} placeholder="What does this customer need?"/></label>
+          <button className="primary" disabled={busy}>{busy?"Saving…":"Add real lead"} <span>↗</span></button>
+        </form>
+        <div className="company-archive"><div className="eyebrow">PIPELINE / {leads.length} SAVED LEADS</div>
+          {leads.length===0?<p className="company-muted">No leads recorded. Add a genuine enquiry or prospect; EIDOLON does not fabricate customers.</p>:leads.map((lead)=><article className="company-artifact" key={lead.id}><div><b>{lead.name}</b><small>{lead.contact||"No contact provided"} · {lead.source} · {new Date(lead.created_at).toLocaleDateString()}</small>{lead.notes&&<p>{lead.notes}</p>}</div><label>Stage<select aria-label={"Stage for "+lead.name} value={lead.stage} disabled={busy} onChange={(event)=>void changeLeadStage(lead,event.target.value)}>{["new","contacted","qualified","quoted","won","lost"].map(stage=><option key={stage} value={stage}>{stage}</option>)}</select></label></article>)}
+        </div>
+      </div>
+      <p className="company-muted">A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
     </section>
 
     <section className="company-section">
