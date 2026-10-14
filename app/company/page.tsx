@@ -10,6 +10,8 @@ type Agent = { id:string; name:string; role:string; description:string; runtime:
 type Artifact = { id:string; title:string; body:string; artifact_type:string; source_provider:string|null; created_at:string };
 type CompanyTask = { id:string; title:string; objective:string; task_type:string; status:string; result:string|null; error_code:string|null; assigned_agent_id:string|null; created_at:string; updated_at:string; completed_at:string|null };
 type Lead = { id:string; name:string; contact:string; source:string; stage:string; notes:string; next_action:string; created_at:string };
+type Quote = {id:string;lead_id:string;title:string;description:string;amount:number;currency:string;status:string;created_at:string};
+type Job = {id:string;lead_id:string;title:string;description:string;scheduled_at:string|null;status:string;created_at:string};
 type McpToken = { id:string; label:string; scopes:string[]; revoked_at:string|null; created_at:string; last_used_at:string|null };
 
 const providerNames:Record<string,string> = {openai:"OpenAI",anthropic:"Anthropic / Claude",openrouter:"OpenRouter"};
@@ -25,6 +27,14 @@ export default function CompanyPage() {
   const [tasks,setTasks] = useState<CompanyTask[]>([]);
   const [leads,setLeads] = useState<Lead[]>([]);
   const [sidebarOpen,setSidebarOpen] = useState(false);
+  const [quotes,setQuotes] = useState<Quote[]>([]);
+  const [jobs,setJobs] = useState<Job[]>([]);
+  const [operationLead,setOperationLead] = useState("");
+  const [operationTitle,setOperationTitle] = useState("");
+  const [operationDescription,setOperationDescription] = useState("");
+  const [quoteAmount,setQuoteAmount] = useState("0");
+  const [quoteCurrency,setQuoteCurrency] = useState("USD");
+  const [jobSchedule,setJobSchedule] = useState("");
   const [leadName,setLeadName] = useState("");
   const [leadContact,setLeadContact] = useState("");
   const [leadNotes,setLeadNotes] = useState("");
@@ -120,6 +130,34 @@ export default function CompanyPage() {
     } catch(e){setError(e instanceof Error?e.message:"Lead update failed.");}
     finally{setBusy(false);}
   }
+  const loadOperations = useCallback(async(id:string)=>{
+    if(!id){setQuotes([]);setJobs([]);return;}
+    const responses=await Promise.all(["quotes","jobs"].map(resource=>fetch("/api/company/operations?companyId="+encodeURIComponent(id)+"&resource="+resource,{cache:"no-store"})));
+    const data=await Promise.all(responses.map(response=>response.json()));
+    if(!responses[0].ok||!responses[1].ok)throw new Error(data.find((_,i)=>!responses[i].ok)?.error??"Operations unavailable.");
+    setQuotes(data[0].records??[]);setJobs(data[1].records??[]);
+  },[]);
+  async function createOperation(resource:"quotes"|"jobs"){
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try{
+      const payload={companyId,resource,leadId:operationLead,title:operationTitle,description:operationDescription,...(resource==="quotes"?{amount:Number(quoteAmount),currency:quoteCurrency.toUpperCase()}:{scheduledAt:jobSchedule?new Date(jobSchedule).toISOString():null})};
+      await submitJson("/api/company/operations",payload);
+      setOperationTitle("");setOperationDescription("");setJobSchedule("");
+      await loadOperations(companyId);setNotice(resource==="quotes"?"Quote saved. Sending is a separate real-world action.":"Job saved to the schedule.");
+    }catch(e){setError(e instanceof Error?e.message:"Operation could not be saved.");}
+    finally{setBusy(false);}
+  }
+  async function updateOperation(resource:"quotes"|"jobs",recordId:string,status:string){
+    if(!companyId)return;
+    setBusy(true);setError("");setNotice("");
+    try{
+      const response=await fetch("/api/company/operations",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({companyId,resource,recordId,status})});
+      const data=await response.json();if(!response.ok)throw new Error(data.error??"Update failed.");
+      await loadOperations(companyId);setNotice("Record status saved. External actions must be confirmed separately.");
+    }catch(e){setError(e instanceof Error?e.message:"Update failed.");}
+    finally{setBusy(false);}
+  }
   const loadMcpTokens = useCallback(async (id:string) => {
     if (!id) { setMcpTokens([]); return; }
     try {
@@ -129,7 +167,7 @@ export default function CompanyPage() {
     } catch { /* Optional until the company MCP migration is deployed. */ }
   },[]);
   useEffect(() => { loadCompanies().catch((e:unknown)=>setError(e instanceof Error?e.message:"Company service unavailable.")); },[loadCompanies]);
-  useEffect(() => { if(companyId) { loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); loadMcpTokens(companyId); loadLeads(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Leads unavailable.")); } },[companyId,loadCompanyData,loadMcpTokens,loadLeads]);
+  useEffect(() => { if(companyId) { loadCompanyData(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Company data unavailable.")); loadMcpTokens(companyId); loadLeads(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Leads unavailable.")); loadOperations(companyId).catch((e:unknown)=>setError(e instanceof Error?e.message:"Operations unavailable.")); } },[companyId,loadCompanyData,loadMcpTokens,loadLeads,loadOperations]);
 
   async function submitJson(url:string,body:unknown) {
     const response = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
@@ -245,6 +283,7 @@ export default function CompanyPage() {
           <a href="#foundry-external" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="discover" size={16}/> External assistants</a>
           <a href="#foundry-workforce" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="project" size={16}/> Workforce <small>{agents.length}</small></a>
           <a href="#foundry-leads" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="graph" size={16}/> Customer pipeline <small>{leads.length}</small></a>
+          <a href="#foundry-sales" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="economy" size={16}/> Quotes & jobs <small>{quotes.length+jobs.length}</small></a>
           <a href="#foundry-operations" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="economy" size={16}/> Operations <small>{tasks.length}</small></a>
         </nav>
         <div className="foundry-sidebar-foot"><span className="status-dot"/> COMPANY DATA / LIVE DATABASE</div>
@@ -342,8 +381,36 @@ export default function CompanyPage() {
       <p className="company-muted">A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
     </section>
 
+    <section className="company-section" id="foundry-sales">
+      <div className="company-section-head"><div><div className="eyebrow">05 / SALES & DELIVERY</div><h2>Quotes and jobs</h2></div><span>COMPANY RECORDS · CUSTOMER LINKED</span></div>
+      <div className="company-generation-layout">
+        <form className="company-form" onSubmit={(event)=>{event.preventDefault();void createOperation("quotes");}}>
+          <div className="eyebrow">NEW QUOTATION</div>
+          <label>Customer lead<select value={operationLead} onChange={e=>setOperationLead(e.target.value)} required><option value="">Select a recorded customer</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.name}</option>)}</select></label>
+          <label>Service or product<input value={operationTitle} onChange={e=>setOperationTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
+          <label>Scope / details<textarea value={operationDescription} onChange={e=>setOperationDescription(e.target.value)} maxLength={4000} rows={3}/></label>
+          <label>Amount<input type="number" min="0" step="0.01" value={quoteAmount} onChange={e=>setQuoteAmount(e.target.value)} required/></label>
+          <label>Currency (ISO code)<input value={quoteCurrency} onChange={e=>setQuoteCurrency(e.target.value.toUpperCase())} minLength={3} maxLength={3} required/></label>
+          <button className="primary" disabled={busy||!leads.length}>Save quote <span>↗</span></button>
+        </form>
+        <div className="company-archive"><div className="eyebrow">QUOTATIONS / {quotes.length}</div>{quotes.length===0?<p className="company-muted">No quotations yet. Quotes are records, not automatically sent invoices.</p>:quotes.map(quote=><article key={quote.id} className="company-artifact"><div><b>{quote.title}</b><small>{leads.find(l=>l.id===quote.lead_id)?.name??"Customer"} · {quote.currency} {Number(quote.amount).toFixed(2)}</small>{quote.description&&<p>{quote.description}</p>}</div><label>Status<select aria-label={"Quote status for "+quote.title} disabled={busy} value={quote.status} onChange={e=>void updateOperation("quotes",quote.id,e.target.value)}>{["draft","sent","accepted","declined"].map(status=><option key={status} value={status}>{status}</option>)}</select></label></article>)}</div>
+      </div>
+      <div className="company-generation-layout">
+        <form className="company-form" onSubmit={event=>{event.preventDefault();void createOperation("jobs");}}>
+          <div className="eyebrow">NEW JOB / APPOINTMENT</div>
+          <label>Customer lead<select value={operationLead} onChange={e=>setOperationLead(e.target.value)} required><option value="">Select a recorded customer</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.name}</option>)}</select></label>
+          <label>Job title<input value={operationTitle} onChange={e=>setOperationTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
+          <label>Job instructions<textarea value={operationDescription} onChange={e=>setOperationDescription(e.target.value)} maxLength={4000} rows={3}/></label>
+          <label>Scheduled date and time<input type="datetime-local" value={jobSchedule} onChange={e=>setJobSchedule(e.target.value)}/></label>
+          <button className="primary" disabled={busy||!leads.length}>Save job <span>↗</span></button>
+        </form>
+        <div className="company-archive"><div className="eyebrow">JOBS / {jobs.length}</div>{jobs.length===0?<p className="company-muted">No jobs scheduled. Scheduling here does not notify customers or dispatch workers.</p>:jobs.map(job=><article key={job.id} className="company-artifact"><div><b>{job.title}</b><small>{leads.find(l=>l.id===job.lead_id)?.name??"Customer"} · {job.scheduled_at?new Date(job.scheduled_at).toLocaleString():"Unscheduled"}</small>{job.description&&<p>{job.description}</p>}</div><label>Status<select aria-label={"Job status for "+job.title} disabled={busy} value={job.status} onChange={e=>void updateOperation("jobs",job.id,e.target.value)}>{["planned","scheduled","in_progress","completed","cancelled"].map(status=><option key={status} value={status}>{status.replaceAll("_"," ")}</option>)}</select></label></article>)}</div>
+      </div>
+      <p className="company-muted">Statuses are owner-maintained records. No quote is sent, job dispatched, or payment collected by changing a status.</p>
+    </section>
+
     <section className="company-section" id="foundry-operations">
-      <div className="company-section-head"><div><div className="eyebrow">05 / OPERATIONS</div><h2>Plan, research and create</h2></div><span>PROVIDER-EXECUTED DELIVERABLES</span></div>
+      <div className="company-section-head"><div><div className="eyebrow">06 / OPERATIONS</div><h2>Plan, research and create</h2></div><span>PROVIDER-EXECUTED DELIVERABLES</span></div>
       <div className="company-generation-layout"><form className="company-form" onSubmit={(event)=>{event.preventDefault();void generate();}}>
         <label>Assigned AI employee<select value={selectedAgentId} onChange={(e)=>setSelectedAgentId(e.target.value)} required><option value="">Choose an active employee</option>{agents.filter((agent)=>agent.status==="active"&&agent.runtime==="provider").map((agent)=><option key={agent.id} value={agent.id}>{agent.name} · {agent.role}</option>)}</select></label>
         <label>Task title<input value={taskTitle} onChange={(e)=>setTaskTitle(e.target.value)} minLength={2} maxLength={180} required/></label>
