@@ -51,6 +51,10 @@ export async function POST(request:Request){
   const scheduledAt=body.scheduledAt;
   if(scheduledAt!==undefined&&scheduledAt!==null&&(!str(scheduledAt,40,10)||Number.isNaN(Date.parse(scheduledAt))))return NextResponse.json({error:"Invalid schedule."},{status:400});
   if(scheduledAt)values.scheduled_at=new Date(scheduledAt).toISOString();
+  if(body.quoteId!==undefined&&body.quoteId!==null&&body.quoteId!==""){
+   if(!uuid.test(body.quoteId))return NextResponse.json({error:"Invalid linked quotation."},{status:400});
+   values.quote_id=body.quoteId;
+  }
  }
  const r=await fetch(supabaseUrl+"/rest/v1/"+config[resource].table,{method:"POST",headers:{...user.headers,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify(values)});
  if(!r.ok)return NextResponse.json({error:"Could not save record. Confirm the selected lead belongs to this company."},{status:502});
