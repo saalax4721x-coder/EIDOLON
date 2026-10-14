@@ -53,6 +53,9 @@ export async function POST(request:Request){
   if(scheduledAt)values.scheduled_at=new Date(scheduledAt).toISOString();
   if(body.quoteId!==undefined&&body.quoteId!==null&&body.quoteId!==""){
    if(!uuid.test(body.quoteId))return NextResponse.json({error:"Invalid linked quotation."},{status:400});
+   const linked=await fetch(supabaseUrl+"/rest/v1/company_quotes?select=id&company_id=eq."+companyId+"&lead_id=eq."+leadId+"&id=eq."+body.quoteId+"&limit=1",{headers:user.headers,cache:"no-store"});
+   if(!linked.ok)return NextResponse.json({error:"Linked quotation could not be checked."},{status:502});
+   if(!((await linked.json()) as Array<{id:string}>).length)return NextResponse.json({error:"Quotation must belong to this customer and company."},{status:400});
    values.quote_id=body.quoteId;
   }
  }
