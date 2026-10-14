@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     let title = typeof input.title === "string" ? input.title.trim().slice(0,180) : "";
     const existingTaskId = typeof input.taskId === "string" ? input.taskId : "";
     let objective = typeof input.prompt === "string" ? input.prompt.trim().slice(0,12000) : "";
-    let taskType = ["planning","research","content","marketing","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
+    let taskType = ["planning","research","content","marketing","customer_acquisition","sales","service_operations","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
     let assignedAgentId: string | null = null;
     let assignedAgentProvider: string | null = null;
     if (!companyId || !connectionId || !model || (!existingTaskId && (title.length < 2 || objective.length < 5))) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       if (!taskId) return NextResponse.json({error:"Task identity could not be confirmed."},{status:502});
     }
 
-    const prompt = `You are assisting the owner of the digital company "${company.name}".\nCompany industry: ${company.industry}.\nMission: ${company.mission}\nBusiness model: ${company.business_model}\nTarget customer: ${company.target_customer || "Not specified"}\n\n${agentContext}\n\nTask category: ${taskType}.\nOwner's instruction: ${objective}\n\nProduce a useful, specific deliverable. Separate assumptions from known facts. Do not invent completed work, customers, revenue, market data, citations, or actions you did not perform. Use clear headings and actionable next steps.`;
+    const prompt = `You are assisting the owner of the operating business "${company.name}".\nIndustry: ${company.industry}.\nMission and services: ${company.mission}\nBusiness model: ${company.business_model}\nTarget customers: ${company.target_customer || "Not specified"}\n\n${agentContext}\n\nTask category: ${taskType}.\nOwner instruction: ${objective}\n\nProduce a useful, specific deliverable for the actual type of business described. For local services and trades, prioritize service area, ideal customer, lead sources, enquiry handling, quote preparation, scheduling, job checklists, customer communication, repeat business, and safety or licensing boundaries where relevant. For wholesale, consider buyer segments, supplier relationships, inventory constraints, order minimums, and repeat purchasing. For digital businesses, tailor recommendations to their product and distribution. Separate assumptions from known facts. Do not invent completed work, customers, revenue, market data, citations, or actions you did not perform. Do not claim to contact leads, book jobs, issue quotes, spend ad budget, or perform physical work unless a connected tool actually did so. Use clear headings and actionable next steps.`;
     let result: string;
     try { result = await runProvider(connection.provider,key,model,prompt); }
     catch (error) {
