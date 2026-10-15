@@ -46,10 +46,10 @@ export async function POST(request:Request){
  if(typeof companyId!=="string"||!uuid.test(companyId)||!await owns(companyId,user))return NextResponse.json({error:"Company not found."},{status:404});
  let table="",values:Record<string,unknown>={created_by:user.id};
  if(kind==="offer"){
-  if(!text(body.title,5,180)||!text(body.description,20,4000)||!text(body.categories??"",0,300)||!text(body.eligibility??"",0,1000)||!text(body.budgetNote??"",0,240))return NextResponse.json({error:"Invalid sponsorship offer."},{status:400});
+  if(!text(body.title,5,180)||!text(body.description,20,4000)||!text(body.categories??"",0,300)||!text(body.eligibility??"",0,1000)||!text(body.budgetNote??"",0,240)||!text(body.contactEmail??"",0,254)||Boolean(body.contactEmail)&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.contactEmail)))return NextResponse.json({error:"Invalid sponsorship offer."},{status:400});
   const company=await readRows(supabaseUrl+"/rest/v1/companies?select=name&id=eq."+companyId+"&limit=1",user.headers) as Array<{name:string}>;
   if(!company[0])return NextResponse.json({error:"Sponsor company not found."},{status:404});
-  table="sponsorship_offers";values={...values,sponsor_name:company[0].name,sponsor_company_id:companyId,title:body.title.trim(),description:body.description.trim(),categories:(body.categories as string??"").trim(),eligibility:(body.eligibility as string??"").trim(),budget_note:(body.budgetNote as string??"").trim()};
+  table="sponsorship_offers";values={...values,sponsor_name:company[0].name,contact_email:String(body.contactEmail??"").trim().toLowerCase(),sponsor_company_id:companyId,title:body.title.trim(),description:body.description.trim(),categories:(body.categories as string??"").trim(),eligibility:(body.eligibility as string??"").trim(),budget_note:(body.budgetNote as string??"").trim()};
  }else if(kind==="application"){
   if(typeof body.offerId!=="string"||!uuid.test(body.offerId)||!text(body.pitch,30,4000)||!text(body.requestedSupport,5,500))return NextResponse.json({error:"Invalid sponsorship application."},{status:400});
   const offers=await readRows(supabaseUrl+"/rest/v1/sponsorship_offers?select=id,sponsor_company_id&status=eq.published&id=eq."+body.offerId+"&limit=1",user.headers) as Array<{id:string;sponsor_company_id:string}>;
