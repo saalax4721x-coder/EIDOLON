@@ -192,6 +192,27 @@ export default function CompanyPage() {
     return ()=>{cancelled=true;};
   },[companyId,loadCompanyData,loadMcpTokens,loadLeads,loadOperations]);
 
+  function exportCompanyRecords(resource:"leads"|"quotes"|"jobs"){
+    if(!selectedCompany)return;
+    const columns:Record<typeof resource,string[]>={leads:["id","name","contact","source","stage","notes","next_action","created_at"],quotes:["id","lead_id","title","description","amount","currency","status","created_at"],jobs:["id","lead_id","quote_id","title","description","scheduled_at","status","created_at"]};
+    const rows:Record<typeof resource,Record<string,unknown>[]>={
+      leads:leads as unknown as Record<string,unknown>[],
+      quotes:quotes as unknown as Record<string,unknown>[],
+      jobs:jobs as unknown as Record<string,unknown>[]
+    };
+    const safeCell=(value:unknown)=>{
+      let cell=String(value??"");
+      // Prevent spreadsheet software from evaluating imported customer content as a formula.
+      if(/^[\\s]*[=+@-]/.test(cell))cell="'"+cell;
+      return '"'+cell.replaceAll('"','""')+'"';
+    };
+    const csv=[columns[resource].map(safeCell).join(","),...rows[resource].map(row=>columns[resource].map(column=>safeCell(row[column])).join(","))].join("\r\n");
+    const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");link.href=url;
+    link.download="eidolon-"+resource+"-"+selectedCompany.id+".csv";
+    document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+  }
   async function submitJson(url:string,body:unknown) {
     const response = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
     const data = await response.json();
@@ -397,11 +418,11 @@ export default function CompanyPage() {
           <label>Next follow-up action<input value={leadNextAction} onChange={(e)=>setLeadNextAction(e.target.value)} maxLength={500} placeholder="e.g. Call to confirm requirements"/></label>
           <button className="primary" disabled={busy}>{busy?"Saving…":"Add real lead"} <span>↗</span></button>
         </form>
-        <div className="company-archive"><div className="eyebrow">PIPELINE / {leads.length} SAVED LEADS</div>
+        <div className="company-archive"><div className="eyebrow">PIPELINE / {leads.length} SAVED LEADS</div><button type="button" className="quiet-button" disabled={!leads.length||companyDataLoading} onClick={()=>exportCompanyRecords("leads")}>Export loaded leads (CSV)</button>
           {leads.length===0?<p className="company-muted">No leads recorded. Add a genuine enquiry or prospect; EIDOLON does not fabricate customers.</p>:leads.map((lead)=><article className="company-artifact" key={lead.id}><div><b>{lead.name}</b><small>{lead.contact||"No contact provided"} · {lead.source} · {new Date(lead.created_at).toLocaleDateString()}</small>{lead.notes&&<p>{lead.notes}</p>}<form onSubmit={(event)=>{event.preventDefault();const data=new FormData(event.currentTarget);void saveLeadFollowUp(lead,String(data.get("nextAction")??""));}}><label>Next follow-up<input name="nextAction" key={lead.id+lead.next_action} defaultValue={lead.next_action} maxLength={500} placeholder="Next call, quote or reminder"/></label><button type="submit" className="quiet-button" disabled={busy}>Save follow-up</button></form></div><label>Stage<select aria-label={"Stage for "+lead.name} value={lead.stage} disabled={busy} onChange={(event)=>void changeLeadStage(lead,event.target.value)}>{["new","contacted","qualified","quoted","won","lost"].map(stage=><option key={stage} value={stage}>{stage}</option>)}</select></label></article>)}
         </div>
       </div>
-      <p className="company-muted">A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
+      <p className="company-muted">Exports include only the currently loaded records (up to 100 per resource), not a full company backup. A pipeline record is not proof of contact, a booking, a payment or a completed job. Those require separate real-world confirmation.</p>
     </section>
 
     <section className="company-section" id="foundry-sales">
@@ -416,7 +437,7 @@ export default function CompanyPage() {
           <label>Currency (ISO code)<input value={quoteCurrency} onChange={e=>setQuoteCurrency(e.target.value.toUpperCase())} minLength={3} maxLength={3} required/></label>
           <button className="primary" disabled={busy||!leads.length}>Save quote <span>↗</span></button>
         </form>
-        <div className="company-archive"><div className="eyebrow">QUOTATIONS / {quotes.length}</div>{quotes.length===0?<p className="company-muted">No quotations yet. Quotes are records, not automatically sent invoices.</p>:quotes.map(quote=><article key={quote.id} className="company-artifact"><div><b>{quote.title}</b><small>{leads.find(l=>l.id===quote.lead_id)?.name??"Customer"} · {quote.currency} {Number(quote.amount).toFixed(2)}</small>{quote.description&&<p>{quote.description}</p>}</div><label>Status<select aria-label={"Quote status for "+quote.title} disabled={busy} value={quote.status} onChange={e=>void updateOperation("quotes",quote.id,e.target.value)}>{["draft","sent","accepted","declined"].map(status=><option key={status} value={status}>{status}</option>)}</select></label></article>)}</div>
+        <div className="company-archive"><div className="eyebrow">QUOTATIONS / {quotes.length}</div><button type="button" className="quiet-button" disabled={!quotes.length||companyDataLoading} onClick={()=>exportCompanyRecords("quotes")}>Export loaded quotes (CSV)</button>{quotes.length===0?<p className="company-muted">No quotations yet. Quotes are records, not automatically sent invoices.</p>:quotes.map(quote=><article key={quote.id} className="company-artifact"><div><b>{quote.title}</b><small>{leads.find(l=>l.id===quote.lead_id)?.name??"Customer"} · {quote.currency} {Number(quote.amount).toFixed(2)}</small>{quote.description&&<p>{quote.description}</p>}</div><label>Status<select aria-label={"Quote status for "+quote.title} disabled={busy} value={quote.status} onChange={e=>void updateOperation("quotes",quote.id,e.target.value)}>{["draft","sent","accepted","declined"].map(status=><option key={status} value={status}>{status}</option>)}</select></label></article>)}</div>
       </div>
       <div className="company-generation-layout">
         <form className="company-form" onSubmit={event=>{event.preventDefault();void createOperation("jobs");}}>
@@ -428,7 +449,7 @@ export default function CompanyPage() {
           <label>Scheduled date and time<input type="datetime-local" value={jobSchedule} onChange={e=>setJobSchedule(e.target.value)}/></label>
           <button className="primary" disabled={busy||!leads.length}>Save job <span>↗</span></button>
         </form>
-        <div className="company-archive"><div className="eyebrow">JOBS / {jobs.length}</div>{jobs.length===0?<p className="company-muted">No jobs scheduled. Scheduling here does not notify customers or dispatch workers.</p>:jobs.map(job=><article key={job.id} className="company-artifact"><div><b>{job.title}</b><small>{leads.find(l=>l.id===job.lead_id)?.name??"Customer"} · {job.scheduled_at?new Date(job.scheduled_at).toLocaleString():"Unscheduled"}</small>{job.description&&<p>{job.description}</p>}{job.quote_id&&<small>Linked quote: {quotes.find(q=>q.id===job.quote_id)?.title??"Recorded quotation"}</small>}</div><label>Status<select aria-label={"Job status for "+job.title} disabled={busy} value={job.status} onChange={e=>void updateOperation("jobs",job.id,e.target.value)}>{["planned","scheduled","in_progress","completed","cancelled"].map(status=><option key={status} value={status}>{status.replaceAll("_"," ")}</option>)}</select></label></article>)}</div>
+        <div className="company-archive"><div className="eyebrow">JOBS / {jobs.length}</div><button type="button" className="quiet-button" disabled={!jobs.length||companyDataLoading} onClick={()=>exportCompanyRecords("jobs")}>Export loaded jobs (CSV)</button>{jobs.length===0?<p className="company-muted">No jobs scheduled. Scheduling here does not notify customers or dispatch workers.</p>:jobs.map(job=><article key={job.id} className="company-artifact"><div><b>{job.title}</b><small>{leads.find(l=>l.id===job.lead_id)?.name??"Customer"} · {job.scheduled_at?new Date(job.scheduled_at).toLocaleString():"Unscheduled"}</small>{job.description&&<p>{job.description}</p>}{job.quote_id&&<small>Linked quote: {quotes.find(q=>q.id===job.quote_id)?.title??"Recorded quotation"}</small>}</div><label>Status<select aria-label={"Job status for "+job.title} disabled={busy} value={job.status} onChange={e=>void updateOperation("jobs",job.id,e.target.value)}>{["planned","scheduled","in_progress","completed","cancelled"].map(status=><option key={status} value={status}>{status.replaceAll("_"," ")}</option>)}</select></label></article>)}</div>
       </div>
       <p className="company-muted">Statuses are owner-maintained records. No quote is sent, job dispatched, or payment collected by changing a status.</p>
     </section>
