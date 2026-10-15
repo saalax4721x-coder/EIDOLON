@@ -66,10 +66,11 @@ export async function PATCH(request:Request){
  const user=await session();if(!user)return NextResponse.json({error:"Sign in required."},{status:401});
  const {companyId,kind,recordId,status}=await request.json();
  if(!uuid.test(companyId??"")||!uuid.test(recordId??"")||!await owns(companyId,user))return NextResponse.json({error:"Company not found."},{status:404});
- const offer=kind==="offer",application=kind==="application";
- if((!offer&&!application)||(offer&&!["published","paused","closed"].includes(status))||(application&&!["submitted","reviewing","accepted","declined"].includes(status)))return NextResponse.json({error:"Invalid status."},{status:400});
+ const offer=kind==="offer",application=kind==="application",withdrawal=kind==="withdrawal";
+ if((!offer&&!application&&!withdrawal)||(offer&&!["published","paused","closed"].includes(status))||(application&&!["submitted","reviewing","accepted","declined"].includes(status))||(withdrawal&&status!=="withdrawn"))return NextResponse.json({error:"Invalid status."},{status:400});
  const table=offer?"sponsorship_offers":"sponsorship_requests";
- const r=await fetch(supabaseUrl+"/rest/v1/"+table+"?id=eq."+recordId+"&sponsor_company_id=eq."+companyId,{method:"PATCH",headers:{...user.headers,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
+ const ownerColumn=withdrawal?"applicant_company_id":"sponsor_company_id";
+ const r=await fetch(supabaseUrl+"/rest/v1/"+table+"?id=eq."+recordId+"&"+ownerColumn+"=eq."+companyId,{method:"PATCH",headers:{...user.headers,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
  if(!r.ok)return NextResponse.json({error:"Could not update sponsorship status."},{status:502});
  const rows=await r.json();if(!rows.length)return NextResponse.json({error:"Record not found."},{status:404});
  return NextResponse.json({record:rows[0]});
