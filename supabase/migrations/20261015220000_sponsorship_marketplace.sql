@@ -41,5 +41,5 @@ create policy "applicants request published offers" on public.sponsorship_reques
  created_by=(select auth.uid()) and private.is_company_owner(applicant_company_id)
  and exists(select 1 from public.sponsorship_offers o where o.id=offer_id and o.sponsor_company_id=sponsor_company_id and o.status='published')
 );
-create policy "participants update requests" on public.sponsorship_requests for update to authenticated using(private.is_company_owner(sponsor_company_id) or private.is_company_owner(applicant_company_id)) with check(private.is_company_owner(sponsor_company_id) or private.is_company_owner(applicant_company_id));
+create policy "participants update requests" on public.sponsorship_requests for update to authenticated using(private.is_company_owner(sponsor_company_id)) with check(private.is_company_owner(sponsor_company_id));
 grant select,insert,update on public.sponsorship_offers,public.sponsorship_requests to authenticated;
