@@ -203,7 +203,7 @@ export default function CompanyPage() {
     const safeCell=(value:unknown)=>{
       let cell=String(value??"");
       // Prevent spreadsheet software from evaluating imported customer content as a formula.
-      if(/^[\\s]*[=+@-]/.test(cell))cell="'"+cell;
+      if(/^[\s]*[=+@-]/.test(cell))cell="'"+cell;
       return '"'+cell.replaceAll('"','""')+'"';
     };
     const csv=[columns[resource].map(safeCell).join(","),...rows[resource].map(row=>columns[resource].map(column=>safeCell(row[column])).join(","))].join("\r\n");
