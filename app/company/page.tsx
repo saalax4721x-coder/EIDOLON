@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EidolonNav } from "@/components/eidolon-nav";
 import { EidolonIcon } from "@/components/eidolon-icon";
 
@@ -21,6 +21,7 @@ export default function CompanyPage() {
   const [companies,setCompanies] = useState<Company[]>([]);
   const [companyId,setCompanyId] = useState("");
   const [companyDataLoading,setCompanyDataLoading] = useState(false);
+  const activeCompanyRef = useRef("");
   const [connections,setConnections] = useState<Connection[]>([]);
   const [agents,setAgents] = useState<Agent[]>([]);
   const [selectedAgentId,setSelectedAgentId] = useState("");
@@ -87,6 +88,7 @@ export default function CompanyPage() {
     if (!connectionResponse.ok) throw new Error(connectionData.error ?? "Connections could not be loaded.");
     if (!agentResponse.ok) throw new Error(agentData.error ?? "AI workforce could not be loaded.");
     if (!workResponse.ok) throw new Error(workData.error ?? "Company work history could not be loaded.");
+    if(activeCompanyRef.current!==id)return;
     setConnections(connectionData.connections ?? []);
     const loadedAgents = (agentData.agents ?? []) as Agent[];
     setAgents(loadedAgents);
@@ -99,7 +101,7 @@ export default function CompanyPage() {
     const response=await fetch("/api/company/leads?companyId="+encodeURIComponent(id),{cache:"no-store"});
     const data=await response.json();
     if(!response.ok)throw new Error(data.error??"Leads unavailable.");
-    setLeads(data.leads??[]);
+    if(activeCompanyRef.current===id)setLeads(data.leads??[]);
   },[]);
   async function addLead() {
     if(!companyId)return;
@@ -140,6 +142,7 @@ export default function CompanyPage() {
     const responses=await Promise.all(["quotes","jobs"].map(resource=>fetch("/api/company/operations?companyId="+encodeURIComponent(id)+"&resource="+resource,{cache:"no-store"})));
     const data=await Promise.all(responses.map(response=>response.json()));
     if(!responses[0].ok||!responses[1].ok)throw new Error(data.find((_,i)=>!responses[i].ok)?.error??"Operations unavailable.");
+    if(activeCompanyRef.current!==id)return;
     setQuotes(data[0].records??[]);setJobs(data[1].records??[]);
   },[]);
   async function createOperation(resource:"quotes"|"jobs"){
@@ -171,12 +174,13 @@ export default function CompanyPage() {
     try {
       const response = await fetch("/api/company/mcp-tokens?companyId="+encodeURIComponent(id),{cache:"no-store"});
       const data = await response.json();
-      if (response.ok) setMcpTokens((data.tokens ?? []) as McpToken[]);
+      if (response.ok&&activeCompanyRef.current===id) setMcpTokens((data.tokens ?? []) as McpToken[]);
     } catch { /* Optional until the company MCP migration is deployed. */ }
   },[]);
   useEffect(() => { loadCompanies().catch((e:unknown)=>setError(e instanceof Error?e.message:"Company service unavailable.")); },[loadCompanies]);
   useEffect(() => {
     let cancelled=false;
+    activeCompanyRef.current=companyId;
     setConnections([]);setAgents([]);setArtifacts([]);setTasks([]);setLeads([]);setQuotes([]);setJobs([]);setMcpTokens([]);
     setOperationLead("");setJobLead("");setJobQuoteId("");setError("");
     if(!companyId){setCompanyDataLoading(false);return;}
