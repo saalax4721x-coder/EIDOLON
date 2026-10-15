@@ -3,12 +3,12 @@ import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
 import {EidolonNav} from "@/components/eidolon-nav";
 type Company={id:string;name:string};
-type Offer={id:string;sponsor_company_id:string;sponsor_name:string;title:string;description:string;categories:string;eligibility:string;budget_note:string;status:string;created_at:string};
+type Offer={id:string;sponsor_company_id:string;sponsor_name:string;contact_email:string;title:string;description:string;categories:string;eligibility:string;budget_note:string;status:string;created_at:string};
 type Application={id:string;offer_id:string;sponsor_company_id:string;applicant_company_id:string;pitch:string;requested_support:string;status:string;created_at:string};
 export default function SponsorshipsPage(){
  const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState("");
  const [offers,setOffers]=useState<Offer[]>([]),[applications,setApplications]=useState<Application[]>([]),[inbox,setInbox]=useState<Application[]>([]);
- const [title,setTitle]=useState(""),[description,setDescription]=useState(""),[categories,setCategories]=useState(""),[eligibility,setEligibility]=useState(""),[budgetNote,setBudgetNote]=useState("");
+ const [title,setTitle]=useState(""),[description,setDescription]=useState(""),[categories,setCategories]=useState(""),[eligibility,setEligibility]=useState(""),[budgetNote,setBudgetNote]=useState(""),[contactEmail,setContactEmail]=useState("");
  const [selectedOffer,setSelectedOffer]=useState(""),[pitch,setPitch]=useState(""),[requestedSupport,setRequestedSupport]=useState("");
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const load=useCallback(async(id:string)=>{
@@ -21,10 +21,10 @@ export default function SponsorshipsPage(){
  async function submit(kind:"offer"|"application"){
   if(!companyId)return;setBusy(true);setError("");setNotice("");
   try{
-   const payload=kind==="offer"?{companyId,kind,title,description,categories,eligibility,budgetNote}:{companyId,kind,offerId:selectedOffer,pitch,requestedSupport};
+   const payload=kind==="offer"?{companyId,kind,title,description,categories,eligibility,budgetNote,contactEmail}:{companyId,kind,offerId:selectedOffer,pitch,requestedSupport};
    const r=await fetch("/api/company/sponsorships",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
    const d=await r.json();if(!r.ok)throw Error(d.error??"Could not submit");
-   if(kind==="offer"){setTitle("");setDescription("");setCategories("");setEligibility("");setBudgetNote("");}else{setPitch("");setRequestedSupport("");setSelectedOffer("");}
+   if(kind==="offer"){setTitle("");setDescription("");setCategories("");setEligibility("");setBudgetNote("");setContactEmail("");}else{setPitch("");setRequestedSupport("");setSelectedOffer("");}
    await load(companyId);setNotice(kind==="offer"?"Your offer is now visible to signed-in company owners.":"Application saved. The sponsor can review it in EIDOLON; no email was sent.");
   }catch(e){setError(e instanceof Error?e.message:"Request failed");}finally{setBusy(false);}
  }
@@ -46,7 +46,7 @@ export default function SponsorshipsPage(){
    </section>
    {companyId&&<>
    <section className="company-section"><div className="company-section-head"><div><div className="eyebrow">01 / DISCOVER</div><h2>Sponsors open to pitches</h2></div><span>{discover.length} available listings</span></div>
-    {discover.length===0?<p className="company-muted">No other companies have published a sponsorship opportunity yet. EIDOLON does not invent sponsor interest.</p>:<div className="company-agent-list">{discover.map(o=><article className="company-agent" key={o.id}><div className="company-agent-main"><strong>{o.title}</strong><small>Offered by {o.sponsor_name||"Sponsor company"}</small><p>{o.description}</p><small>Categories: {o.categories||"Open"} · Support: {o.budget_note||"Discuss with sponsor"}</small><p>Eligibility: {o.eligibility||"Ask sponsor"}</p><button className="quiet-button" onClick={()=>{setSelectedOffer(o.id);document.getElementById("sponsorship-apply")?.scrollIntoView({behavior:"smooth"});}}>Pitch this sponsor ↗</button></div></article>)}</div>}
+    {discover.length===0?<p className="company-muted">No other companies have published a sponsorship opportunity yet. EIDOLON does not invent sponsor interest.</p>:<div className="company-agent-list">{discover.map(o=><article className="company-agent" key={o.id}><div className="company-agent-main"><strong>{o.title}</strong><small>Offered by {o.sponsor_name||"Sponsor company"}</small><p>{o.description}</p><small>Categories: {o.categories||"Open"} · Support: {o.budget_note||"Discuss with sponsor"}</small><p>Eligibility: {o.eligibility||"Ask sponsor"}</p>{o.contact_email&&<p>Public sponsor contact: <a href={"mailto:"+o.contact_email}>{o.contact_email}</a></p>}<button className="quiet-button" onClick={()=>{setSelectedOffer(o.id);document.getElementById("sponsorship-apply")?.scrollIntoView({behavior:"smooth"});}}>Pitch this sponsor ↗</button></div></article>)}</div>}
    </section>
    <section className="company-section" id="sponsorship-apply"><div className="company-section-head"><div><div className="eyebrow">02 / APPLY</div><h2>Offer your product or project</h2></div></div>
     <form className="company-form" onSubmit={e=>{e.preventDefault();void submit("application");}}>
@@ -64,7 +64,7 @@ export default function SponsorshipsPage(){
      <label>Relevant sectors<input maxLength={300} value={categories} onChange={e=>setCategories(e.target.value)} placeholder="AI, commerce, education, sustainability"/></label>
      <label>Eligibility<input maxLength={1000} value={eligibility} onChange={e=>setEligibility(e.target.value)} placeholder="Early-stage teams with a working demo"/></label>
      <label>Support or budget (optional, not a guarantee)<input maxLength={240} value={budgetNote} onChange={e=>setBudgetNote(e.target.value)} placeholder="Up to $1,000 in software credits"/></label>
-     <button className="primary" disabled={busy}>Publish sponsorship offer ↗</button>
+     <label>Public business email (optional)<input type="email" maxLength={254} value={contactEmail} onChange={e=>setContactEmail(e.target.value)} placeholder="partnerships@yourcompany.com"/></label><p className="company-muted">Only enter an address you are authorized to publish. This email will be visible to signed-in founders; leave blank to receive pitches inside EIDOLON only.</p><button className="primary" disabled={busy}>Publish sponsorship offer ↗</button>
     </form>
     <div className="company-archive"><div className="eyebrow">YOUR SPONSOR LISTINGS / {ownOffers.length}</div>{ownOffers.map(o=><article className="company-artifact" key={o.id}><b>{o.title}</b><small>{o.status}</small><label>Listing status<select disabled={busy} value={o.status} onChange={e=>void update("offer",o.id,e.target.value)}>{["published","paused","closed"].map(v=><option key={v} value={v}>{v}</option>)}</select></label></article>)}</div>
    </section>
