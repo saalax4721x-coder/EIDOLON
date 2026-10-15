@@ -54,7 +54,9 @@ export async function POST(request:Request){
   if(typeof body.offerId!=="string"||!uuid.test(body.offerId)||!text(body.pitch,30,4000)||!text(body.requestedSupport,5,500))return NextResponse.json({error:"Invalid sponsorship application."},{status:400});
   const offers=await readRows(supabaseUrl+"/rest/v1/sponsorship_offers?select=id,sponsor_company_id&status=eq.published&id=eq."+body.offerId+"&limit=1",user.headers) as Array<{id:string;sponsor_company_id:string}>;
   const offer=offers[0];if(!offer||offer.sponsor_company_id===companyId)return NextResponse.json({error:"Offer not available for this company."},{status:400});
-  table="sponsorship_requests";values={...values,offer_id:offer.id,sponsor_company_id:offer.sponsor_company_id,applicant_company_id:companyId,pitch:body.pitch.trim(),requested_support:body.requestedSupport.trim()};
+  const applicant=await readRows(supabaseUrl+"/rest/v1/companies?select=name&id=eq."+companyId+"&limit=1",user.headers) as Array<{name:string}>;
+  if(!applicant[0])return NextResponse.json({error:"Applicant company not found."},{status:404});
+  table="sponsorship_requests";values={...values,applicant_name:applicant[0].name,offer_id:offer.id,sponsor_company_id:offer.sponsor_company_id,applicant_company_id:companyId,pitch:body.pitch.trim(),requested_support:body.requestedSupport.trim()};
  }else return NextResponse.json({error:"Invalid action."},{status:400});
  const r=await fetch(supabaseUrl+"/rest/v1/"+table,{method:"POST",headers:{...user.headers,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify(values)});
  if(!r.ok)return NextResponse.json({error:r.status===409?"An application already exists for this offer.":"Could not save sponsorship record."},{status:r.status===409?409:502});
