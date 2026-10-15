@@ -46,3 +46,7 @@ Use the GitHub branch `feat/chromatic-surface-language` (PR #20) as the current 
 ## October 16 security audit
 
 Reviewed live sponsorship RLS policies and found an ambiguous SQL column reference in the published-offer validation. Corrected it with an explicit outer-table correlation in `20261016001000_sponsor_offer_correlation.sql`; applied and confirmed the live policy definition. Previous `80b1dfa` passed GitHub Verify and Vercel status succeeded. The new security-fix commit requires its own CI/deployment confirmation. No multi-user end-to-end run has yet been completed.
+
+## October 16 identity hardening
+
+`20261016023000_sponsorship_identity_guards.sql` installs invoker-rights database triggers. They derive sponsor/applicant display names from owner-controlled company records on insert, prevent reassignment and pitch/content tampering through direct Data API access, and block reopening withdrawn applications. Migration applied; trigger existence verified. These are structural security checks, **not** substitutes for multi-account authenticated E2E tests. GitHub Verify for commit `65b2f1b` succeeded; Vercel reported build-rate-limit failure for that commit. Latest security migration needs its own CI/deployment confirmation.
