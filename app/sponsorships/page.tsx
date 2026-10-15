@@ -4,7 +4,7 @@ import Link from "next/link";
 import {EidolonNav} from "@/components/eidolon-nav";
 type Company={id:string;name:string};
 type Offer={id:string;sponsor_company_id:string;sponsor_name:string;contact_email:string;title:string;description:string;categories:string;eligibility:string;budget_note:string;status:string;created_at:string};
-type Application={id:string;offer_id:string;sponsor_company_id:string;applicant_company_id:string;pitch:string;requested_support:string;status:string;created_at:string};
+type Application={id:string;applicant_name:string;offer_id:string;sponsor_company_id:string;applicant_company_id:string;pitch:string;requested_support:string;status:string;created_at:string};
 export default function SponsorshipsPage(){
  const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState("");
  const [offers,setOffers]=useState<Offer[]>([]),[applications,setApplications]=useState<Application[]>([]),[inbox,setInbox]=useState<Application[]>([]);
@@ -69,7 +69,7 @@ export default function SponsorshipsPage(){
     <div className="company-archive"><div className="eyebrow">YOUR SPONSOR LISTINGS / {ownOffers.length}</div>{ownOffers.map(o=><article className="company-artifact" key={o.id}><b>{o.title}</b><small>{o.status}</small><label>Listing status<select disabled={busy} value={o.status} onChange={e=>void update("offer",o.id,e.target.value)}>{["published","paused","closed"].map(v=><option key={v} value={v}>{v}</option>)}</select></label></article>)}</div>
    </section>
    <section className="company-section"><div className="company-section-head"><div><div className="eyebrow">04 / INBOX</div><h2>Review founder pitches</h2></div><span>{inbox.length} applications</span></div>
-    {inbox.length===0?<p className="company-muted">No sponsorship applications received yet.</p>:inbox.map(a=><article className="company-artifact" key={a.id}><b>{ownOffers.find(o=>o.id===a.offer_id)?.title??"Your offer"}</b><p>{a.pitch}</p><p><strong>Requested:</strong> {a.requested_support}</p><small>Applicant company ID: {a.applicant_company_id} · {new Date(a.created_at).toLocaleDateString()}</small><label>Review status<select disabled={busy} value={a.status} onChange={e=>void update("application",a.id,e.target.value)}>{["submitted","reviewing","accepted","declined"].map(v=><option key={v} value={v}>{v}</option>)}</select></label></article>)}
+    {inbox.length===0?<p className="company-muted">No sponsorship applications received yet.</p>:inbox.map(a=><article className="company-artifact" key={a.id}><b>{ownOffers.find(o=>o.id===a.offer_id)?.title??"Your offer"}</b><p>{a.pitch}</p><p><strong>Requested:</strong> {a.requested_support}</p><small>From {a.applicant_name||"Applicant company"} · {new Date(a.created_at).toLocaleDateString()}</small><label>Review status<select disabled={busy} value={a.status} onChange={e=>void update("application",a.id,e.target.value)}>{["submitted","reviewing","accepted","declined"].map(v=><option key={v} value={v}>{v}</option>)}</select></label></article>)}
    </section>
    </>}
   </div></div>
