@@ -11,7 +11,7 @@ Updated 2026-10-15. This file records **verified** facts and explicit release ga
 - Customer-linked quotations, jobs and appointments; persisted status tracking.
 - CSV export for currently loaded leads, quotations and jobs (100-record limit per resource). These are not full backups.
 - Company workspace navigation, dashboard, and stale-response protection.
-- Sponsorship Exchange: opted-in company offers, authenticated founder applications, sponsor review inbox, status tracking, and company name on offers. This is an internal marketplace, not automated outreach or a funding commitment.
+- Sponsorship Exchange: opted-in company offers, authenticated founder applications, sponsor review inbox, status tracking, applicant withdrawal, and optional publicly listed sponsor contact email. This is an internal marketplace, not automated outreach or a funding commitment.
 
 ## Confirmed automated checks
 
@@ -42,3 +42,7 @@ The GitHub Actions Verify workflow installs dependencies, runs TypeScript typech
 Use the GitHub branch `feat/chromatic-surface-language` (PR #20) as the current functionality-first candidate, not `main` unless merged after acceptance. Export the source using GitHub's **Code → Download ZIP** for that branch, or `git archive` locally. Include migrations and documentation; exclude `.env*`, `node_modules`, `.next`, generated exports and secrets. Preserve `app/api`, `lib`, and `supabase/migrations` during the frontend redesign.
 
 **Merge policy:** PR #20 stays open until the above authenticated release gates are passed or explicitly accepted as known risks.
+
+## October 16 security audit
+
+Reviewed live sponsorship RLS policies and found an ambiguous SQL column reference in the published-offer validation. Corrected it with an explicit outer-table correlation in `20261016001000_sponsor_offer_correlation.sql`; applied and confirmed the live policy definition. Previous `80b1dfa` passed GitHub Verify and Vercel status succeeded. The new security-fix commit requires its own CI/deployment confirmation. No multi-user end-to-end run has yet been completed.
