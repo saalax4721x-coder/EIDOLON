@@ -22,6 +22,7 @@ export default function CompanyPage() {
   const [companyId,setCompanyId] = useState("");
   const [companyDataLoading,setCompanyDataLoading] = useState(false);
   const activeCompanyRef = useRef("");
+  activeCompanyRef.current=companyId;
   const [connections,setConnections] = useState<Connection[]>([]);
   const [agents,setAgents] = useState<Agent[]>([]);
   const [selectedAgentId,setSelectedAgentId] = useState("");
