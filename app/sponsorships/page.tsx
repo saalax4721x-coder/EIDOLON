@@ -3,7 +3,7 @@ import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
 import {EidolonNav} from "@/components/eidolon-nav";
 type Company={id:string;name:string};
-type Offer={id:string;sponsor_company_id:string;title:string;description:string;categories:string;eligibility:string;budget_note:string;status:string;created_at:string};
+type Offer={id:string;sponsor_company_id:string;sponsor_name:string;title:string;description:string;categories:string;eligibility:string;budget_note:string;status:string;created_at:string};
 type Application={id:string;offer_id:string;sponsor_company_id:string;applicant_company_id:string;pitch:string;requested_support:string;status:string;created_at:string};
 export default function SponsorshipsPage(){
  const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState("");
@@ -46,7 +46,7 @@ export default function SponsorshipsPage(){
    </section>
    {companyId&&<>
    <section className="company-section"><div className="company-section-head"><div><div className="eyebrow">01 / DISCOVER</div><h2>Sponsors open to pitches</h2></div><span>{discover.length} available listings</span></div>
-    {discover.length===0?<p className="company-muted">No other companies have published a sponsorship opportunity yet. EIDOLON does not invent sponsor interest.</p>:<div className="company-agent-list">{discover.map(o=><article className="company-agent" key={o.id}><div className="company-agent-main"><strong>{o.title}</strong><p>{o.description}</p><small>Categories: {o.categories||"Open"} · Support: {o.budget_note||"Discuss with sponsor"}</small><p>Eligibility: {o.eligibility||"Ask sponsor"}</p><button className="quiet-button" onClick={()=>{setSelectedOffer(o.id);document.getElementById("sponsorship-apply")?.scrollIntoView({behavior:"smooth"});}}>Pitch this sponsor ↗</button></div></article>)}</div>}
+    {discover.length===0?<p className="company-muted">No other companies have published a sponsorship opportunity yet. EIDOLON does not invent sponsor interest.</p>:<div className="company-agent-list">{discover.map(o=><article className="company-agent" key={o.id}><div className="company-agent-main"><strong>{o.title}</strong><small>Offered by {o.sponsor_name||"Sponsor company"}</small><p>{o.description}</p><small>Categories: {o.categories||"Open"} · Support: {o.budget_note||"Discuss with sponsor"}</small><p>Eligibility: {o.eligibility||"Ask sponsor"}</p><button className="quiet-button" onClick={()=>{setSelectedOffer(o.id);document.getElementById("sponsorship-apply")?.scrollIntoView({behavior:"smooth"});}}>Pitch this sponsor ↗</button></div></article>)}</div>}
    </section>
    <section className="company-section" id="sponsorship-apply"><div className="company-section-head"><div><div className="eyebrow">02 / APPLY</div><h2>Offer your product or project</h2></div></div>
     <form className="company-form" onSubmit={e=>{e.preventDefault();void submit("application");}}>
