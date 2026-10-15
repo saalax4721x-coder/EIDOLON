@@ -74,7 +74,7 @@ export default function CompanyPage() {
     if (response.status === 401) { window.location.href="/auth?next=/company"; return; }
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Companies could not be loaded.");
-    const items = (data.companies ?? []) as Company[];
+    const items = ((data.companies ?? []) as Array<Company & {business_model?:string;target_customer?:string}>).map(item=>({...item,businessModel:item.businessModel??item.business_model??"",targetCustomer:item.targetCustomer??item.target_customer??""}));
     setCompanies(items);
     setCompanyId((current) => items.some((item) => item.id === current) ? current : items[0]?.id ?? "");
   },[]);
