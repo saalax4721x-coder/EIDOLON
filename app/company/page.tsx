@@ -326,6 +326,7 @@ export default function CompanyPage() {
           <a href="#foundry-connections" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="verified" size={16}/> AI connections</a>
           <a href="#foundry-external" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="discover" size={16}/> External assistants</a>
           <a href="#foundry-workforce" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="project" size={16}/> Workforce <small>{agents.length}</small></a>
+          <a href="/sponsorships" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="economy" size={16}/> Sponsorship exchange</a>
           <a href="#foundry-leads" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="graph" size={16}/> Customer pipeline <small>{leads.length}</small></a>
           <a href="#foundry-sales" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="economy" size={16}/> Quotes & jobs <small>{quotes.length+jobs.length}</small></a>
           <a href="#foundry-operations" onClick={()=>setSidebarOpen(false)}><EidolonIcon name="economy" size={16}/> Operations <small>{tasks.length}</small></a>
