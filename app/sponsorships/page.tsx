@@ -28,7 +28,7 @@ export default function SponsorshipsPage(){
    await load(companyId);setNotice(kind==="offer"?"Your offer is now visible to signed-in company owners.":"Application saved. The sponsor can review it in EIDOLON; no email was sent.");
   }catch(e){setError(e instanceof Error?e.message:"Request failed");}finally{setBusy(false);}
  }
- async function update(kind:"offer"|"application",recordId:string,status:string){
+ async function update(kind:"offer"|"application"|"withdrawal",recordId:string,status:string){
   if(!companyId)return;setBusy(true);setError("");setNotice("");
   try{
    const r=await fetch("/api/company/sponsorships",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({companyId,kind,recordId,status})});
@@ -55,7 +55,7 @@ export default function SponsorshipsPage(){
      <label>Your pitch<textarea required minLength={30} maxLength={4000} rows={5} value={pitch} onChange={e=>setPitch(e.target.value)} placeholder="What have you built? Who uses it? What will the sponsor gain? What milestones will you deliver?"/></label>
      <button className="primary" disabled={busy||!selectedOffer}>Submit sponsorship request ↗</button>
     </form>
-    <div className="company-archive"><div className="eyebrow">YOUR APPLICATIONS / {applications.length}</div>{applications.map(a=><article key={a.id} className="company-artifact"><b>{offers.find(o=>o.id===a.offer_id)?.title??"Sponsorship opportunity"}</b><p>{a.requested_support}</p><small>{a.status} · {new Date(a.created_at).toLocaleDateString()}</small></article>)}</div>
+    <div className="company-archive"><div className="eyebrow">YOUR APPLICATIONS / {applications.length}</div>{applications.map(a=><article key={a.id} className="company-artifact"><b>{offers.find(o=>o.id===a.offer_id)?.title??"Sponsorship opportunity"}</b><p>{a.requested_support}</p><small>{a.status} · {new Date(a.created_at).toLocaleDateString()}</small>{["submitted","reviewing"].includes(a.status)&&<button type="button" className="quiet-button" disabled={busy} onClick={()=>{if(window.confirm("Withdraw this sponsorship application?"))void update("withdrawal",a.id,"withdrawn");}}>Withdraw application</button>}</article>)}</div>
    </section>
    <section className="company-section"><div className="company-section-head"><div><div className="eyebrow">03 / SPONSOR</div><h2>Invite founders to pitch you</h2></div></div>
     <form className="company-form" onSubmit={e=>{e.preventDefault();void submit("offer");}}>
