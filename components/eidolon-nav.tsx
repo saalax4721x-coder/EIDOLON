@@ -55,6 +55,9 @@ export function EidolonNav({ section }: { section?: string }) {
         }}>
           <div className="eidolon-command-head"><div><span>CONTROL / COMMAND</span><strong>Navigate the network.</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close command menu">ESC</button></div>
           <div className="eidolon-command-grid">
+            <a href="/dashboard" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Dashboard</b><small>Company statistics and work status</small></span><i>↗</i></a>
+            <a href="/workflows" onClick={() => setOpen(false)}><EidolonIcon name="graph" size={18}/><span><b>Workflows</b><small>Build workflows and review runs</small></span><i>↗</i></a>
+            <a href="/sponsorships" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Sponsorships</b><small>Offers and applications</small></span><i>↗</i></a>
             <a href="/discover" onClick={() => setOpen(false)}><EidolonIcon name="discover" size={18}/><span><b>Discover</b><small>Find projects and objects</small></span><i>↗</i></a>
             <a href="/graph" onClick={() => setOpen(false)}><EidolonIcon name="graph" size={18}/><span><b>Graph</b><small>Inspect recorded relationships</small></span><i>↗</i></a>
             <a href="/launch" onClick={() => setOpen(false)}><EidolonIcon name="launch" size={18}/><span><b>Launch</b><small>Create a new object</small></span><i>↗</i></a>

@@ -76,7 +76,8 @@ export default function CompanyPage() {
     if (!response.ok) throw new Error(data.error ?? "Companies could not be loaded.");
     const items = ((data.companies ?? []) as Array<Company & {business_model?:string;target_customer?:string}>).map(item=>({...item,businessModel:item.businessModel??item.business_model??"",targetCustomer:item.targetCustomer??item.target_customer??""}));
     setCompanies(items);
-    setCompanyId((current) => items.some((item) => item.id === current) ? current : items[0]?.id ?? "");
+    const requested = new URLSearchParams(window.location.search).get("companyId");
+    setCompanyId((current) => items.some((item) => item.id === current) ? current : items.some((item) => item.id === requested) ? requested! : items[0]?.id ?? "");
   },[]);
   const loadCompanyData = useCallback(async (id:string) => {
     if (!id) { setConnections([]); setAgents([]); setArtifacts([]); setTasks([]); return; }

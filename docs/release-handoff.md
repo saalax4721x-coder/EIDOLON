@@ -1,6 +1,6 @@
 # EIDOLON — release verification and repository handoff
 
-Updated 2026-10-15. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete.
+Updated 2026-10-16. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The October 16 workflow continuation below supersedes older candidate/check statements for the new changes.
 
 ## Scope already implemented
 
@@ -50,3 +50,21 @@ Reviewed live sponsorship RLS policies and found an ambiguous SQL column referen
 ## October 16 identity hardening
 
 `20261016023000_sponsorship_identity_guards.sql` installs invoker-rights database triggers. They derive sponsor/applicant display names from owner-controlled company records on insert, prevent reassignment and pitch/content tampering through direct Data API access, and block reopening withdrawn applications. Migration applied; trigger existence verified. These are structural security checks, **not** substitutes for multi-account authenticated E2E tests. GitHub Verify for commit `65b2f1b` succeeded; Vercel reported build-rate-limit failure for that commit. Latest security migration needs its own CI/deployment confirmation.
+
+## October 16 workflow continuation
+
+The starting branch head in this workspace was `93cdcdf0ca45b98aae6da66e860a452109526c64`, newer than the supplied `8a95c21`. GitHub Verify runs `38940900246` and `38940891435` succeeded for that starting head, and GitHub reports a successful Vercel preview deployment (`7125519445`). Those checks do not apply to later commits.
+
+Implemented actual workflow execution through the existing provider/task/artifact infrastructure, graph validation, owner review gates, persisted immutable run snapshots and logs, concurrent-step claims, duplicate-task protection, failure/interruption handling, workflow deletion/archival, template, and editor movement/instructions. Dashboard aggregation now includes status breakdowns and separately grouped quoted amounts/currencies without REST pagination truncation. Added navigation and company context links, loading/empty/error handling, a committed dependency lockfile, and test execution in CI. Fixed agent-only task invocation and unconfirmed task completion reporting. See [workflows.md](workflows.md) for behavior, APIs, limits and migration order.
+
+Local automated evidence: all **20** graph/route/task-runner and PostgreSQL migration/RLS checks pass, including workflow task uniqueness. Standalone TypeScript and diff whitespace checks pass. The final production build passes with `node --max-old-space-size=256 node_modules/next/dist/bin/next build`. An unrestricted-heap attempt exhausted machine memory; limiting the heap resolved it. A separate sandbox-only build had failed writing generated page files and passed outside that sandbox. Remote exact-head checks must be verified independently.
+
+Built-app HTTP smoke checks also passed: `/dashboard` and `/workflows` returned 200; dashboard/workflow/run reads and workflow/run/generation writes returned 401 without a session (eight assertions total). This verifies the actual built Next.js runtime's public pages and anonymous API denial, not authenticated behavior or browser interactions.
+
+Explicitly blocked/unverified:
+
+- **Live migration not applied in this session.** Supabase CLI returned `AccessTokenRequiredError`; no connected project credentials were available. The new dashboard RPC and run tables require the migration before use. No live database advisors or live authenticated query has been run.
+- **Authenticated two-account E2E not performed.** No actual user/sponsor records or provider credentials were fabricated. Local test identities and mocked provider boundaries are not live account testing.
+- **Browser smoke test incomplete.** The remote browser could not reach the local server; local Chrome then failed with insufficient machine resources. No full UI/browser pass is claimed.
+- **Live provider/MCP/outbound integrations not reverified.** Real task execution requires a connected API key. Workflows only support provider-generated deliverables and owner review; they do not add outreach, financial transactions or automated business dispatch.
+- **Publishing blocked in this session.** The changes are committed locally on `feat/chromatic-surface-language`; Git could clone the public repository but the push failed because no GitHub credentials were stored (`Cannot prompt because user interactivity has been disabled`). The new code is not yet in PR #20 or its Vercel deployment. Authenticate Git or connect the GitHub app, push this branch, then check CI and Vercel for that exact new head. PR #20 remains open and unmerged.

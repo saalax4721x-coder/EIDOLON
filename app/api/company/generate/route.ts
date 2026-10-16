@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { decryptAiCredential } from "@/lib/ai-credentials";
 import { supabaseHeaders, supabaseUrl } from "@/lib/supabase-config";
+import { orderNodes, uuid, type WorkflowRun } from "@/lib/workflow";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 180;
 type Provider = "openai" | "anthropic" | "openrouter";
 async function auth() {
   const token = (await cookies()).get("eidolon_access_token")?.value;
@@ -81,9 +83,18 @@ export async function POST(request: Request) {
     let taskType = ["planning","research","content","marketing","customer_acquisition","sales","service_operations","product","coding","operations","general"].includes(String(input.taskType)) ? String(input.taskType) : "general";
     let assignedAgentId: string | null = null;
     let assignedAgentProvider: string | null = null;
-    if (!companyId || !connectionId || !model || (!existingTaskId && (title.length < 2 || objective.length < 5))) return NextResponse.json({error:"Choose a company, connected provider, model, task title and a clear instruction."},{status:400});
+    if (!companyId || (!agentId && (!connectionId || !model)) || (!existingTaskId && (title.length < 2 || objective.length < 5))) return NextResponse.json({error:"Choose a company, active agent or connected provider and model, task title and a clear instruction."},{status:400});
     const company = await owns(companyId,user.id,user.headers);
     if (!company) return NextResponse.json({error:"Company not found or access denied."},{status:404});
+    const workflowRunId = typeof input.workflowRunId === "string" ? input.workflowRunId : "";
+    const workflowNodeId = typeof input.workflowNodeId === "string" ? input.workflowNodeId : "";
+    if (workflowRunId || workflowNodeId) {
+      if (!uuid.test(workflowRunId) || !uuid.test(workflowNodeId) || existingTaskId) return NextResponse.json({error:"Invalid workflow task identity."},{status:400});
+      const response = await fetch(`${supabaseUrl}/rest/v1/company_workflow_runs?select=*&id=eq.${workflowRunId}&company_id=eq.${encodeURIComponent(companyId)}&limit=1`,{headers:user.headers,cache:"no-store"});
+      const rows = response.ok ? await response.json() as WorkflowRun[] : [];
+      const run = rows[0], node = run ? orderNodes(run.nodes,run.edges)[run.cursor] : undefined;
+      if (!run || run.status !== "running" || node?.id !== workflowNodeId || node.type !== "agent" || node.agentId !== agentId) return NextResponse.json({error:"Workflow step is not claimed for this agent."},{status:409});
+    }
     if (existingTaskId) {
       const queuedResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks?select=id,title,objective,task_type,status&company_id=eq.${encodeURIComponent(companyId)}&id=eq.${encodeURIComponent(existingTaskId)}&limit=1`,{headers:user.headers,cache:"no-store"});
       if (!queuedResponse.ok) return NextResponse.json({error:"Queued company task could not be loaded."},{status:502});
@@ -112,6 +123,7 @@ export async function POST(request: Request) {
     const connections = await connectionResponse.json() as Array<{id:string;provider:Provider;status:string;credential_ciphertext:string|null}>;
     const connection = connections[0];
     if (!connection || connection.status !== "connected" || !connection.credential_ciphertext) return NextResponse.json({error:"Select an active API connection for this company."},{status:400});
+    if (!["openai", "anthropic", "openrouter"].includes(connection.provider)) return NextResponse.json({error:"This provider is not supported by the task runner."},{status:400});
     if (assignedAgentProvider && connection.provider !== assignedAgentProvider) return NextResponse.json({error:"The selected employee and provider connection do not match."},{status:400});
     let key: string;
     try { key = decryptAiCredential(connection.credential_ciphertext); } catch { return NextResponse.json({error:"AI credentials cannot be decrypted on this deployment. Verify EIDOLON_AI_ENCRYPTION_KEY."},{status:503}); }
@@ -123,7 +135,7 @@ export async function POST(request: Request) {
       taskId = taskRows[0]?.id ?? "";
       if (!taskId) return NextResponse.json({error:"This task was already claimed or is no longer queued."},{status:409});
     } else {
-      const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,assigned_agent_id:assignedAgentId,title,objective,task_type:taskType,status:"running"}),cache:"no-store"});
+      const taskResponse = await fetch(`${supabaseUrl}/rest/v1/company_tasks`,{method:"POST",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({company_id:companyId,created_by:user.id,assigned_agent_id:assignedAgentId,title,objective,task_type:taskType,status:"running",...(workflowRunId?{workflow_run_id:workflowRunId,workflow_node_id:workflowNodeId}:{})}),cache:"no-store"});
       if (!taskResponse.ok) return NextResponse.json({error:"The task could not be recorded, so no model call was made."},{status:502});
       const taskRows = await taskResponse.json() as Array<{id:string}>;
       taskId = taskRows[0]?.id ?? "";
@@ -146,7 +158,9 @@ export async function POST(request: Request) {
       await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"review",result,updated_at:new Date().toISOString()}),cache:"no-store"}).catch(()=>null);
       return NextResponse.json({error:"The model completed the task, but saving the deliverable failed. The result is returned so you can copy it.",result,taskId},{status:502});
     }
-    await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}`,{method:"PATCH",headers:{...user.headers,Prefer:"return=minimal"},body:JSON.stringify({status:"completed",result,completed_at:new Date().toISOString(),updated_at:new Date().toISOString()}),cache:"no-store"});
+    const completion = await fetch(`${supabaseUrl}/rest/v1/company_tasks?id=eq.${encodeURIComponent(taskId)}&company_id=eq.${encodeURIComponent(companyId)}&status=eq.running`,{method:"PATCH",headers:{...user.headers,Prefer:"return=representation"},body:JSON.stringify({status:"completed",result,completed_at:new Date().toISOString(),updated_at:new Date().toISOString()}),cache:"no-store"});
+    const completed = completion.ok ? await completion.json() as Array<{id:string}> : [];
+    if (!completed[0]) return NextResponse.json({error:"Deliverable saved, but task completion was not confirmed. Inspect work history before running again.",taskId,result},{status:502});
     const artifacts = await artifactResponse.json() as Array<{id:string}>;
     return NextResponse.json({task:{id:taskId,status:"completed",assignedAgentId},artifact:artifacts[0]??null,result,provider:connection.provider,model},{status:201});
   } catch {
