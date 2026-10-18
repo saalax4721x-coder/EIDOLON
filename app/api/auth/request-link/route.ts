@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 import { createHash, randomBytes } from "node:crypto";
 import { supabaseUrl, supabasePublishableKey } from "@/lib/supabase-config";
+import { safeAuthNext } from "@/lib/auth-redirect";
 
 const base64Url = (input: Buffer) =>
   input.toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 
-const safeNext = (value: unknown) => {
-  if (typeof value !== "string") return "/launch";
-  const trimmed = value.trim();
-  return trimmed.startsWith("/") && !trimmed.startsWith("//") ? trimmed : "/launch";
-};
-
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email = body?.email;
-  const next = safeNext(body?.next);
-  if (typeof email !== "string" || !email.includes("@")) {
+  const next = safeAuthNext(body?.next);
+  if (typeof email !== "string" || email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
   }
 
@@ -23,43 +18,49 @@ export async function POST(request: Request) {
   const challenge = base64Url(createHash("sha256").update(verifier).digest());
   const origin = new URL(request.url).origin;
 
-  const response = await fetch(
-    supabaseUrl + "/auth/v1/otp",
-    {
-      method: "POST",
-      headers: { apikey: supabasePublishableKey, "content-type": "application/json" },
-      body: JSON.stringify({
-        email: email.trim().toLowerCase(),
-        create_user: true,
-        data: {},
-        options: {
-          email_redirect_to: origin + "/api/auth/callback",
+  try {
+    // This is the raw Auth API, not the supabase-js options object. PKCE fields
+    // belong in the request body and the email destination is a query parameter.
+    const endpoint = new URL(supabaseUrl + "/auth/v1/otp");
+    endpoint.searchParams.set("redirect_to", origin + "/api/auth/callback");
+    const response = await fetch(
+      endpoint.toString(),
+      {
+        method: "POST",
+        headers: { apikey: supabasePublishableKey, "content-type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          create_user: true,
+          data: {},
           code_challenge: challenge,
           code_challenge_method: "s256",
-        },
-      }),
-    },
-  );
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(20000),
+      },
+    );
 
-  if (!response.ok) {
-    const detail = await response.text();
-    return NextResponse.json({ error: detail || "Unable to send sign-in link." }, { status: response.status });
+    if (!response.ok) {
+      return NextResponse.json({ error: response.status === 429 ? "Too many sign-in requests. Wait a moment and try again." : "Unable to send a sign-in link. Check the email address and try again." }, { status: response.status === 429 ? 429 : 502 });
+    }
+
+    const result = NextResponse.json({ ok: true });
+    result.cookies.set("eidolon_pkce_verifier", verifier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 600,
+    });
+    result.cookies.set("eidolon_auth_next", next, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 600,
+    });
+    return result;
+  } catch {
+    return NextResponse.json({ error: "Sign-in service could not be reached. Please try again." }, { status: 503 });
   }
-
-  const result = NextResponse.json({ ok: true });
-  result.cookies.set("eidolon_pkce_verifier", verifier, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 600,
-  });
-  result.cookies.set("eidolon_auth_next", next, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 600,
-  });
-  return result;
 }

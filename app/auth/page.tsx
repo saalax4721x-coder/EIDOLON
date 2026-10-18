@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
 import { EidolonNav } from "@/components/eidolon-nav";
 
@@ -9,6 +9,9 @@ export default function AuthPage() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "invalid_link") setError("This sign-in link expired, was already used, or was opened in a different browser. Request a new link and open it in the same browser.");
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
