@@ -1,6 +1,6 @@
 # EIDOLON — release verification and repository handoff
 
-Updated 2026-10-16. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The October 16 workflow continuation below supersedes older candidate/check statements for the new changes.
+Updated 2026-10-18. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The October 18 live verification below supersedes earlier connection and migration blockers.
 
 ## Scope already implemented
 
@@ -63,8 +63,31 @@ Built-app HTTP smoke checks also passed: `/dashboard` and `/workflows` returned 
 
 Explicitly blocked/unverified:
 
-- **Live migration not applied in this session.** Supabase CLI returned `AccessTokenRequiredError`; no connected project credentials were available. The new dashboard RPC and run tables require the migration before use. No live database advisors or live authenticated query has been run.
+- **Live migration applied October 18.** See the live verification below. Earlier Supabase authentication failures are resolved; owner execution and two-account E2E remain unverified.
 - **Authenticated two-account E2E not performed.** No actual user/sponsor records or provider credentials were fabricated. Local test identities and mocked provider boundaries are not live account testing.
 - **Browser smoke test incomplete.** The remote browser could not reach the local server; local Chrome then failed with insufficient machine resources. No full UI/browser pass is claimed.
 - **Live provider/MCP/outbound integrations not reverified.** Real task execution requires a connected API key. Workflows only support provider-generated deliverables and owner review; they do not add outreach, financial transactions or automated business dispatch.
 - **Publishing restored after GitHub sign-in.** Implementation commit `e3962374b324dcdcc7ad5e8f19e41dcc7fc91b65` was pushed to `feat/chromatic-surface-language`, PR #20. The earlier credential error is resolved. Exact-head GitHub CI and Vercel results are recorded in the PR description after remote verification; do not reuse a previous head's success. PR #20 remains open and unmerged. Publishing source does not apply the Supabase migration or establish authenticated E2E acceptance.
+
+## October 18 live database verification
+
+Authenticated the official Supabase CLI and linked the checkout to the active **EIDOLON** project, `bqpdjhcshjjfqcbcnotj`. The current Bun-based CLI crashed on this Windows machine because its paging file was exhausted; official Go-based releases were downloaded from Supabase's GitHub releases and their SHA-256 digests checked against the published asset metadata. No credentials or verification codes are stored in this repository.
+
+Read-only inspection confirmed that the workflow-definition table already existed, while workflow runs, task/run correlation, and the dashboard RPC were missing. The general migration dry run refused to proceed because 16 older remote migration timestamps differ from the repository filenames, despite matching migration names. For example, live `20261016173425_company_workflows` corresponds to repository `20261016204000_company_workflows.sql`.
+
+**No earlier migration history was repaired, deleted, or replayed.** Applied only `20261016204100_workflow_execution_dashboard.sql` in a transaction with an advisory lock and duplicate/schema guards, and inserted its version, name, and exact source statements into `supabase_migrations.schema_migrations` in that same transaction. The live receipt confirms version `20261016204100`, name `workflow_execution_dashboard`.
+
+Confirmed on the live database:
+
+- Run RLS is enabled; SELECT/INSERT/UPDATE require the existing company-owner helper and INSERT/UPDATE check `created_by = auth.uid()`.
+- Composite workflow/company foreign keys, task/run company foreign key, and unique run/node task-attempt index exist.
+- The run snapshot/state guard trigger is installed. Both new functions use invoker rights with an empty search path.
+- Anonymous roles cannot SELECT/INSERT runs or execute the dashboard. Authenticated roles cannot DELETE runs and can invoke the owner-checked dashboard function.
+- Four live role-denial checks passed: anonymous run SELECT, anonymous dashboard invocation, authenticated dashboard invocation with no owner subject, and existing MCP authentication with a missing token. These checks made no persistent test records.
+- Security advisors reported **zero errors and two warnings**: the existing anonymous-callable `SECURITY DEFINER` MCP function (it deliberately uses its own hashed-token/revocation/scope gate; missing-token denial was tested), and disabled leaked-password protection in Supabase Auth. No protection settings or MCP access were changed merely to silence these warnings.
+
+The live company and distinct company-owner counts are both **zero**. Consequently, a successful real-owner dashboard call, saved workflow/provider run, and two-account isolation test are still blocked on real user/company setup. No users, companies, sponsors, provider connections, tasks, or workflow runs were fabricated for live testing.
+
+`a8d78b51ef8cd6578e91527c728ba8b2db9de548` passed GitHub Verify runs `38951147133` and `38951140428`, and Vercel preview deployment `7127079747` succeeded. Direct preview GETs reached Vercel SSO; this establishes a successful deployment, not authenticated application acceptance. The PR description carries the verification for its latest head after subsequent documentation commits.
+
+Remaining release gates: reconcile the historical migration filename/version drift before a general `supabase db push`; complete actual owner/provider execution and authenticated two-account browser E2E; verify deployed application behavior behind Vercel protection; complete existing email/session, sponsorship, and external MCP/revocation acceptance tests. PR #20 stays open and unmerged.
