@@ -1,6 +1,6 @@
 # EIDOLON — release verification and repository handoff
 
-Updated 2026-10-18. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The October 18 live verification below supersedes earlier connection and migration blockers.
+Updated 2026-10-20. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The dated live verification below supersedes earlier connection and migration blockers.
 
 ## Scope already implemented
 
@@ -15,7 +15,7 @@ Updated 2026-10-18. This file records **verified** facts and explicit release ga
 
 ## Confirmed automated checks
 
-The GitHub Actions Verify workflow installs dependencies, runs TypeScript typechecking, and builds Next.js. The head `f6cec98a9ab3d12c13506750b6f0f560d09cb212` passed workflow `38764098266`. A successful build is not proof that authenticated flows, provider calls, email delivery, or MCP integrations work end to end.
+The GitHub Actions Verify workflow installs locked dependencies, runs tests and TypeScript typechecking, and builds Next.js. Functionality head `97ed21a5e3aa31400ab1258268186fbf4d9ef626` passed Verify runs `39157542566` and `39157538487`; its Vercel preview deployment `7159341368` succeeded. A successful build is not proof that authenticated flows, provider calls, email delivery, or MCP integrations work end to end.
 
 ## Release gates requiring a real account and browser
 
@@ -99,3 +99,11 @@ The account-setup audit found that `/api/auth/request-link` sent `code_challenge
 Corrected the raw request format and callback destination, shared the internal-return-path validation, and added bounded requests and useful provider/network errors. The callback now validates the verifier and session response, clears temporary sign-in cookies on success or failure, and returns expired/invalid links to the sign-in page with a useful error while preserving the safe destination. Session cookies are installed only after a valid token exchange. No website redesign or new user/provider records were introduced.
 
 All **26** automated checks pass, including six new sign-in regression checks for challenge/verifier matching, request/callback destinations, invalid inputs, expired links, rejected or malformed token exchanges, outages, and HttpOnly session cookies. Standalone TypeScript, full production build, and the existing eight built-app HTTP smoke checks also pass. External Auth calls in these tests are explicit mocks; actual email delivery, Supabase redirect allow-list, real browser callback and two-account E2E remain unverified until the user supplies real account/company details. The browser-control connection also failed during this attempt, so no new browser acceptance pass is claimed. No sign-in emails were sent without those details.
+
+## October 20 protected-preview and real sign-in checks
+
+The user supplied two real email addresses and authorized Playwright for the acceptance test. Vercel device authorization completed and the CLI identity matched the existing EIDOLON team. Linked this checkout to the existing `eidolon` project; no deployment protection settings were changed. Local `.vercel` metadata, environment files, and acceptance-test session files are ignored.
+
+The exact `97ed21a` preview, `https://eidolon-69cv0usb3-saalaxxasan4721-4419.vercel.app`, returned HTTP 200 through authenticated Vercel access. Playwright reached and read the actual sign-in page using an origin-scoped short-lived development identity. The first account's form submission returned HTTP 200 with `{ok:true}` and displayed the link-sent state. The second account's request initially returned the application's HTTP 503 sign-in-service error; a subsequent request through Playwright's request client returned HTTP 200. A refresh for the first account returned HTTP 429 with the expected rate-limit message. These are real deployed requests, not mocked responses; HTTP 200 only confirms the Auth service accepted the email request, not delivery or account ownership.
+
+Full account authentication remains pending the inbox links and their matching unexpired PKCE sessions. The first account's sign-in needs refreshing after the rate limit permits it. Browser automation also encountered local timeouts and resource exhaustion; only the observations above are confirmed. No company, sponsor offer, task, or workflow run was created during these checks. The real two-account isolation, provider execution, sponsorship exchange, and external MCP/revocation release gates remain open. PR #20 remains unmerged.
