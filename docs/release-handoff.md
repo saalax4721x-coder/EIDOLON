@@ -1,6 +1,6 @@
 # EIDOLON — release verification and repository handoff
 
-Updated 2026-10-20. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The dated live verification below supersedes earlier connection and migration blockers.
+Updated 2026-10-21. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The dated live verification below supersedes earlier connection and migration blockers.
 
 ## Scope already implemented
 
@@ -107,3 +107,9 @@ The user supplied two real email addresses and authorized Playwright for the acc
 The exact `97ed21a` preview, `https://eidolon-69cv0usb3-saalaxxasan4721-4419.vercel.app`, returned HTTP 200 through authenticated Vercel access. Playwright reached and read the actual sign-in page using an origin-scoped short-lived development identity. The first account's form submission returned HTTP 200 with `{ok:true}` and displayed the link-sent state. The second account's request initially returned the application's HTTP 503 sign-in-service error; a subsequent request through Playwright's request client returned HTTP 200. A refresh for the first account returned HTTP 429 with the expected rate-limit message. These are real deployed requests, not mocked responses; HTTP 200 only confirms the Auth service accepted the email request, not delivery or account ownership.
 
 Full account authentication remains pending the inbox links and their matching unexpired PKCE sessions. The first account's sign-in needs refreshing after the rate limit permits it. Browser automation also encountered local timeouts and resource exhaustion; only the observations above are confirmed. No company, sponsor offer, task, or workflow run was created during these checks. The real two-account isolation, provider execution, sponsorship exchange, and external MCP/revocation release gates remain open. PR #20 remains unmerged.
+
+## October 21 email delivery and branding
+
+After refreshing the local Vercel development identity, a new request for the second real account returned HTTP 200. The user confirmed that its sign-in email arrived. This establishes actual email delivery for that request, not a completed callback, authenticated session, company, or two-account isolation pass.
+
+At the user's request, added EIDOLON signup and returning-user email subjects/body templates in [supabase/templates](../supabase/templates/README.md). Both preserve `{{ .ConfirmationURL }}`. Read the live project's Auth configuration using the existing Supabase CLI identity, then attempted a narrow PATCH of only the four subject/template fields. Supabase rejected it because free-tier projects using the default email provider cannot modify templates. Custom SMTP is not configured. The branded files are committed but **not applied to hosted Auth**; a connected provider/verified sender or eligible plan is required. No SMTP credentials, auth settings, website design, or schema were changed. A subsequent read confirms the hosted subject/template fields still differ from the proposed values and no unrelated fields changed.
