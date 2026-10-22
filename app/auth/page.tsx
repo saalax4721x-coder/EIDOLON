@@ -54,17 +54,19 @@ export default function AuthPage() {
           {sent ? (
             <div className="identity-sent">
               <div className="signal-ring">✓</div>
-              <div><span className="eyebrow">LINK SENT</span><h2>Check your inbox.</h2><p>A secure sign-in link is on its way. Open it on this device to continue.</p></div>
+              <div role="status"><span className="eyebrow">WELCOME TO EIDOLON</span><h2>Check your inbox.</h2><p>We requested a secure link for <strong>{email}</strong>. Open the newest email in this same browser to continue. Check spam if it has not arrived.</p><p className="auth-note">The link works once and expires shortly. Requesting another link replaces the earlier request in this browser.</p></div>
               <button className="quiet-button" onClick={() => { setSent(false); setError(""); }}>Use another email</button>
             </div>
           ) : (
-            <form className="form" onSubmit={submit}>
-              <label>Email<input autoComplete="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"/></label>
+            <form className="form" onSubmit={submit} aria-busy={busy}>
+              <label>Email<input autoComplete="email" type="email" maxLength={320} required aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error auth-help" : "auth-help"} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"/></label>
+              <p id="auth-help" className="auth-note">New here? The same secure email flow creates your account. No password needed.</p>
               <button className="primary" type="submit" disabled={busy}>{busy ? "Sending…" : "Send secure link"} <span>↗</span></button>
-              {error && <p className="auth-error" role="alert">{error}</p>}
+              {error && <p id="auth-error" className="auth-error" role="alert">{error}</p>}
             </form>
           )}
           <div className="identity-foot"><span>PKCE protected</span><span>NO PASSWORD</span></div>
+          <p className="auth-legal">Before continuing, read the <a href="/terms">terms of service</a>, <a href="/privacy">privacy notice</a> and <a href="/cookies">cookie information</a>.</p>
         </div>
       </section>
     </main>

@@ -9,6 +9,12 @@ These templates brand the existing email sign-in flow without changing its PKCE 
 
 Both use the existing `{{ .ConfirmationURL }}` placeholder. Keep that placeholder intact. The first email confirms signup; subsequent emails welcome the user back and provide sign-in access. No tracking, external assets, or untrusted user metadata are embedded.
 
+## Porcelain email set — October 22, 2026
+
+`node scripts/render-auth-emails.mjs` renders the warm Porcelain treatment into twelve static templates. `manifest.json` maps each subject and content field to its file. It covers signup, magic link, invitation, recovery, email change, reauthentication, and six account-security notifications (password/email change, identity linked/unlinked, verification method added/removed). Reauthentication uses `{{ .Token }}`; actionable emails preserve `{{ .ConfirmationURL }}`. Notification bodies contain no sign-in tokens or fake support addresses.
+
+These files only prepare the supported Supabase template slots. They do not create a password-reset UI, enable disabled notification types, install SMTP, or change hosted Auth. Review the actual supported account actions and configure sender identity before enabling additional emails. The free-tier/default-provider restriction below still blocks hosted customization. The application's own branded sign-in errors, inbox instructions and session-expiry notice do not depend on hosted template customization.
+
 ## Hosted project status — October 21, 2026
 
 Prepared for EIDOLON project `bqpdjhcshjjfqcbcnotj`. Its Management API rejected the four-field template update:

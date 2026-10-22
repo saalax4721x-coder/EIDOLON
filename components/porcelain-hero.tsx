@@ -1,0 +1,19 @@
+"use client";
+import { useRef, useState } from "react";
+import Link from "next/link";
+const stages = [
+  { name: "Launch", title: "A place for what you build.", text: "Create a project page with its name, source and capabilities. Start without a token.", href: "/launch", action: "Launch a project" },
+  { name: "Prove", title: "Let the source speak.", text: "Connect GitHub to verify repository control. Other source claims remain unverified until checked.", href: "/connectors", action: "Connect a source" },
+  { name: "Discover", title: "Find your next useful thing.", text: "Explore real project records, follow what interests you and inspect recorded relationships.", href: "/discover", action: "Discover projects" },
+  { name: "Build", title: "Turn intention into work.", text: "Create a company, connect a provider and give your agents a workflow you can review.", href: "/company", action: "Create a company" },
+];
+export function PorcelainHero() {
+  const [selected, setSelected] = useState(0);
+  const object = useRef<HTMLDivElement>(null);
+  const stage = stages[selected];
+  return <section className="phero" aria-labelledby="hero-title"><h1 className="phero-title" id="hero-title"><span className="pt-line">Launch anything.</span><span className="pt-line pt-line--b">Make it <span className="hl">real.</span></span></h1>
+    <div className="phero-stage" aria-hidden="true"><div className="chrome porcelain-object" ref={object} onPointerMove={event=>{const box=event.currentTarget.getBoundingClientRect(); object.current?.style.setProperty("--tilt-x", `${(event.clientY-box.top)/box.height*16-8}deg`);object.current?.style.setProperty("--tilt-y", `${(event.clientX-box.left)/box.width*16-8}deg`);}} onPointerLeave={()=>{object.current?.style.setProperty("--tilt-x","0deg");object.current?.style.setProperty("--tilt-y","0deg");}}><div className="chrome-shadow"/>
+      <svg className="chrome-sculpture" viewBox="0 0 600 600" fill="none"><defs><linearGradient id="chrome-body" x1="105" y1="80" x2="465" y2="510" gradientUnits="userSpaceOnUse"><stop stopColor="#fff"/><stop offset=".15" stopColor="#d6d8d4"/><stop offset=".27" stopColor="#ffddcf"/><stop offset=".39" stopColor="#faf8ec"/><stop offset=".45" stopColor="#737e84"/><stop offset=".49" stopColor="#15171d"/><stop offset=".55" stopColor="#c5d5ee"/><stop offset=".64" stopColor="#fff"/><stop offset=".75" stopColor="#d1e8df"/><stop offset=".85" stopColor="#5f656b"/><stop offset="1" stopColor="#e3e1dd"/></linearGradient><filter id="chrome-depth" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="25" stdDeviation="17" floodColor="#302f38" floodOpacity=".16"/></filter></defs><path filter="url(#chrome-depth)" fillRule="evenodd" d="M303 71C389 50 429 116 449 170C471 227 535 245 516 316C501 377 451 380 421 432C384 497 316 518 255 477C201 444 143 464 109 403C75 342 110 301 99 246C84 166 135 111 204 111C248 111 257 81 303 71ZM299 214C249 203 218 238 213 282C207 333 240 373 287 378C333 383 379 351 380 303C382 261 346 225 299 214Z" fill="url(#chrome-body)" clipRule="evenodd"/></svg>
+    </div></div><div className="phero-bottom"><div className="phero-intro"><p>A home for things people build. A workspace for the people and agents who bring them to life.</p><div className="phero-ctas"><Link href={stage.href} className="btn">{stage.action} <span aria-hidden="true">↗</span></Link><Link href="/how-it-works" className="btn btn--quiet">How it works</Link></div></div><div className="phero-panel"><div className="stage-tabs glass" role="group" aria-label="Explore EIDOLON">{stages.map((item,i)=><button type="button" key={item.name} aria-pressed={selected===i} onClick={()=>setSelected(i)}><b>0{i+1}</b>{item.name}</button>)}</div><div className="stage-card glass" aria-live="polite"><strong>{stage.title}</strong><p>{stage.text}</p></div></div></div>
+  </section>;
+}

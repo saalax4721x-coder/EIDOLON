@@ -1,6 +1,6 @@
 # EIDOLON — release verification and repository handoff
 
-Updated 2026-10-21. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The dated live verification below supersedes earlier connection and migration blockers.
+Updated 2026-10-22. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The dated live verification below supersedes earlier connection and migration blockers.
 
 ## Scope already implemented
 
@@ -113,3 +113,11 @@ Full account authentication remains pending the inbox links and their matching u
 After refreshing the local Vercel development identity, a new request for the second real account returned HTTP 200. The user confirmed that its sign-in email arrived. This establishes actual email delivery for that request, not a completed callback, authenticated session, company, or two-account isolation pass.
 
 At the user's request, added EIDOLON signup and returning-user email subjects/body templates in [supabase/templates](../supabase/templates/README.md). Both preserve `{{ .ConfirmationURL }}`. Read the live project's Auth configuration using the existing Supabase CLI identity, then attempted a narrow PATCH of only the four subject/template fields. Supabase rejected it because free-tier projects using the default email provider cannot modify templates. Custom SMTP is not configured. The branded files are committed but **not applied to hosted Auth**; a connected provider/verified sender or eligible plan is required. No SMTP credentials, auth settings, website design, or schema were changed. A subsequent read confirms the hosted subject/template fields still differ from the proposed values and no unrelated fields changed.
+
+## October 22 Porcelain product surfaces
+
+The user supplied the Porcelain HTML reference and authorized implementing its design, help/FAQ, footer, legal pages and branded auth messages/notifications. This supersedes the earlier request to defer redesign. The reference's mock fetch layer and fabricated project/account data were excluded; existing company and workflow infrastructure remains in use. See [Porcelain handoff](porcelain-handoff.md) for implementation, browser evidence and boundaries.
+
+Added a shared footer, expanded help/FAQ/how-it-works, launch-draft terms/privacy/cookies/acceptable-use/legal centre, loading/error/missing-page states, and real-record activity notifications. Official X/social links and operator/legal contact details are intentionally pending at the user's request. In-app auth copy and session-expiry notices are branded now. Twelve hosted Auth email templates are prepared; no hosted SMTP settings, templates or notification switches were changed. The earlier provider-plan restriction remains unresolved; a new read-only Auth configuration request failed with a local transport error on this attempt.
+
+Found and corrected transient Supabase Auth failures being treated as invalid refresh credentials: outages, rate limits and malformed replies now preserve cookies and return a temporary-service response, with bounded upstream requests. Rejected refresh credentials still clear the protected cookies. All **32** automated tests pass, standalone typecheck passes, and the final production build passes locally. Browser checks cover public routing, responsive overflow, FAQ keyboard controls, command focus restoration and mocked auth error presentation. These checks do not satisfy the outstanding real authenticated two-account/provider/MCP/sponsorship acceptance gates. Keep PR #20 unmerged.

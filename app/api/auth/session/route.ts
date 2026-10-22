@@ -8,10 +8,15 @@ async function readUser(accessToken: string) {
   const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: { ...supabaseHeaders, Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
+    signal: AbortSignal.timeout(20000),
   });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    if ([401, 403].includes(response.status)) return null;
+    throw new Error("Auth unavailable");
+  }
   const user = await response.json().catch(() => null) as { id?: string; email?: string } | null;
-  return user?.id ? user : null;
+  if (!user?.id) throw new Error("Invalid user response");
+  return user;
 }
 
 async function refreshSession(refreshToken: string) {
@@ -20,9 +25,15 @@ async function refreshSession(refreshToken: string) {
     headers: { apikey: supabasePublishableKey, "content-type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
     cache: "no-store",
+    signal: AbortSignal.timeout(20000),
   });
-  if (!response.ok) return null;
-  return await response.json().catch(() => null) as { access_token?: string; refresh_token?: string; expires_in?: number } | null;
+  if (!response.ok) {
+    if ([400, 401, 403].includes(response.status)) return null;
+    throw new Error("Auth unavailable");
+  }
+  const session = await response.json().catch(() => null) as { access_token?: string; refresh_token?: string; expires_in?: number } | null;
+  if (!session?.access_token || !session.refresh_token) throw new Error("Invalid session response");
+  return session;
 }
 
 export async function GET() {

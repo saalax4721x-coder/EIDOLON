@@ -1,34 +1,16 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ContactDetails, ContentPage } from "@/components/content-page";
+export const metadata: Metadata = { title: "Terms of service · EIDOLON" };
 export default function Terms() {
-  return (
-    <main className="legal-page">
-      <header className="surface-nav">
-        <a href="/" className="wordmark">EIDOLON</a>
-        <nav className="surface-nav-links">
-          <a href="/discover">Discover</a>
-          <a href="/launch">Launch</a>
-          <a href="/privacy">Privacy</a>
-          <span>TERMS</span>
-        </nav>
-      </header>
-      <section className="legal-hero">
-        <span className="eyebrow">LEGAL / TERMS</span>
-        <h1>Use the network<br /><em>with clarity.</em></h1>
-        <p>EIDOLON connects people to real projects and external systems. Some capabilities are live; others are deliberately marked as network-layer work.</p>
-      </section>
-      <article className="legal-copy">
-        <h2>1. Honest project information</h2>
-        <p>You are responsible for the information and sources you publish. Do not claim ownership, authorization or verification you do not have.</p>
-        <h2>2. External services</h2>
-        <p>Connected providers remain independent services with their own terms, permissions and availability. EIDOLON does not control third-party systems.</p>
-        <h2>3. Economic activity</h2>
-        <p>Labels such as Buy, Sell, Fund, Trade or Predict do not imply a live transaction rail. Only capabilities connected to a real underlying system should be treated as executable.</p>
-        <h2>4. Prohibited use</h2>
-        <p>Do not use EIDOLON for fraud, impersonation, unauthorized access, abuse of external services or unlawful activity.</p>
-        <h2>5. Availability</h2>
-        <p>The service and integrations may change or become unavailable. Network-layer labels exist to make unfinished capability explicit.</p>
-        <h2>6. Contact</h2>
-        <p>Legal questions: <a href="mailto:legal@eidolon.network">legal@eidolon.network</a>.</p>
-      </article>
-    </main>
-  );
+  return <ContentPage legal eyebrow="Terms of service" title="Build with clarity." intro="Draft conditions for using EIDOLON’s project network and company tools.">
+    <section><h2>1. Your account and authority</h2><p>Use accurate account details, protect your sign-in links and connected credentials, and act only for companies and sources you are authorized to control. The service is intended for adults able to enter binding agreements. Do not create accounts for children.</p></section>
+    <section><h2>2. Your content and public records</h2><p>You retain your rights in the material you submit. You give the operator permission to store, process and display it as needed to provide the features you choose. You must have the necessary rights and permissions. Published project information and opted-in sponsor offers may be visible to others. Do not publish secrets or private customer information.</p></section>
+    <section><h2>3. Company tools and AI</h2><p>You control provider connections, permissions and workflow approvals. Provider-generated content can be inaccurate or inappropriate; review it before relying on it or using it externally. You are responsible for instructions you submit and for lawful use of customer data. EIDOLON is not a substitute for professional legal, financial, medical or other regulated advice.</p></section>
+    <section><h2>4. Charges and third-party services</h2><p>AI providers and external services have their own accounts, charges and terms. A consumer AI subscription does not necessarily include API access. Authorizing a workflow may incur provider charges. An interrupted or failed step may already have reached the provider; do not assume a retry is free. EIDOLON does not currently offer a platform subscription checkout or payment/refund workflow. Any future paid offering needs its own disclosed price, cancellation and refund terms.</p></section>
+    <section><h2>5. Verification, sponsorship and economy</h2><p>Source verification checks a specific ownership claim; it is not a quality, safety or legal certification. Company records do not register a legal entity. Quotes, jobs, sponsor applications and status changes do not themselves send money, dispatch staff or create a funding guarantee. Participants must agree their own lawful commercial terms. Economy settings do not imply live token issuance or an investment service.</p></section>
+    <section><h2>6. Acceptable use and suspension</h2><p>Follow the <Link href="/acceptable-use">acceptable-use policy</Link>. Access may be restricted to investigate abuse, protect people or comply with law. Where practical and legally permitted, the operator should explain material restrictions and provide a way to raise concerns through the published contact.</p></section>
+    <section><h2>7. Availability, leaving and data</h2><p>Features may be incomplete, changed or unavailable. Keep your own copies of important work. Signing out does not delete your account or stored records. Self-service account deletion is not yet available; the privacy-contact and request process must be established before launch. See the <Link href="/privacy">privacy notice</Link> for current handling and open items.</p></section>
+    <section><h2>8. Rights, disputes and changes</h2><p>No statement on this page excludes rights or liabilities that applicable law does not allow to be excluded. Governing law, responsible operator, dispute contact and any permitted liability terms need to be finalized for the intended jurisdiction before launch. Material revisions should be dated and communicated where required.</p></section><ContactDetails/>
+  </ContentPage>;
 }

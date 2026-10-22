@@ -1,66 +1,22 @@
-"use client";
-
-import { useState } from "react";
-import { EidolonIcon, type EidolonIconName } from "@/components/eidolon-icon";
+import Link from "next/link";
 import { EidolonNav } from "@/components/eidolon-nav";
-
-const intents = [
-  { id: "launch", label: "Launch something", detail: "Bring a project into the world.", icon: "launch" as EidolonIconName },
-  { id: "company", label: "Launch a company", detail: "Build a company with human and AI employees.", icon: "project" as EidolonIconName },
-  { id: "discover", label: "Discover projects", detail: "Find what people are building.", icon: "discover" as EidolonIconName },
-  { id: "build", label: "Build & collaborate", detail: "Find people, projects and open work.", icon: "build" as EidolonIconName },
-  { id: "commerce", label: "Buy / sell", detail: "Find products, assets and services.", icon: "commerce" as EidolonIconName },
-  { id: "fund", label: "Fund a project", detail: "Support something worth building.", icon: "fund" as EidolonIconName },
-  { id: "use", label: "Use something", detail: "Find an API, app, game or service.", icon: "use" as EidolonIconName },
-];
-
+import { PorcelainHero } from "@/components/porcelain-hero";
+import { faqs } from "@/lib/help-content";
 export default function Home() {
-  const [intent, setIntent] = useState<string | null>(null);
-  return (
-    <main className="shell">
-      <EidolonNav />
-      <section className="hero">
-        <div className="hero-atmosphere" aria-hidden="true"><span className="hero-orbit orbit-a"/><span className="hero-orbit orbit-b"/><span className="hero-orbit orbit-c"/><i className="hero-axis"/><b className="hero-node node-a"/><b className="hero-node node-b"/></div>
-        <div className="hero-index" aria-hidden="true"><span>01</span><i/><span>06</span></div>
-        <div className="eyebrow">THE WORLD OF THINGS BEING BUILT</div>
-        <h1>What are you<br /><em>here to do?</em></h1>
-        <p className="lede">EIDOLON keeps the surface simple. Tell us your intention and the world behind it will unfold.</p>
-        <div className="intent-grid">
-          {intents.map((item) => (
-            <button key={item.id} className={`intent-card ${intent === item.id ? "selected" : ""}`}
-              onClick={() => { setIntent(item.id); window.location.href = item.id === "launch" ? "/launch" : item.id === "company" ? "/company" : item.id === "discover" ? "/discover" : `/discover?intent=${item.id}`; }} type="button">
-              <span className={`intent-mark intent-mark-${item.id}`}><EidolonIcon name={item.icon} size={22} /></span>
-              <span className="intent-copy"><strong>{item.label}</strong><small>{item.detail}</small></span>
-              <span className="arrow">↗</span>
-            </button>
-          ))}
-        </div>
-        <section className="landing-intelligence" aria-label="How EIDOLON works">
-          <div className="landing-intelligence-head">
-            <span className="eyebrow">THE EIDOLON MODEL</span>
-            <h2>Things become more useful<br/><em>when they become objects.</em></h2>
-            <p>Every project can carry a source, capabilities, relationships and an optional economy. EIDOLON turns that structure into something you can discover, understand and act on.</p>
-          </div>
-          <div className="landing-primitives">
-            <article><span className="landing-primitive-index">01</span><EidolonIcon name="project" size={20}/><strong>OBJECT</strong><p>A project has an identity instead of being just another link.</p></article>
-            <article><span className="landing-primitive-index">02</span><EidolonIcon name="verified" size={20}/><strong>PROOF</strong><p>Sources and verification separate what is known from what is claimed.</p></article>
-            <article><span className="landing-primitive-index">03</span><EidolonIcon name="graph" size={20}/><strong>NETWORK</strong><p>Real persisted relationships reveal how projects actually connect.</p></article>
-            <article><span className="landing-primitive-index">04</span><EidolonIcon name="commerce" size={20}/><strong>ACTION</strong><p>Use, fund, buy, license, contribute and compose when capability exists.</p></article>
-          </div>
-        </section>
-        <section className="landing-loop" aria-label="EIDOLON network loop">
-          <span className="eyebrow">THE NETWORK LOOP</span>
-          <div className="landing-loop-track">
-            <span>DISCOVER</span><i>→</i><span>VERIFY</span><i>→</i><span>UNDERSTAND</span><i>→</i><span>CONNECT</span><i>→</i><span>USE</span><i>→</i><span>BUILD</span><i>→</i><span>LAUNCH</span>
-          </div>
-        </section>
-        <div className="hero-footerline">
-          <span>PROJECTS / COMPANIES / AI WORKFORCE / ECONOMIES</span>
-          <span>Projects can launch with or without their own economy.</span>
-          {intent && <span className="selected-intent">Selected · {intents.find((i) => i.id === intent)?.label}</span>}
-        </div>
-      </section>
-      <footer><span>EIDOLON / 001</span><span>Launch anything. Discover everything.</span><nav className="footer-links"><a href="/help">Help</a><a href="/faq">FAQ</a><a href="/connectors">Connectors</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/auth">Sign in</a></nav><span>THE NETWORK IS FORMING</span></footer>
-    </main>
-  );
+  return <main id="main-content" className="porc"><div className="home-nav"><EidolonNav/></div><PorcelainHero/>
+    <section className="psec wrap" id="what"><div className="phead"><span className="pk">What it is</span><h2>Good things deserve a <span className="hl">home.</span></h2><p className="home-statement">Bring a project into the world. Give your company a workspace. Connect the people and agents who help you move it forward.</p></div><ul className="kinds">{["Software", "Apps", "APIs", "Games", "Services", "Datasets", "Companies"].map(kind=><li key={kind} className="glass">{kind}</li>)}</ul></section>
+    <section className="psec wrap" id="how"><div className="phead phead--row"><div><span className="pk">How it works</span><h2>From an idea to <span className="hl">useful work.</span></h2></div><p>A clear path, with you in control of each meaningful action.</p></div><div className="home-steps">{[
+      ["01", "Make it yours.", "Sign in with a secure email link. Create a project or a company workspace.", "/auth", "Get started"],
+      ["02", "Connect what you need.", "Add a source for your project or connect an AI provider for your company’s agents.", "/connectors", "Explore connections"],
+      ["03", "Build, then review.", "Assign tasks, connect workflow steps and review saved outputs before continuing.", "/workflows", "Open workflows"],
+    ].map(([n,title,body,href,action])=><article className="glass" key={n}><span className="pk">{n}</span><h3>{title}</h3><p>{body}</p><Link href={href}>{action} ↗</Link></article>)}</div></section>
+    <section className="psec wrap" id="proof"><div className="home-split glass"><div><span className="pk">A claim is not proof</span><h2>Keep the real thing <span className="hl">visible.</span></h2></div><div><p>Project pages distinguish verified sources from claims awaiting proof. Company dashboards count recorded work, leads, quotes and jobs.</p><p>No invented sponsors or activity. A quote is a quote; it is not recorded revenue. Supported workflow actions create real tasks and saved results.</p><Link className="btn btn--quiet" href="/how-it-works">See how it works ↗</Link></div></div></section>
+    <section className="psec wrap" id="company"><div className="phead"><span className="pk">Your workspace</span><h2>Give your team <span className="hl">room to work.</span></h2></div><div className="home-steps">{[
+      ["Company Foundry", "Manage agents, provider connections, tasks, customer leads, quotes and jobs.", "/company"],
+      ["Agent workflows", "Create and connect steps. Run supported actions and pause for owner review.", "/workflows"],
+      ["Sponsorship exchange", "Publish a real offer or submit a pitch. Applications stay separate from commitments.", "/sponsorships"],
+    ].map(([title,body,href])=><Link className="home-feature glass" key={href} href={href}><h3>{title} ↗</h3><p>{body}</p></Link>)}</div></section>
+    <section className="psec wrap" id="faq"><div className="faq"><div className="phead"><span className="pk">Questions</span><h2>Good to know.</h2><Link href="/faq">All questions ↗</Link></div><div className="faq-list">{faqs.slice(0,5).map(({question,answer})=><details className="faq-item glass" key={question}><summary>{question}<span className="faq-plus" aria-hidden="true"/></summary><p>{answer}</p></details>)}</div></div></section>
+    <section className="pclose wrap"><div className="pclose-card glass"><span className="pk">Start with what matters</span><h2>Make space for your <span className="hl">next thing.</span></h2><p>One project. One company. Your next useful step.</p><div className="phero-ctas"><Link className="btn" href="/launch">Launch a project ↗</Link><Link className="btn btn--quiet" href="/company">Create a company</Link></div></div></section>
+  </main>;
 }
