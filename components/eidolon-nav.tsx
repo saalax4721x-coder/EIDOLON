@@ -50,7 +50,7 @@ export function EidolonNav({ section }: { section?: string }) {
         <a className="eidolon-nav-icon" href="/notifications" aria-label="Notifications and activity">↗</a>
         <button ref={commandButtonRef} type="button" className="eidolon-nav-command" onClick={() => setOpen(true)} aria-label="Open command menu" aria-haspopup="dialog" aria-expanded={open}><span>COMMAND</span><kbd>⌘K</kbd></button>
         <a className="eidolon-nav-icon" href="/help" aria-label="Help">?</a>
-        <a className="eidolon-nav-signin" href={authenticated ? "/account" : "/auth"}>{authenticated ? "My workspace" : "Sign in"} <span>↗</span></a>
+        <a className="eidolon-nav-signin" href={authenticated ? "/workspace" : "/auth"}>{authenticated ? "My workspace" : "Sign in"} <span>↗</span></a>
       </div>
       {open && <div className="eidolon-command-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
         <section ref={commandDialogRef} className="eidolon-command" role="dialog" aria-modal="true" aria-label="EIDOLON command menu" onKeyDown={(event) => {
@@ -64,6 +64,8 @@ export function EidolonNav({ section }: { section?: string }) {
         }}>
           <div className="eidolon-command-head"><div><span>CONTROL / COMMAND</span><strong>Navigate the network.</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close command menu">ESC</button></div>
           <div className="eidolon-command-grid">
+            <a href="/workspace" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Workspace</b><small>Your companies and projects</small></span><i>↗</i></a>
+            <a href="/marketplace" onClick={() => setOpen(false)}><EidolonIcon name="discover" size={18}/><span><b>Marketplace</b><small>Sourced investors and public opportunities</small></span><i>↗</i></a>
             <a href="/notifications" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Notifications</b><small>Reviews and recorded work updates</small></span><i>↗</i></a>
             <a href="/dashboard" onClick={() => setOpen(false)}><EidolonIcon name="project" size={18}/><span><b>Dashboard</b><small>Company statistics and work status</small></span><i>↗</i></a>
             <a href="/workflows" onClick={() => setOpen(false)}><EidolonIcon name="graph" size={18}/><span><b>Workflows</b><small>Build workflows and review runs</small></span><i>↗</i></a>

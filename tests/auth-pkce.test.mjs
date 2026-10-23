@@ -40,7 +40,7 @@ test('malformed email and JSON never call Supabase; unsafe redirects fall back l
   for (const email of ['bad', 'a@', 'a@b', 'x y@example.test', 'x'.repeat(321)]) assert.equal((await route.POST(request({ email }))).status, 400);
   assert.equal((await route.POST(new Request('https://app.test/api/auth/request-link', { method: 'POST', body: '{' }))).status, 400);
   assert.equal(calls, 0);
-  for (const value of ['//outside.test', '/\\outside.test', '/path\nheader', 'https://outside.test']) assert.equal(redirect.safeAuthNext(value), '/launch');
+  for (const value of ['//outside.test', '/\\outside.test', '/path\nheader', 'https://outside.test']) assert.equal(redirect.safeAuthNext(value), '/workspace');
   assert.equal(redirect.safeAuthNext('/dashboard?q=50%'), '/dashboard?q=50%');
 });
 test('provider rejection, rate limit and network errors are actionable without leaking upstream details', async () => {
@@ -73,7 +73,7 @@ test('missing or malformed verifier and missing code redirect to a useful auth e
     const route = callbackRoute({ eidolon_pkce_verifier: verifier, eidolon_auth_next: '//outside.test' }, async () => { calls++; });
     const response = await route.GET(new Request('https://app.test/api/auth/callback?code=code'));
     const destination = new URL(response.headers.get('location'));
-    assert.equal(destination.origin, 'https://app.test'); assert.equal(destination.pathname, '/auth'); assert.equal(destination.searchParams.get('next'), '/launch');
+    assert.equal(destination.origin, 'https://app.test'); assert.equal(destination.pathname, '/auth'); assert.equal(destination.searchParams.get('next'), '/workspace');
     assert.equal(destination.searchParams.get('error'), 'invalid_link'); assert.equal(response.cookieValues.has('eidolon_access_token'), false);
   }
   const route = callbackRoute({ eidolon_pkce_verifier: 'a'.repeat(43) }, async () => { calls++; });

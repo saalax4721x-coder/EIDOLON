@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { EidolonIcon } from "@/components/eidolon-icon";
+import { safeAuthNext } from "@/lib/auth-redirect";
 import { EidolonNav } from "@/components/eidolon-nav";
 
 export default function AuthPage() {
@@ -11,6 +12,12 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("error") === "invalid_link") setError("This sign-in link expired, was already used, or was opened in a different browser. Request a new link and open it in the same browser.");
+    const controller = new AbortController();
+    void fetch("/api/auth/session", { cache: "no-store", signal: controller.signal }).then(async response => {
+      const session = await response.json();
+      if (response.ok && session.authenticated && !controller.signal.aborted) window.location.replace(safeAuthNext(new URLSearchParams(window.location.search).get("next")));
+    }).catch(() => { /* The sign-in form remains available during a session-check outage. */ });
+    return () => controller.abort();
   }, []);
 
   async function submit(event: FormEvent) {
@@ -19,8 +26,8 @@ export default function AuthPage() {
     setError("");
     setBusy(true);
     try {
-      const next = new URLSearchParams(window.location.search).get("next") || "/launch";
-      const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/launch";
+      const next = new URLSearchParams(window.location.search).get("next") || "/workspace";
+      const safeNext = safeAuthNext(next);
       const response = await fetch("/api/auth/request-link", {
         method: "POST",
         headers: { "content-type": "application/json" },

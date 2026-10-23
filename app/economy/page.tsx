@@ -34,6 +34,7 @@ export default function Economy() {
   }, []);
 
   const saveMode = async (nextMode: Mode) => {
+    const previousMode = mode;
     setMode(nextMode);
     setMessage("");
     setError("");
@@ -53,6 +54,7 @@ export default function Economy() {
       if (!response.ok) throw new Error(data?.error ?? "Economy could not be updated.");
       setMessage(nextMode === "token" ? "Token economy selected for this project." : "Project-only economy selected.");
     } catch (cause) {
+      setMode(previousMode);
       setError(cause instanceof Error ? cause.message : "Economy could not be updated.");
     } finally {
       setSaving(false);
@@ -75,10 +77,10 @@ export default function Economy() {
           {loading ? <div className="economy-readout"><span className="readout-dot"/><div><strong>READING PROJECT STATE</strong><p>Loading the persisted economy configuration.</p></div></div> : (
             <>
               <div className="economy-grid">
-                <button type="button" className={mode === "none" ? "economy active" : "economy"} disabled={saving} onClick={() => saveMode("none")}><span className="economy-index">01</span><strong>Project only</strong><span>No token. Keep the project independent.</span><i>○</i></button>
-                <button type="button" className={mode === "token" ? "economy active" : "economy"} disabled={saving} onClick={() => saveMode("token")}><span className="economy-index">02</span><strong>Project + token</strong><span>Attach a native project economy.</span><i>◇</i></button>
+                <button type="button" aria-pressed={mode === "none"} className={mode === "none" ? "economy active" : "economy"} disabled={saving} onClick={() => saveMode("none")}><span className="economy-index">01</span><strong>Project only</strong><span>No token. Keep the project independent.</span><i>○</i></button>
+                <button type="button" aria-pressed={mode === "token"} className={mode === "token" ? "economy active" : "economy"} disabled={saving} onClick={() => saveMode("token")}><span className="economy-index">02</span><strong>Project + token</strong><span>Attach a native project economy.</span><i>◇</i></button>
               </div>
-              <div className="economy-readout"><span className="readout-dot"/><div><strong>{mode === "token" ? "NATIVE ECONOMY SELECTED" : "INDEPENDENT PROJECT SELECTED"}</strong><p>{mode === "token" ? "The economic mode is persisted. Token deployment, wallet ownership and chain configuration require real infrastructure before activation." : "This project remains independent. An economy can be enabled later without replacing its canonical identity."}</p></div></div>
+              <div className="economy-readout"><span className="readout-dot"/><div><strong>{mode === "token" ? "NATIVE ECONOMY SELECTED" : "INDEPENDENT PROJECT SELECTED"}</strong><p>{!projectId ? "Preview only. Create or open a project to save this preference. No token is deployed here." : mode === "token" ? "Token preference selected. Token deployment, wallet ownership and chain configuration require real infrastructure before activation." : "This project remains independent. An economy can be enabled later without replacing its canonical identity."}</p></div></div>
               {message && <p className="action-note" role="status" aria-live="polite">{message}</p>}
               {error && <p className="action-error" role="alert">{error}</p>}
             </>

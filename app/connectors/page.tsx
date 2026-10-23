@@ -17,6 +17,8 @@ type SolanaProvider = { connect: () => Promise<{ publicKey?: { toString: () => s
 
 export default function Connectors() {
   const [github, setGithub] = useState<GithubStatus | null>(null);
+  const [githubError, setGithubError] = useState("");
+  const [signedOut, setSignedOut] = useState(false);
   const [wallet, setWallet] = useState<{ kind: "ethereum" | "solana"; address: string; chain?: string } | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletError, setWalletError] = useState("");
@@ -147,9 +149,10 @@ export default function Connectors() {
       .then(async (response) => {
         const data = await response.json().catch(() => null);
         if (response.ok && active) setGithub(data);
-        else if (active) setGithub({ connected: false });
+        else if (active && response.status === 401) { setSignedOut(true); setGithub({ connected: false }); }
+        else if (active) { setGithubError("GitHub status could not be checked. Reload to try again."); setGithub({ connected: false }); }
       })
-      .catch(() => { if (active) setGithub({ connected: false }); });
+      .catch(() => { if (active) { setGithubError("GitHub status could not be checked. Reload to try again."); setGithub({ connected: false }); } });
     return () => {
       active = false;
       evm?.removeListener?.("accountsChanged", onAccountsChanged);
@@ -173,7 +176,7 @@ export default function Connectors() {
       <section className="connector-grid">
         <article className="connector-card active">
           <div>
-            <span className="connector-status">{github === null ? "CHECKING" : githubConnected ? "CONNECTED" : github?.expired ? "EXPIRED" : "AVAILABLE"}</span>
+            <span className="connector-status">{github === null ? "CHECKING" : githubError ? "STATUS UNAVAILABLE" : githubConnected ? "CONNECTED" : github?.expired ? "EXPIRED" : "NOT CONNECTED"}</span>
             <span className="connector-mark"><EidolonIcon name="verified" size={20} /></span>
           </div>
           <h2>GitHub</h2>
@@ -183,11 +186,12 @@ export default function Connectors() {
               <span className="connector-muted">Connected as <strong>{github.login}</strong></span>
               <span className="connector-muted">Scopes: {(github.scopes ?? []).join(", ") || "provider-managed"}</span>
             </>
-          ) : github?.expired ? (
-            <a className="connector-muted" href="/auth?next=/connectors">Reconnect GitHub →</a>
+          ) : signedOut ? (
+            <a className="connector-muted" href="/auth?next=/connectors">Sign in to manage source connections →</a>
           ) : (
-            <a className="connector-muted" href="/auth?next=/launch">Sign in to continue →</a>
+            <a className="connector-muted" href="/workspace">Choose your project to verify its GitHub repository →</a>
           )}
+          {githubError && <p role="alert">{githubError}</p>}
         </article>
 
         <article className={`connector-card ${wallet ? "active" : ""}`}>
@@ -198,10 +202,10 @@ export default function Connectors() {
           {walletError && <span className="connector-error" role="alert">{walletError}</span>}
         </article>
         <article className="connector-card">
-          <div><span className="connector-status">COMING LATER</span><span className="connector-mark">◇</span></div>
-          <h2>Platforms</h2>
-          <p>App stores, games and brokerages require their own authorization and policy rails before they can be represented as connected.</p>
-          <span className="connector-muted">Not connected</span>
+          <div><span className="connector-status">COMPANY CONNECTIONS</span><span className="connector-mark">◇</span></div>
+          <h2>AI &amp; assistants</h2>
+          <p>Connect provider APIs for agent execution, or create a scoped MCP connection for an external assistant. Manage credentials inside your company workspace.</p>
+          <a className="connector-muted" href="/company#foundry-connections">Manage company connections →</a>
         </article>
       </section>
 

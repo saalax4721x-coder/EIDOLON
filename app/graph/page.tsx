@@ -117,12 +117,12 @@ export default function GraphPage() {
         <Link className="launch-link" href="/launch"><EidolonIcon name="launch" size={15} /> Add an object</Link>
       </section>
 
-      {loading && <section className="panel graph-state"><span className="eyebrow">READING GRAPH</span><h2>Mapping verified objects.</h2><div className="signal-loader" aria-hidden="true"><i /><i /><i /></div></section>}
+      {loading && <section className="panel graph-state"><span className="eyebrow">READING GRAPH</span><h2>Loading recorded projects.</h2><div className="signal-loader" aria-hidden="true"><i /><i /><i /></div></section>}
       {!loading && error && <section className="panel"><span className="eyebrow">GRAPH UNAVAILABLE</span><h2>Could not read the network.</h2><p>{error}</p></section>}
 
       {!loading && !error && (
         <>
-          <section className="graph-field" aria-label="Persisted project graph">
+          {visibleProjects.length===0 ? <section className="workspace-notice glass"><h2>No projects match this view.</h2><p>Launch a project or change the filters to explore recorded relationships.</p><Link className="btn" href="/launch">Launch a project ↗</Link></section> : <section className="graph-field" aria-label="Persisted project graph">
             <div className="graph-field-grid" aria-hidden="true" />
             <div className="graph-field-axis" aria-hidden="true"><i /><i /><i /></div>
             <svg className="graph-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -144,7 +144,7 @@ export default function GraphPage() {
               );
             })}
             <div className="graph-core"><EidolonIcon name="graph" size={24} /><span>CANONICAL<br />OBJECT GRAPH</span></div>
-          </section>
+          </section>}
 
           <section className="graph-ledger">
             <div className="graph-ledger-head"><span className="eyebrow">EDGE LEDGER</span><strong>{visibleEdges.length} visible relationship{visibleEdges.length === 1 ? "" : "s"}</strong></div>

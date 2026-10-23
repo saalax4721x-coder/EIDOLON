@@ -1,8 +1,8 @@
 # Porcelain product surfaces — October 22, 2026
 
-The user supplied `EIDOLON Porcelain (1).html` and explicitly authorized applying the design, superseding the earlier functionality-only/no-redesign constraint. Its CSS informs `app/porcelain-reference.css`; the existing functional layout CSS is preserved in a lower cascade layer in `app/legacy.css`, with product adaptations in `app/porcelain.css`.
+The user supplied `EIDOLON Porcelain (1).html` and explicitly authorized applying the design, superseding the earlier functionality-only/no-redesign constraint. Its CSS informs `app/porcelain-reference.css`; the October 23 correction removes `app/legacy.css` from the active cascade and supplies clean product layouts, with shared materials in `app/porcelain.css`. See [workspace and marketplace corrections](workspace-marketplace.md).
 
-The supplied file's bundled demo JavaScript overrides `fetch` and invents projects, sign-ins and account connections. **None of that runtime or demo data was copied.** The landing page's lightweight SVG chrome sculpture and stage buttons explain features and navigate to the real product. Typography is locally hosted Geist with its OFL licence; there is no Google Fonts request in the app.
+The supplied file's bundled demo JavaScript overrides `fetch` and invents projects, sign-ins and account connections. **None of that runtime or demo data was copied.** The October 23 correction replaces the initial SVG approximation with the supplied reference's WebGL shaders, four real 3D shapes and rotation/morph controls. The mocked runtime remains excluded. Typography is locally hosted Geist with its OFL licence; there is no Google Fonts request in the app.
 
 ## Added and retained
 

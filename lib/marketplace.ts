@@ -1,0 +1,24 @@
+/** Public-source research, not EIDOLON memberships or investment solicitations. */
+export type MarketProfile = {
+  id: string; name: string; kind: "Venture capital" | "Private equity" | "Accelerator" | "Startup";
+  description: string; focus: string[]; geography: string; stage: string;
+  website: string; source: string; sourceLabel: string; reviewedOn: string;
+  opportunity: string; opportunitySource?: string;
+};
+export const marketProfiles: readonly MarketProfile[] = [
+  { id:"y-combinator",name:"Y Combinator",kind:"Accelerator",description:"Startup accelerator with a published application process and founder support program.",focus:["Technology","Startups"],geography:"San Francisco, US",stage:"Early stage",website:"https://www.ycombinator.com",source:"https://www.ycombinator.com/apply",sourceLabel:"YC application information",reviewedOn:"2026-10-23",opportunity:"A public startup application route is published. Check the official page for the current batch, deadlines and eligibility.",opportunitySource:"https://www.ycombinator.com/apply" },
+  { id:"antler-us",name:"Antler — US",kind:"Venture capital",description:"Early-stage investor offering an in-person founder residency and investment review in the United States.",focus:["Company building","Technology"],geography:"United States",stage:"Pre-seed",website:"https://www.antler.co",source:"https://www.antler.co/location/us",sourceLabel:"Antler US residency and criteria",reviewedOn:"2026-10-23",opportunity:"A residency application route is published. Participation requires relevant US work authorization; investment follows a separate review.",opportunitySource:"https://www.antler.co/location/us" },
+  { id:"sequoia",name:"Sequoia Capital",kind:"Venture capital",description:"Venture investor whose public portfolio includes software, financial technology and other technology companies.",focus:["Technology","Software","Fintech"],geography:"See official firm information",stage:"See official firm information",website:"https://sequoiacap.com",source:"https://sequoiacap.com/our-companies",sourceLabel:"Sequoia official portfolio",reviewedOn:"2026-10-23",opportunity:"Public firm profile. An open application or current investment interest in your company has not been confirmed." },
+  { id:"kkr",name:"KKR Private Equity",kind:"Private equity",description:"Private equity platform with traditional buyout, core, middle-market and impact strategies.",focus:["Established businesses","Growth","Impact"],geography:"Global",stage:"Growth and established businesses",website:"https://www.kkr.com",source:"https://www.kkr.com/invest/private-equity",sourceLabel:"KKR private equity strategies",reviewedOn:"2026-10-23",opportunity:"Public firm profile. This listing is not an open investment offer or confirmation of interest in your company." },
+  { id:"supabase",name:"Supabase",kind:"Startup",description:"Developer platform built around Postgres, including database, authentication and generated APIs. Listed in YC's company directory.",focus:["Developer tools","Databases","Open source"],geography:"San Francisco / remote",stage:"Public company profile",website:"https://supabase.com",source:"https://www.ycombinator.com/companies/supabase",sourceLabel:"YC company profile — Supabase",reviewedOn:"2026-10-23",opportunity:"Public company profile only. Current fundraising availability is not confirmed." },
+  { id:"resend",name:"Resend",kind:"Startup",description:"Developer email API for building and sending transactional email. Listed in YC's company directory.",focus:["Developer tools","Email","Software"],geography:"See official company information",stage:"Public company profile",website:"https://resend.com",source:"https://www.ycombinator.com/companies/resend",sourceLabel:"YC company profile — Resend",reviewedOn:"2026-10-23",opportunity:"Public company profile only. Current fundraising availability is not confirmed." },
+];
+
+export function searchMarketplace(profiles: readonly MarketProfile[], query: string, kind: string, geography: string) {
+  const words=query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return profiles.filter(profile=>(kind==="all"||profile.kind===kind)&&(geography==="all"||profile.geography===geography)&&words.every(word=>[profile.name,profile.description,profile.stage,profile.geography,...profile.focus].join(" ").toLowerCase().includes(word)));
+}
+
+export function marketplaceLeadInput(profile: MarketProfile, companyId: string) {
+  return {companyId,name:profile.name,source:"public_directory",contact:"",notes:`Unqualified public research profile — ${profile.kind}. No contact or investment interest confirmed.\n${profile.description}\n${profile.opportunity}\nSource: ${profile.source}\nReviewed: ${profile.reviewedOn}`,nextAction:"Review official source, eligibility and relevance before any contact."};
+}

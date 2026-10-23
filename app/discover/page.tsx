@@ -13,7 +13,7 @@ export default function Discover() {
   const [q, setQ] = useState("");
   const [intent, setIntent] = useState("");
   const [projects, setProjects] = useState<DiscoveryProject[]>([]);
-  const [relationships, setRelationships] = useState<DiscoveryRelationship[]>([]);
+  const [, setRelationships] = useState<DiscoveryRelationship[]>([]);
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,35 +40,6 @@ export default function Discover() {
     <div className="toolbar"><div className="filters">{discoveryFilters.map((x) => <button aria-pressed={filter === x} className={filter === x ? "filter active" : "filter"} onClick={() => setFilter(x)} key={x}>{x}</button>)}</div>{intent && <div className="intent-context">INTENT / {intent.replace("_"," ").toUpperCase()} <button type="button" onClick={() => { setIntent(""); window.history.replaceState({}, "", "/discover"); }}>CLEAR</button></div>}<label className="search-wrap"><EidolonIcon name="discover" size={15}/><input aria-label="Search projects" className="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the network"/></label></div>
     {loading && <div className="panel network-state"><span className="eyebrow">LOADING NETWORK</span><h2>Reading verified projects.</h2><div className="signal-loader" aria-hidden="true"><i/><i/><i/></div></div>}
     {!loading && error && <div className="panel"><span className="eyebrow">NETWORK UNAVAILABLE</span><h2>Discovery could not load.</h2><p>{error}</p></div>}
-    {!loading && !error && visible.length > 0 && <section className="network-field" aria-label="Live project object field">
-      <div className="network-field-head"><div><span className="eyebrow">OBJECT FIELD / LIVE SET</span><strong>{visible.length} visible project{visible.length === 1 ? "" : "s"}</strong></div><span>{relationships.length ? relationships.length + " recorded relationship" + (relationships.length === 1 ? "" : "s") : "No recorded relationships yet."}</span></div>
-      <div className="network-field-stage">
-        <div className="network-field-axis" aria-hidden="true"><i/><i/></div>
-        {(() => {
-          const fieldProjects = visible.slice(0, 12);
-          const positions = new Map(fieldProjects.map((p, index) => {
-            const angle = (index * 137.5) * Math.PI / 180;
-            const radius = 18 + (index % 4) * 8;
-            return [p.id, { left: 50 + Math.cos(angle) * radius, top: 50 + Math.sin(angle) * radius * 0.68 }];
-          }));
-          const fieldEdges = relationships.filter((edge) => positions.has(edge.sourceProjectId) && positions.has(edge.targetProjectId));
-          return <>
-            <svg className="network-field-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {fieldEdges.map((edge) => { const a = positions.get(edge.sourceProjectId)!; const b = positions.get(edge.targetProjectId)!; return <line key={edge.id} x1={a.left} y1={a.top} x2={b.left} y2={b.top} />; })}
-            </svg>
-            {fieldProjects.map((p) => {
-              const pos = positions.get(p.id)!;
-              return <a className={`network-node network-node-${typeIcons[p.type] ?? "project"}`} key={p.id} href={"/project?slug=" + encodeURIComponent(p.slug)} style={{left: pos.left + "%", top: pos.top + "%"}}>
-                <span className="network-node-core"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={14}/></span>
-                <span className="network-node-label"><b>{p.name}</b><small>{p.type} · {p.source.status}</small></span>
-              </a>;
-            })}
-            <div className="network-field-center"><EidolonIcon name="graph" size={20}/><span>LIVE<br/>OBJECTS</span></div>
-          </>;
-        })()}
-      </div>
-      <p className="network-field-note">Edges connect only persisted relationships between projects visible in this field. Hidden projects may have relationships that are intentionally not drawn here.</p>
-    </section>}
     {!loading && !error && <section className="project-grid">{visible.map((p,index) => <article className={`project-card project-card-${typeIcons[p.type] ?? "project"}`} key={p.id} style={{"--card-index":index} as React.CSSProperties}><div className="card-sigil" aria-hidden="true"><EidolonIcon name={typeIcons[p.type] ?? "project"} size={19}/></div>
       <div className="card-top"><span>{p.type}</span><span className="card-code">0{(index + 1).toString().slice(-1)} / NODE</span></div>
       <h2><a href={`/project?slug=${encodeURIComponent(p.slug)}`}>{p.name}</a></h2>
