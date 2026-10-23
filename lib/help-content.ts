@@ -1,0 +1,14 @@
+export const faqs = [
+  { question: "What is EIDOLON?", answer: "A home for project discovery and a company workspace for agents, tasks, workflows and customer operations. You choose the tools you need." },
+  { question: "Do I need a token or wallet?", answer: "No. Create a project or company without either. Optional economy settings do not create a live token, payment service or investment product." },
+  { question: "How do I sign in?", answer: "Enter your email and open the newest secure link in the same browser where you requested it. Check spam if it does not arrive. Links expire and work once." },
+  { question: "What can agents actually do?", answer: "Supported agents generate deliverables using your connected AI provider. Saved tasks and artifacts record the result. They do not automatically email customers, move money or dispatch staff." },
+  { question: "Do workflows spend money?", answer: "Agent steps may incur charges from your connected provider. Starting a run requires authorization; Continue executes one step, and owner-review steps pause for your approval." },
+  { question: "What does source verification mean?", answer: "A verified GitHub source means repository control was checked using the connected account. It is not a guarantee of quality, safety, legal status or financial performance." },
+  { question: "Who can see my company data?", answer: "Company APIs and database policies restrict private workspace records to the owner. Published projects and opted-in sponsorship offers are visible to their intended audience. Do not include secrets in public content." },
+  { question: "What are notifications based on?", answer: "The activity page reads your saved workflow runs and task history. It highlights reviews, failures and completed work. It does not invent notifications or send push messages." },
+  { question: "Does a sponsor application mean funding is secured?", answer: "No. An application, review or acceptance is a recorded exchange between participants, not a payment, guarantee or legal funding agreement." },
+  { question: "Can I export or delete data?", answer: "Company tools export the currently loaded leads, quotes and jobs, subject to their displayed limits. Self-service account deletion and a full account export are not yet available. A verified privacy contact must be published before launch." },
+  { question: "My sign-in link failed. What now?", answer: "Request a new link, stay in the same browser and use the newest email. Wait if you see a rate-limit message. Keep cookies enabled for sign-in; do not share the email link publicly." },
+  { question: "What should I do if an agent step stalls?", answer: "Refresh run history before another action. A claimed step can be marked interrupted after the displayed waiting period. Uncertain steps are never automatically retried, because the provider may already have charged for them." },
+];

@@ -17,17 +17,21 @@ create table if not exists public.provider_connections (
 
 alter table public.provider_connections enable row level security;
 
+drop policy if exists "provider_connections_select_own" on public.provider_connections;
 create policy "provider_connections_select_own" on public.provider_connections
   for select to authenticated using ((select auth.uid()) = user_id);
 
+drop policy if exists "provider_connections_insert_own" on public.provider_connections;
 create policy "provider_connections_insert_own" on public.provider_connections
   for insert to authenticated with check ((select auth.uid()) = user_id);
 
+drop policy if exists "provider_connections_update_own" on public.provider_connections;
 create policy "provider_connections_update_own" on public.provider_connections
   for update to authenticated
   using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
 
+drop policy if exists "provider_connections_delete_own" on public.provider_connections;
 create policy "provider_connections_delete_own" on public.provider_connections
   for delete to authenticated using ((select auth.uid()) = user_id);
 

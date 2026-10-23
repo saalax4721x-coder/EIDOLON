@@ -1,4 +1,6 @@
-import type { Project, ProjectAction } from "@/lib/eidolon";
+import type { Project, ProjectAction, ProjectRelationship } from "@/lib/eidolon";
+
+export interface DiscoveryRelationship { id: string; sourceProjectId: string; targetProjectId: string; relationship: ProjectRelationship; }
 
 export interface DiscoveryProject extends Project {
   activityScore: number | null;
