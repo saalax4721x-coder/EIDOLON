@@ -5,4 +5,7 @@
 @import "./porcelain.css" layer(product);
 
 @import "./registry.css";
+@import "./react-bits.css";
 @import "./workspace.css" layer(workspace);
+
+@import "./premium.css" layer(workspace);

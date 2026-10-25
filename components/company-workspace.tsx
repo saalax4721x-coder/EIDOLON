@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import SpotlightCard from "@/components/SpotlightCard";
 import { useWorkspace } from "@/components/workspace-provider";
 import { EidolonNav } from "@/components/eidolon-nav";
 import { EidolonIcon } from "@/components/eidolon-icon";
@@ -417,7 +418,7 @@ export default function CompanyPage({ workspaceView = "setup" }: { workspaceView
         <label>Model ID<input value={model} onChange={(e)=>setModel(e.target.value)} maxLength={160} required placeholder="Exact model ID from provider"/></label>
         <button className="primary" disabled={busy}>{busy?"Saving…":"Add AI employee"} <span>↗</span></button>
       </form>
-      <div className="company-agent-list">{agents.length===0?<div className="company-empty"><span>⌘</span><strong>Your workforce starts here</strong><p>Create role profiles and assign connected model providers. Activate a provider-backed employee to execute work.</p></div>:agents.map((agent)=><article key={agent.id} className="company-agent"><div className="company-agent-icon">{agent.runtime==="provider"?"✳":"◇"}</div><div className="company-agent-main"><div className="company-agent-top"><strong>{agent.name}</strong><span className={"company-status "+(agent.status==="active"?"live":"")}>{agent.status}</span></div><span>{agent.role}</span><small>{agent.runtime==="provider"?providerNames[agent.provider??""]+" · "+(agent.model??"Model not set"):"Native EIDOLON profile · provider needed for model execution"}</small></div><div className="company-agent-actions">{agent.status==="active"?<button type="button" className="quiet-button" disabled={busy} onClick={()=>void setAgentStatus(agent,"paused")}>Pause</button>:<button type="button" className="quiet-button" disabled={busy||agent.runtime!=="provider"} onClick={()=>void setAgentStatus(agent,"active")}>Activate</button>}</div></article>)}</div></div>
+      <div className="company-agent-list">{agents.length===0?<div className="company-empty"><span>⌘</span><strong>Your workforce starts here</strong><p>Create role profiles and assign connected model providers. Activate a provider-backed employee to execute work.</p></div>:agents.map((agent)=><SpotlightCard key={agent.id} className="company-agent premium-agent" theme="dark" spotlightColor="#99cdd8" intensity={0.15} borderGlow={0.6} flare><div className="company-agent-icon">{agent.runtime==="provider"?"✳":"◇"}</div><div className="company-agent-main"><div className="company-agent-top"><strong>{agent.name}</strong><span className={"company-status "+(agent.status==="active"?"live":"")}>{agent.status}</span></div><span>{agent.role}</span><small>{agent.runtime==="provider"?providerNames[agent.provider??""]+" · "+(agent.model??"Model not set"):"Native EIDOLON profile · provider needed for model execution"}</small></div><div className="company-agent-actions">{agent.status==="active"?<button type="button" className="quiet-button" disabled={busy} onClick={()=>void setAgentStatus(agent,"paused")}>Pause</button>:<button type="button" className="quiet-button" disabled={busy||agent.runtime!=="provider"} onClick={()=>void setAgentStatus(agent,"active")}>Activate</button>}</div></SpotlightCard>)}</div></div>
     </section>
 
     <section className="company-section" id="foundry-leads" hidden={view!=="leads"}>

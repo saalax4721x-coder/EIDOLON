@@ -59,10 +59,10 @@ export function ancestorResults(nodeId: string, edges: WorkflowEdge[], steps: Ru
 
 export function workflowTemplate(): { nodes: WorkflowNode[]; edges: WorkflowEdge[] } {
   const nodes: WorkflowNode[] = [
-    { id: crypto.randomUUID(), type: "trigger", label: "Start", x: 20, y: 30 },
-    { id: crypto.randomUUID(), type: "agent", label: "Prepare deliverable", prompt: "Prepare a useful company action plan. State assumptions and next steps.", x: 230, y: 30 },
-    { id: crypto.randomUUID(), type: "review", label: "Owner review", x: 440, y: 30 },
-    { id: crypto.randomUUID(), type: "end", label: "Finish", x: 650, y: 30 },
+    { id: crypto.randomUUID(), type: "trigger", label: "Start", x: 40, y: 170 },
+    { id: crypto.randomUUID(), type: "agent", label: "Prepare deliverable", prompt: "Prepare a useful company action plan. State assumptions and next steps.", x: 300, y: 90 },
+    { id: crypto.randomUUID(), type: "review", label: "Owner review", x: 560, y: 230 },
+    { id: crypto.randomUUID(), type: "end", label: "Finish", x: 820, y: 130 },
   ];
   return { nodes, edges: nodes.slice(1).map((n, i) => ({ id: crypto.randomUUID(), source: nodes[i].id, target: n.id })) };
 }

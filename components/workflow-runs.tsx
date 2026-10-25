@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ThoughtLine from "@/components/ThoughtLine";
 import { orderNodes, type WorkflowRun } from "@/lib/workflow";
 function validRun(value:unknown):value is WorkflowRun {
   if(!value||typeof value!=="object")return false;
@@ -30,6 +31,7 @@ export function WorkflowRuns({ companyId, refreshKey }: { companyId: string; ref
     <div className="company-section-head"><h2>Run history</h2><button type="button" disabled={!!busy || loading} onClick={() => setReload(v => v + 1)}>Refresh runs</button></div>
     <p>Each Continue executes one step. Agent steps call the saved provider and may incur charges. Review pauses require owner approval. No outbound messages, payments, or external tool actions are supported.</p>
     {loading && <p role="status">Loading runs…</p>}{error && <p role="alert">{error}</p>}
+    {busy&&<ThoughtLine working label="Waiting for the workflow service…" doneLabel="Request completed" showTimer={false} fontSize={14} glyphColor="#778d7a" steps={["Request submitted; awaiting a confirmed saved run state."]} />}
     {!loading && !error && !runs.length && <p>No runs yet. Save a valid workflow, then start a run.</p>}
     {runs.map(run => <article key={run.id} className="company-agent workflow-run-card">
       <h3>{run.name} · {run.status}</h3><small>{new Date(run.created_at).toLocaleString()} · {run.id}</small>
