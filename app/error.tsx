@@ -1,0 +1,3 @@
+"use client";
+import Link from "next/link";
+export default function ErrorPage({reset}:{error:Error & {digest?:string};reset:()=>void}) { return <main id="main-content" className="content-page"><header className="content-head"><span className="pk">Something interrupted this page</span><h1>Let’s try that again.</h1><p role="alert">The page could not be displayed. Your saved records have not been replaced by this error screen.</p><div className="phero-ctas"><button className="btn" type="button" onClick={reset}>Try again</button><Link href="/help" className="btn btn--quiet">Open help</Link></div></header></main>; }

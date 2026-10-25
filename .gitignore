@@ -1,6 +1,10 @@
 node_modules
+*.tsbuildinfo
+supabase/.temp/
+.verification/
 .next
 out
 *.log
 .env*
 !.env.example
+.vercel

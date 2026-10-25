@@ -1,0 +1,4 @@
+/* Registry utility classes only. No Tailwind preflight on existing product pages. */
+@import "tailwindcss/theme.css" layer(registry-theme);
+@import "tailwindcss/utilities.css" layer(registry-utilities);
+@source "../components/ui";
