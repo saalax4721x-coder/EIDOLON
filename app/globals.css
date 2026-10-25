@@ -1,5 +1,8 @@
-@layer reset, reference, layout, product;
+@layer reset, reference, layout, product, registry-theme, registry-utilities, workspace;
 @import "./product-reset.css" layer(reset);
 @import "./porcelain-reference.css" layer(reference);
 @import "./product-layout.css" layer(layout);
 @import "./porcelain.css" layer(product);
+
+@import "./registry.css";
+@import "./workspace.css" layer(workspace);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SessionKeeper from "./session-keeper";
-import { SiteFooter } from "@/components/site-footer";
+import { WorkspaceFrame } from "@/components/workspace-frame";
 
 export const metadata: Metadata = {
   title: "EIDOLON",
@@ -14,8 +14,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <a className="skip-link" href="#page-content">Skip to content</a>
         <SessionKeeper />
-        <div id="page-content" tabIndex={-1}>{children}</div>
-        <SiteFooter />
+        <div id="application-root"><WorkspaceFrame>{children}</WorkspaceFrame></div>
       </body>
     </html>
   );

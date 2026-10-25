@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useWorkspace } from "@/components/workspace-provider";
 import { EidolonNav } from "@/components/eidolon-nav";
 import { WorkflowRuns } from "@/components/workflow-runs";
 import { validateGraph, workflowTemplate, type Workflow, type WorkflowNode, type WorkflowEdge } from "@/lib/workflow";
@@ -11,8 +12,10 @@ async function read(url: string, signal?: AbortSignal) {
   if (!r.ok) throw Error(d.error ?? "Unable to load data"); return d;
 }
 export default function WorkflowsPage() {
+  const scope=useWorkspace();
   const [hasChanges, setHasChanges] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]), [companyId, setCompanyId] = useState(""), [loading, setLoading] = useState(true), [error, setError] = useState(""), [reload, setReload] = useState(0);
+  useEffect(()=>{const check=(event:Event)=>{if(hasChanges&&!window.confirm("Discard unsaved workflow changes and switch company?"))event.preventDefault();};window.addEventListener("eidolon:before-company-switch",check);document.documentElement.dataset.eidolonWorkflowDirty=String(hasChanges);return()=>{window.removeEventListener("eidolon:before-company-switch",check);delete document.documentElement.dataset.eidolonWorkflowDirty;};},[hasChanges]);
   useEffect(() => {
     const controller = new AbortController(); setError(""); setLoading(true);
     read("/api/companies", controller.signal).then(d => { if (!controller.signal.aborted) { setCompanies(d.companies); const requested = new URLSearchParams(location.search).get("companyId"); setCompanyId(d.companies.some((c: Company) => c.id === requested) ? requested : d.companies[0]?.id ?? ""); } }).catch(e => { if (!controller.signal.aborted) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -20,7 +23,7 @@ export default function WorkflowsPage() {
   }, [reload]);
   return <main className="surface company-foundry"><EidolonNav section="company"/><header className="company-hero"><div className="eyebrow">EIDOLON / WORKFLOW BUILDER</div><h1>Agent workflows.</h1><p>Connect real agent deliverables and owner review steps.</p></header><div className="foundry-workspace"><div className="foundry-main" style={{ width: "100%", minWidth: 0 }}>
     <section className="company-section"><div className="company-section-head"><h2>Workflow workspace</h2><Link href={`/dashboard${companyId ? `?companyId=${companyId}` : ""}`}>Company dashboard ↗</Link></div>
-      {loading ? <p role="status">Loading companies…</p> : error ? <p role="alert">{error} <Link href="/auth?next=/workflows">Sign in</Link> <button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></p> : companies.length ? <label>Company <select value={companyId} onChange={e => { if (!hasChanges || window.confirm("Discard unsaved workflow changes and switch company?")) { setHasChanges(false); setCompanyId(e.target.value); } }}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label> : <p>No companies yet. <Link href="/company">Create a company</Link> to begin.</p>}
+      {loading ? <p role="status">Loading companies…</p> : error ? <p role="alert">{error} <Link href="/auth?next=/workflows">Sign in</Link> <button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></p> : companies.length ? <label>Company <select value={companyId} onChange={e => scope.chooseCompany(e.target.value)}>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label> : <p>No companies yet. <Link href="/company">Create a company</Link> to begin.</p>}
     </section>
     {companyId && <Editor key={companyId} companyId={companyId} onDirtyChange={setHasChanges}/>}
   </div></div></main>;

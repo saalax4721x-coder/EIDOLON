@@ -1,11 +1,13 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
+import { useWorkspace } from "@/components/workspace-provider";
 import {EidolonNav} from "@/components/eidolon-nav";
 type Company={id:string;name:string};
 type Offer={id:string;sponsor_company_id:string;sponsor_name:string;contact_email:string;title:string;description:string;categories:string;eligibility:string;budget_note:string;status:string;created_at:string};
 type Application={id:string;applicant_name:string;offer_id:string;sponsor_company_id:string;applicant_company_id:string;pitch:string;requested_support:string;status:string;created_at:string};
 export default function SponsorshipsPage(){
+ const scope=useWorkspace();
  const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState("");
  const [offers,setOffers]=useState<Offer[]>([]),[applications,setApplications]=useState<Application[]>([]),[inbox,setInbox]=useState<Application[]>([]);
  const [title,setTitle]=useState(""),[description,setDescription]=useState(""),[categories,setCategories]=useState(""),[eligibility,setEligibility]=useState(""),[budgetNote,setBudgetNote]=useState(""),[contactEmail,setContactEmail]=useState("");
@@ -16,7 +18,7 @@ export default function SponsorshipsPage(){
   const d=await r.json();if(!r.ok)throw Error(d.error??"Marketplace unavailable");
   setOffers(d.offers??[]);setApplications(d.applications??[]);setInbox(d.inbox??[]);
  },[]);
- useEffect(()=>{fetch("/api/companies",{cache:"no-store"}).then(async r=>{if(r.status===401){window.location.href="/auth?next=/sponsorships";return;}const d=await r.json();if(!r.ok)throw Error(d.error??"Companies unavailable");setCompanies(d.companies??[]);setCompanyId(d.companies?.[0]?.id??"");}).catch(e=>setError(String(e))).finally(()=>setLoadingCompanies(false));},[]);
+ useEffect(()=>{fetch("/api/companies",{cache:"no-store"}).then(async r=>{if(r.status===401){window.location.href="/auth?next=/sponsorships";return;}const d=await r.json();if(!r.ok)throw Error(d.error??"Companies unavailable");setCompanies(d.companies??[]);setCompanyId(d.companies?.some((company:Company)=>company.id===scope.companyId)?scope.companyId:d.companies?.[0]?.id??"");}).catch(e=>setError(String(e))).finally(()=>setLoadingCompanies(false));},[]);
  useEffect(()=>{if(!companyId){setLoadingMarket(false);setOffers([]);setApplications([]);setInbox([]);return;}let active=true;setLoadingMarket(true);setOffers([]);setApplications([]);setInbox([]);fetch("/api/company/sponsorships?companyId="+encodeURIComponent(companyId),{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error??"Marketplace unavailable");if(active){setOffers(d.offers??[]);setApplications(d.applications??[]);setInbox(d.inbox??[]);}}).catch(e=>{if(active)setError(String(e));}).finally(()=>{if(active)setLoadingMarket(false);});return()=>{active=false;};},[companyId]);
  async function submit(kind:"offer"|"application"){
   if(!companyId)return;setBusy(true);setError("");setNotice("");
@@ -41,7 +43,7 @@ export default function SponsorshipsPage(){
   <header className="company-hero"><div className="eyebrow">EIDOLON / SPONSORSHIP EXCHANGE</div><h1>Find partners.<br/><em>Fund real progress.</em></h1><p>Companies can publicly opt in to sponsorship opportunities. Founders can discover relevant offers, pitch their products, and track sponsor decisions in one place.</p><p className="company-muted">Listings are owner-submitted, not endorsements or verified commitments. No funding, payment, contact or external message is automated.</p></header>
   <div className="foundry-workspace"><div className="foundry-main" style={{width:"100%"}}>
    <section className="company-section"><div className="company-section-head"><div><div className="eyebrow">YOUR IDENTITY</div><h2>Choose your company</h2></div><Link href="/company">Company Foundry ↗</Link></div>
-    {loadingCompanies?<p role="status">Loading your companies…</p>:companies.length?<label>Acting as <select value={companyId} onChange={e=>{setCompanyId(e.target.value);setSelectedOffer("");setError("");setNotice("");}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>:<p>Create a company in Company Foundry to publish or apply for sponsorships.</p>}
+    {loadingCompanies?<p role="status">Loading your companies…</p>:companies.length?<label>Acting as <select value={companyId} onChange={e=>{scope.chooseCompany(e.target.value);setSelectedOffer("");setError("");setNotice("");}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>:<p>Create a company in Company Foundry to publish or apply for sponsorships.</p>}
     {error&&<p role="alert" className="company-alert error">{error}</p>}{notice&&<p role="status" className="company-alert success">{notice}</p>}
    </section>
    {companyId&&<>{loadingMarket&&<p role="status" aria-live="polite">Loading sponsorship opportunities and applications…</p>}

@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { isWorkspacePath } from "@/lib/workspace-navigation";
 import { EidolonIcon } from "@/components/eidolon-icon";
 
-export function EidolonNav({ section }: { section?: string }) {
+export function EidolonNav(props: { section?: string }) {
+  const pathname = usePathname();
+  return isWorkspacePath(pathname) ? null : <PublicEidolonNav {...props}/>;
+}
+function PublicEidolonNav({ section }: { section?: string }) {
   const [open, setOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   useEffect(() => {
