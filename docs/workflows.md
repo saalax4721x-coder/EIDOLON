@@ -1,6 +1,6 @@
 # Company workflows and operational dashboard
 
-Functionality-first changes for PR #20. The existing visual language is retained.
+Operational workflow behavior for PR #20. The [premium workflow studio](premium-workspace.md) documents the current editor presentation; the [V1 checklist](v1-remaining.md) records current acceptance gates.
 
 ## Dashboard
 
@@ -42,8 +42,8 @@ The tests compile the actual route modules and inject external I/O boundaries. P
 
 ## Remaining acceptance gates
 
-- Apply the new migration to the intended Supabase project, inspect live policies/functions/advisors, and query the dashboard as both owner and non-owner.
+- The additive migration was applied and structurally verified live October 18 (see the release handoff). Real owner/non-owner dashboard acceptance remains pending. Reconcile historical migration-version drift before a general database push; do not replay the applied migration.
 - With two real signed-in accounts, create companies/agents/workflows, save and reload, switch companies, attempt cross-company HTTP and Data API access, and verify denial.
 - With a valid test API connection, run start → agent → review → finish. Verify the saved task/artifact, approval gate, reload persistence, provider failure, concurrent Continue requests, cancellation, and interrupted-step handling. Review usage charges.
 - Repeat existing company creation, encrypted connections, task queue, leads/quotes/jobs, sponsorship exchange, session refresh/logout and external MCP/revocation tests. No changes here establish that those integrations passed.
-- Check desktop/mobile keyboard and pointer interactions in the deployed app and verify exact-commit GitHub CI/Vercel results. A successful build or Vercel status alone is not authenticated E2E acceptance.
+- Automated desktop/mobile keyboard/pointer tests and exact-commit CI/deployed anonymous checks pass for the October 25 implementation. Repeat operating flows with real authenticated accounts; a fixture/browser or build pass alone is not authenticated E2E acceptance.

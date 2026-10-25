@@ -1,6 +1,6 @@
 # EIDOLON — release verification and repository handoff
 
-Updated 2026-10-22. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The dated live verification below supersedes earlier connection and migration blockers.
+Updated 2026-10-25. This file records **verified** facts and explicit release gates. It is not a declaration that EIDOLON is production-complete. The [current V1 remaining-work checklist](v1-remaining.md) and [premium workspace handoff](premium-workspace.md) supersede older browser/design blockers below. Dated entries remain historical evidence, not the status of the latest implementation.
 
 ## Scope already implemented
 
